@@ -1,0 +1,6 @@
+schema: spec-driven
+context: |
+  Tech stack: Java (Spring Boot, Maven-based)
+  Architecture: Conventional Spring Boot application
+  Testing: JUnit (expected based on structure)
+  Style: YAML configuration for application properties

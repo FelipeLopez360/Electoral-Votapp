@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "skills": {
+    "database-migration": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "3d1846b0c60f0ffaa211da66e50709e688038458620ee90608adbc27e846bbfc"
+    },
+    "e2e-testing-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "5b76a0209fee373a3cdf22d241fb6bf275e19fc69f92915e07c6448538a14e9d"
+    },
+    "git-advanced-workflows": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "d46ca590d97215674b986dbc8d0085739032117669483bead7eba739948abbdd"
+    },
+    "postgresql-table-design": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "0728424e6f56972333bd60e4f45da0322ac6db273744d863aa2b94f1e95d61ec"
+    }
+  }
+}

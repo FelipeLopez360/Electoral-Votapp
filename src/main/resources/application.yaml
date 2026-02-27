@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: Electoral-Votapp
+  
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/sistema_votaciones_institucional}
+    username: ${SPRING_DATASOURCE_USERNAME:votapp_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:votapp_password}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    default-schema: test_votaappdb
+    create-schemas: true
+
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+      password: ${SPRING_REDIS_PASSWORD:}
+
+server:
+  port: ${SERVER_PORT:8080}
