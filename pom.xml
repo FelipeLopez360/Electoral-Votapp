@@ -59,6 +59,11 @@
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 	
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -69,8 +74,8 @@
 			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-core</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.flywaydb</groupId>
@@ -79,19 +84,48 @@
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>junit-jupiter</artifactId>
-			<version>1.19.7</version>
+			<version>1.20.4</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers</artifactId>
+			<version>1.20.4</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>1.19.7</version>
+			<version>1.20.4</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<!--
+						Docker Desktop >= 4.13 en macOS expone docker.sock como un proxy stub que
+						devuelve HTTP 400 en /info (payload vacío). Testcontainers interpreta ese 400
+						como "Docker no disponible".
+						docker.raw.sock es el daemon real y devuelve HTTP 200 en /info con API v1.44+.
+						docker-java 3.4.0 lee "api.version" de System.getProperties() y lo aplica
+						al DockerClientConfig. Forzar 1.44 evita el fallback a 1.32 que docker.raw.sock rechaza.
+					-->
+					<environmentVariables>
+						<DOCKER_HOST>unix://${user.home}/Library/Containers/com.docker.docker/Data/docker.raw.sock</DOCKER_HOST>
+						<TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE>${user.home}/Library/Containers/com.docker.docker/Data/docker.raw.sock</TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE>
+						<TESTCONTAINERS_HOST_OVERRIDE>localhost</TESTCONTAINERS_HOST_OVERRIDE>
+						<TESTCONTAINERS_RYUK_DISABLED>true</TESTCONTAINERS_RYUK_DISABLED>
+					</environmentVariables>
+					<systemPropertyVariables>
+						<api.version>1.44</api.version>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>

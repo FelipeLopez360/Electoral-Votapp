@@ -15,12 +15,13 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: test_votaappdb
 
   flyway:
     enabled: true
-    baseline-on-migrate: true
+    baseline-on-migrate: false
     default-schema: test_votaappdb
+    schemas: test_votaappdb
     create-schemas: true
 
   data:
