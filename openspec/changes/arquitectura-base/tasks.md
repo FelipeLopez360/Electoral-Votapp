@@ -29,6 +29,6 @@
 - [ ] 5.2 Candidates Module: Scaffold `Candidate.java`, `Category.java`, `JpaCandidateAdapter.java` (`CandidateEntity.java`, `CategoryEntity.java`), and `CandidateController.java`.
 
 ## Phase 6: E2E Integration & Verification
-- [ ] 6.1 Update `src/main/java/co/com/votapp/ws/VotappApplication.java` (if necessary) to ensure correct component scanning for `@UseCase`.
-- [ ] 6.2 Write `VoteControllerE2ETest.java` in `src/test/java/co/com/votapp/ws/voting/infrastructure/adapter/in/web/` testing the full HTTP -> Redis -> DB flow.
-- [ ] 6.3 Write `LoginUseCaseTest.java` in `src/test/java/co/com/votapp/ws/auth/application/usecase/` verifying valid/invalid credentials flow.
+- [x] 6.1 Update `src/main/java/co/com/votapp/ws/VotappApplication.java` (if necessary) to ensure correct component scanning for `@UseCase`.
+- [x] 6.2 Write `VoteControllerE2ETest.java` in `src/test/java/co/com/votapp/ws/voting/infrastructure/adapter/in/web/` testing the full HTTP -> Redis -> DB flow.
+- [x] 6.3 Write `LoginUseCaseTest.java` in `src/test/java/co/com/votapp/ws/auth/application/usecase/` verifying valid/invalid credentials flow.
