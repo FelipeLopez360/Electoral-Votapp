@@ -32,3 +32,12 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+
+# SpringDoc v3.x disables both endpoints by default — must be explicitly enabled
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html

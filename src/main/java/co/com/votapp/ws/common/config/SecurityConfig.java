@@ -27,9 +27,11 @@ public class SecurityConfig {
                 // No HTTP session — each request must carry credentials
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Require authentication for all API endpoints; HTTP Basic is the default
+                // Require authentication for all API endpoints; HTTP Basic is the default.
+                // SpringDoc paths are explicitly permitted so docs are accessible without credentials.
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/**").authenticated()
+                                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                                 .anyRequest().permitAll())
                 .httpBasic(httpBasic -> {});
         return http.build();
