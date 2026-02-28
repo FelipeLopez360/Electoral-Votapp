@@ -11,13 +11,13 @@
 - [x] 2.2 Create `src/main/java/co/com/votapp/ws/common/exception/DomainException.java` to handle core business logic errors.
 
 ## Phase 3: Voting Module (Concurrency & Redis Highlight)
-- [ ] 3.1 Create domain models `Token.java` and `Vote.java` in `src/main/java/co/com/votapp/ws/voting/domain/`.
-- [ ] 3.2 Create port `TokenLockPort.java` in `src/main/java/co/com/votapp/ws/voting/application/port/out/`.
-- [ ] 3.3 Create `RedisTokenLockAdapter.java` in `src/main/java/co/com/votapp/ws/voting/infrastructure/adapter/out/` implementing `TokenLockPort` using Redis `SETNX`.
-- [ ] 3.4 Create JPA entity `VoteEntity.java` and repository `VoteRepository.java` in `src/main/java/co/com/votapp/ws/voting/infrastructure/adapter/out/persistence/`.
-- [ ] 3.5 Create use case `CastVoteUseCase.java` in `src/main/java/co/com/votapp/ws/voting/application/usecase/` that invokes `TokenLockPort`.
-- [ ] 3.6 Create `VoteController.java` in `src/main/java/co/com/votapp/ws/voting/infrastructure/adapter/in/web/` exposing `POST /api/v1/votes`.
-- [ ] 3.7 Write `RedisTokenLockAdapterTest.java` in `src/test/java/co/com/votapp/ws/voting/infrastructure/adapter/out/` using Testcontainers to verify atomic token locking.
+- [x] 3.1 Create domain models `Token.java` and `Vote.java` in `src/main/java/co/com/votapp/ws/voting/domain/`.
+- [x] 3.2 Create port `TokenLockPort.java` in `src/main/java/co/com/votapp/ws/voting/application/port/out/`.
+- [x] 3.3 Create `RedisTokenLockAdapter.java` in `src/main/java/co/com/votapp/ws/voting/infrastructure/adapter/out/` implementing `TokenLockPort` using Redis `SETNX`.
+- [x] 3.4 Create JPA entity `VoteEntity.java` and repository `VoteRepository.java` in `src/main/java/co/com/votapp/ws/voting/infrastructure/adapter/out/persistence/`.
+- [x] 3.5 Create use case `CastVoteUseCase.java` in `src/main/java/co/com/votapp/ws/voting/application/usecase/` that invokes `TokenLockPort`.
+- [x] 3.6 Create `VoteController.java` in `src/main/java/co/com/votapp/ws/voting/infrastructure/adapter/in/web/` exposing `POST /api/v1/votes`.
+- [x] 3.7 Write `RedisTokenLockAdapterTest.java` in `src/test/java/co/com/votapp/ws/voting/infrastructure/adapter/out/` using Testcontainers to verify atomic token locking.
 
 ## Phase 4: Core Modules Implementation (Auth, Electoral, Audit)
 - [ ] 4.1 Auth Module: Create `Admin.java`, `LoginUseCase.java`, `AdminRepositoryPort.java`, `JpaAdminAdapter.java` (`AdminEntity.java`), and `AuthController.java` (`/api/v1/auth/login`).
