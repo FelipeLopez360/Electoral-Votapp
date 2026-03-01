@@ -6,6 +6,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
@@ -21,17 +22,26 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
+        // When the browser receives WWW-Authenticate: Basic it shows its own native popup,
+        // which intercepts Swagger UI's Authorization header before it reaches the server.
+        // Replacing the entry point with one that returns 401 WITHOUT that header suppresses
+        // the popup so Swagger can send credentials uninterrupted.
+        AuthenticationEntryPoint suppressBrowserPopup =
+                (request, response, ex) -> response.sendError(401, "Unauthorized");
+
         http
                 // REST APIs are stateless — CSRF only matters for browser-based session auth
                 .csrf(AbstractHttpConfigurer::disable)
                 // No HTTP session — each request must carry credentials
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Require authentication for all API endpoints; HTTP Basic is the default
+                // Require authentication for all API endpoints; HTTP Basic is the default.
+                // SpringDoc paths are explicitly permitted so docs are accessible without credentials.
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/**").authenticated()
+                                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                                 .anyRequest().permitAll())
-                .httpBasic(httpBasic -> {});
+                .httpBasic(basic -> basic.authenticationEntryPoint(suppressBrowserPopup));
         return http.build();
     }
 }
