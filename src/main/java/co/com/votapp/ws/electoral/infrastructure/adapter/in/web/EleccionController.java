@@ -1,7 +1,7 @@
 package co.com.votapp.ws.electoral.infrastructure.adapter.in.web;
 
-import co.com.votapp.ws.electoral.application.port.in.GetEleccionPort;
 import co.com.votapp.ws.electoral.domain.Eleccion;
+import co.com.votapp.ws.electoral.domain.port.in.GetEleccionPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;

@@ -1,7 +1,7 @@
 package co.com.votapp.ws.auth.infrastructure.adapter.in.web;
 
-import co.com.votapp.ws.auth.application.port.in.AuthenticateFuncionarioPort;
 import co.com.votapp.ws.auth.domain.Funcionario;
+import co.com.votapp.ws.auth.domain.port.in.AuthenticateFuncionarioPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -62,4 +62,3 @@ public class AuthController {
                                       String email,
                                       boolean puedeVotar) {}
 }
-

@@ -1,7 +1,7 @@
 package co.com.votapp.ws.organization.infrastructure.adapter.in.web;
 
-import co.com.votapp.ws.organization.application.port.in.GetDepartamentosPort;
 import co.com.votapp.ws.organization.domain.Departamento;
+import co.com.votapp.ws.organization.domain.port.in.GetDepartamentosPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;

@@ -1,7 +1,7 @@
 package co.com.votapp.ws.candidates.infrastructure.adapter.in.web;
 
-import co.com.votapp.ws.candidates.application.port.in.GetCandidatosPort;
 import co.com.votapp.ws.candidates.domain.Candidato;
+import co.com.votapp.ws.candidates.domain.port.in.GetCandidatosPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;

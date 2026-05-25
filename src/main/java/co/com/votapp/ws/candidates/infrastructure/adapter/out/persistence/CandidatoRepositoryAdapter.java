@@ -1,7 +1,7 @@
 package co.com.votapp.ws.candidates.infrastructure.adapter.out.persistence;
 
-import co.com.votapp.ws.candidates.application.port.out.CandidatoRepositoryPort;
 import co.com.votapp.ws.candidates.domain.Candidato;
+import co.com.votapp.ws.candidates.domain.port.out.CandidatoRepositoryPort;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

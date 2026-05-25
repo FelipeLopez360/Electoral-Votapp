@@ -1,7 +1,7 @@
-package co.com.votapp.ws.auth.application.usecase;
+package co.com.votapp.ws.auth.domain.usecase;
 
-import co.com.votapp.ws.auth.application.port.out.FuncionarioRepositoryPort;
 import co.com.votapp.ws.auth.domain.Funcionario;
+import co.com.votapp.ws.auth.domain.port.out.FuncionarioRepositoryPort;
 import co.com.votapp.ws.common.exception.DomainException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

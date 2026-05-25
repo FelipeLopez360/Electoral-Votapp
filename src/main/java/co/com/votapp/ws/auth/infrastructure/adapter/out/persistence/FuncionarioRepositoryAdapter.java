@@ -1,7 +1,7 @@
 package co.com.votapp.ws.auth.infrastructure.adapter.out.persistence;
 
-import co.com.votapp.ws.auth.application.port.out.FuncionarioRepositoryPort;
 import co.com.votapp.ws.auth.domain.Funcionario;
+import co.com.votapp.ws.auth.domain.port.out.FuncionarioRepositoryPort;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;

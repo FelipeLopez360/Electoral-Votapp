@@ -1,7 +1,7 @@
 package co.com.votapp.ws.audit.infrastructure.adapter.out.persistence;
 
-import co.com.votapp.ws.audit.application.port.out.AuditoriaRepositoryPort;
 import co.com.votapp.ws.audit.domain.AuditoriaEvento;
+import co.com.votapp.ws.audit.domain.port.out.AuditoriaRepositoryPort;
 import org.springframework.stereotype.Component;
 
 /**

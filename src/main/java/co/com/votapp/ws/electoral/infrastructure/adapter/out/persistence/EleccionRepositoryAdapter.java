@@ -1,7 +1,7 @@
 package co.com.votapp.ws.electoral.infrastructure.adapter.out.persistence;
 
-import co.com.votapp.ws.electoral.application.port.out.EleccionRepositoryPort;
 import co.com.votapp.ws.electoral.domain.Eleccion;
+import co.com.votapp.ws.electoral.domain.port.out.EleccionRepositoryPort;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;

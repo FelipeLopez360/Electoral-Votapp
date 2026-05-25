@@ -1,7 +1,7 @@
 package co.com.votapp.ws.organization.infrastructure.adapter.out.persistence;
 
-import co.com.votapp.ws.organization.application.port.out.DepartamentoRepositoryPort;
 import co.com.votapp.ws.organization.domain.Departamento;
+import co.com.votapp.ws.organization.domain.port.out.DepartamentoRepositoryPort;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
