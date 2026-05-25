@@ -12,14 +12,14 @@ public class AuditoriaEvento {
 
     private final String tipo;
     private final UUID eleccionId;
-    private final Long funcionarioId;   // nullable — VOTE_ACCEPTED does not include funcionarioId
+    private final Integer funcionarioId;   // nullable — VOTE_ACCEPTED does not include funcionarioId
     private final UUID candidatoId;     // nullable
     private final Map<String, Object> metadata;
     private final Instant createdAt;
 
     public AuditoriaEvento(String tipo,
                            UUID eleccionId,
-                           Long funcionarioId,
+                           Integer funcionarioId,
                            UUID candidatoId,
                            Map<String, Object> metadata,
                            Instant createdAt) {
@@ -35,7 +35,7 @@ public class AuditoriaEvento {
 
     public String getTipo() { return tipo; }
     public UUID getEleccionId() { return eleccionId; }
-    public Long getFuncionarioId() { return funcionarioId; }
+    public Integer getFuncionarioId() { return funcionarioId; }
     public UUID getCandidatoId() { return candidatoId; }
     public Map<String, Object> getMetadata() { return metadata; }
     public Instant getCreatedAt() { return createdAt; }

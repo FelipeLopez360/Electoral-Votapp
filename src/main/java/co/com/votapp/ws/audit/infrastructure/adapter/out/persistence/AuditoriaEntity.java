@@ -28,7 +28,7 @@ public class AuditoriaEntity {
     private UUID eleccionId;
 
     @Column(name = "funcionario_id")
-    private Long funcionarioId;
+    private Integer funcionarioId;
 
     @Column(name = "candidato_id", columnDefinition = "UUID")
     private UUID candidatoId;
@@ -51,8 +51,8 @@ public class AuditoriaEntity {
     public UUID getEleccionId() { return eleccionId; }
     public void setEleccionId(UUID eleccionId) { this.eleccionId = eleccionId; }
 
-    public Long getFuncionarioId() { return funcionarioId; }
-    public void setFuncionarioId(Long funcionarioId) { this.funcionarioId = funcionarioId; }
+    public Integer getFuncionarioId() { return funcionarioId; }
+    public void setFuncionarioId(Integer funcionarioId) { this.funcionarioId = funcionarioId; }
 
     public UUID getCandidatoId() { return candidatoId; }
     public void setCandidatoId(UUID candidatoId) { this.candidatoId = candidatoId; }
