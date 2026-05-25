@@ -1,7 +1,5 @@
 package co.com.votapp.ws.auth.domain;
 
-import java.util.UUID;
-
 /**
  * Aggregado raíz del módulo de autenticación.
  *
@@ -10,25 +8,25 @@ import java.util.UUID;
  */
 public class Funcionario {
 
-    private final UUID uuid;
+    private final Integer id;
     private final String numeroEmpleado;
     private final String documentoIdentidad;
     private final String email;
     private final boolean puedeVotar;
     private final String estadoLaboral;
 
-    public Funcionario(UUID uuid,
+    public Funcionario(Integer id,
                        String numeroEmpleado,
                        String documentoIdentidad,
                        String email,
                        boolean puedeVotar,
                        String estadoLaboral) {
-        if (uuid == null) throw new IllegalArgumentException("uuid must not be null");
+        if (id == null) throw new IllegalArgumentException("id must not be null");
         if (numeroEmpleado == null || numeroEmpleado.isBlank())
             throw new IllegalArgumentException("numeroEmpleado must not be blank");
         if (documentoIdentidad == null || documentoIdentidad.isBlank())
             throw new IllegalArgumentException("documentoIdentidad must not be blank");
-        this.uuid = uuid;
+        this.id = id;
         this.numeroEmpleado = numeroEmpleado;
         this.documentoIdentidad = documentoIdentidad;
         this.email = email;
@@ -36,7 +34,7 @@ public class Funcionario {
         this.estadoLaboral = estadoLaboral;
     }
 
-    public UUID getUuid() { return uuid; }
+    public Integer getId() { return id; }
     public String getNumeroEmpleado() { return numeroEmpleado; }
     public String getDocumentoIdentidad() { return documentoIdentidad; }
     public String getEmail() { return email; }

@@ -46,7 +46,7 @@ public class AuthController {
                 request.password()
         );
         return ResponseEntity.ok(new FuncionarioResponse(
-                funcionario.getUuid().toString(),
+                funcionario.getId(),
                 funcionario.getNumeroEmpleado(),
                 funcionario.getEmail(),
                 funcionario.isPuedeVotar()
@@ -57,7 +57,7 @@ public class AuthController {
     public record LoginRequest(String documentoIdentidad, String password) {}
 
     /** DTO de salida (Record — obligatorio por arquitectura). */
-    public record FuncionarioResponse(String uuid,
+    public record FuncionarioResponse(Integer id,
                                       String numeroEmpleado,
                                       String email,
                                       boolean puedeVotar) {}

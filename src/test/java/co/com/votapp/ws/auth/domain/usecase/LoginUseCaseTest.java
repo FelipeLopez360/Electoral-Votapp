@@ -10,7 +10,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -40,7 +39,7 @@ class LoginUseCaseTest {
 
     private Funcionario buildFuncionario(String estadoLaboral) {
         return new Funcionario(
-                UUID.randomUUID(),
+                1,
                 "EMP-001",
                 "12345678",
                 "juan.perez@votapp.co",

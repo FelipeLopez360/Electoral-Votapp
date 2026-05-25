@@ -29,7 +29,7 @@ public class FuncionarioRepositoryAdapter implements FuncionarioRepositoryPort {
 
     private Funcionario toDomain(FuncionarioEntity entity) {
         return new Funcionario(
-                entity.getUuid(),
+                entity.getId(),
                 entity.getNumeroEmpleado(),
                 entity.getDocumentoIdentidad(),
                 entity.getEmail(),
