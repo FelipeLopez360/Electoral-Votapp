@@ -3,12 +3,12 @@ package co.com.votapp.ws.candidates.domain.usecase;
 import co.com.votapp.ws.candidates.domain.Candidato;
 import co.com.votapp.ws.candidates.domain.port.in.GetCandidatosPort;
 import co.com.votapp.ws.candidates.domain.port.out.CandidatoRepositoryPort;
-import co.com.votapp.ws.common.exception.DomainException;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
- * Caso de uso: devuelve los candidatos activos de una elección.
+ * Use case: returns candidates for an election.
  */
 public class GetCandidatosUseCase implements GetCandidatosPort {
 
@@ -19,10 +19,10 @@ public class GetCandidatosUseCase implements GetCandidatosPort {
     }
 
     @Override
-    public List<Candidato> findByEleccionId(Integer eleccionId) {
+    public List<Candidato> findByEleccionId(UUID eleccionId) {
         if (eleccionId == null) {
-            throw new DomainException("eleccionId no puede ser nulo");
+            throw new IllegalArgumentException("eleccionId must not be null");
         }
-        return repositoryPort.findByEleccionIdAndActivoTrue(eleccionId);
+        return repositoryPort.findByEleccionId(eleccionId);
     }
 }

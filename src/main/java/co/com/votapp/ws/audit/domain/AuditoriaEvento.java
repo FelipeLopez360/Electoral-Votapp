@@ -1,50 +1,42 @@
 package co.com.votapp.ws.audit.domain;
 
 import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
 
 /**
- * Agregado raíz del módulo de auditoría.
- *
- * <p>Representa un evento de auditoría registrado en el sistema.
- * No contiene anotaciones de Spring ni de JPA — pertenece exclusivamente al dominio.
+ * Domain aggregate for an audit event (MVP schema: auditoria_eventos).
+ * No Spring or JPA annotations — pure Java.
  */
 public class AuditoriaEvento {
 
-    private final String tablaAfectada;
-    private final Integer registroId;
-    private final String accion;
-    private final Integer usuarioId;
-    private final String usuarioTipo;
-    private final Instant timestampAccion;
-    private final String descripcion;
+    private final String tipo;
+    private final UUID eleccionId;
+    private final Long funcionarioId;   // nullable — VOTE_ACCEPTED does not include funcionarioId
+    private final UUID candidatoId;     // nullable
+    private final Map<String, Object> metadata;
+    private final Instant createdAt;
 
-    public AuditoriaEvento(String tablaAfectada,
-                           Integer registroId,
-                           String accion,
-                           Integer usuarioId,
-                           String usuarioTipo,
-                           Instant timestampAccion,
-                           String descripcion) {
-        if (tablaAfectada == null || tablaAfectada.isBlank())
-            throw new IllegalArgumentException("tablaAfectada must not be blank");
-        if (accion == null || accion.isBlank())
-            throw new IllegalArgumentException("accion must not be blank");
-        if (timestampAccion == null)
-            throw new IllegalArgumentException("timestampAccion must not be null");
-        this.tablaAfectada = tablaAfectada;
-        this.registroId = registroId;
-        this.accion = accion;
-        this.usuarioId = usuarioId;
-        this.usuarioTipo = usuarioTipo;
-        this.timestampAccion = timestampAccion;
-        this.descripcion = descripcion;
+    public AuditoriaEvento(String tipo,
+                           UUID eleccionId,
+                           Long funcionarioId,
+                           UUID candidatoId,
+                           Map<String, Object> metadata,
+                           Instant createdAt) {
+        if (tipo == null || tipo.isBlank())
+            throw new IllegalArgumentException("tipo must not be blank");
+        this.tipo = tipo;
+        this.eleccionId = eleccionId;
+        this.funcionarioId = funcionarioId;
+        this.candidatoId = candidatoId;
+        this.metadata = metadata;
+        this.createdAt = createdAt != null ? createdAt : Instant.now();
     }
 
-    public String getTablaAfectada() { return tablaAfectada; }
-    public Integer getRegistroId() { return registroId; }
-    public String getAccion() { return accion; }
-    public Integer getUsuarioId() { return usuarioId; }
-    public String getUsuarioTipo() { return usuarioTipo; }
-    public Instant getTimestampAccion() { return timestampAccion; }
-    public String getDescripcion() { return descripcion; }
+    public String getTipo() { return tipo; }
+    public UUID getEleccionId() { return eleccionId; }
+    public Long getFuncionarioId() { return funcionarioId; }
+    public UUID getCandidatoId() { return candidatoId; }
+    public Map<String, Object> getMetadata() { return metadata; }
+    public Instant getCreatedAt() { return createdAt; }
 }

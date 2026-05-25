@@ -3,10 +3,11 @@ package co.com.votapp.ws.candidates.domain.port.in;
 import co.com.votapp.ws.candidates.domain.Candidato;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
- * Puerto de entrada para listar candidatos de una elección.
+ * Input port: list candidates for an election.
  */
 public interface GetCandidatosPort {
-    List<Candidato> findByEleccionId(Integer eleccionId);
+    List<Candidato> findByEleccionId(UUID eleccionId);
 }

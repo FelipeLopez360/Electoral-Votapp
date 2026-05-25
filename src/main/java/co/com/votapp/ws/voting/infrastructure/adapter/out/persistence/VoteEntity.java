@@ -1,116 +1,50 @@
 package co.com.votapp.ws.voting.infrastructure.adapter.out.persistence;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Entidad JPA para la tabla {@code votos}.
- *
- * <p>Nota arquitectural: esta clase vive en la capa de infraestructura.
- * NO debe importarse ni usarse en ninguna clase del dominio.
- *
- * <p>Mapeo al esquema {@code test_votaappdb.votos}:
- * <ul>
- *   <li>{@code id}            — SERIAL PRIMARY KEY  → Integer (auto-generado por BD)</li>
- *   <li>{@code uuid}          — UUID                → UUID (generado por BD via uuid-ossp)</li>
- *   <li>{@code eleccion_id}   — INTEGER             → Integer</li>
- *   <li>{@code candidato_id}  — INTEGER             → Integer</li>
- *   <li>{@code categoria_id}  — INTEGER             → Integer</li>
- *   <li>{@code token_id}      — UUID NOT NULL UNIQUE → UUID</li>
- *   <li>{@code timestamp_voto}— TIMESTAMP            → Instant</li>
- * </ul>
+ * JPA entity for the {@code votos} table (MVP schema).
+ * No funcionario_id — anonymity is guaranteed by design.
+ * Lives in the infrastructure layer only — never imported by domain.
  */
 @Entity
-@Table(name = "votos", schema = "test_votaappdb")
+@Table(name = "votos")
 public class VoteEntity {
 
-    /** SERIAL (INTEGER) — generado por la secuencia de la BD, NO por Hibernate. */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "UUID")
+    private UUID id;
 
-    /** UUID generado por la función {@code generate_uuid()} (uuid-ossp). */
-    @Column(name = "uuid", updatable = false, insertable = false)
-    private UUID uuid;
+    @Column(name = "eleccion_id", nullable = false, columnDefinition = "UUID")
+    private UUID eleccionId;
 
-    @Column(name = "eleccion_id", nullable = false)
-    private Integer electionId;
+    @Column(name = "candidato_id", nullable = false, columnDefinition = "UUID")
+    private UUID candidatoId;
 
-    @Column(name = "candidato_id", nullable = false)
-    private Integer candidateId;
-
-    @Column(name = "categoria_id", nullable = false)
-    private Integer categoryId;
-
-    /** UUID del token usado para votar (referencia lógica al UUID de tokens_votacion). */
     @Column(name = "token_id", nullable = false, unique = true, columnDefinition = "UUID")
     private UUID tokenId;
 
-    @Column(name = "timestamp_voto", nullable = false)
-    private Instant castAt;
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
 
     // ─── Getters & Setters ───────────────────────────────────────────────────
 
-    public Integer getId() {
-        return id;
-    }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+    public UUID getEleccionId() { return eleccionId; }
+    public void setEleccionId(UUID eleccionId) { this.eleccionId = eleccionId; }
 
-    public UUID getUuid() {
-        return uuid;
-    }
+    public UUID getCandidatoId() { return candidatoId; }
+    public void setCandidatoId(UUID candidatoId) { this.candidatoId = candidatoId; }
 
-    public void setUuid(UUID uuid) {
-        this.uuid = uuid;
-    }
+    public UUID getTokenId() { return tokenId; }
+    public void setTokenId(UUID tokenId) { this.tokenId = tokenId; }
 
-    public Integer getElectionId() {
-        return electionId;
-    }
-
-    public void setElectionId(Integer electionId) {
-        this.electionId = electionId;
-    }
-
-    public Integer getCandidateId() {
-        return candidateId;
-    }
-
-    public void setCandidateId(Integer candidateId) {
-        this.candidateId = candidateId;
-    }
-
-    public Integer getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(Integer categoryId) {
-        this.categoryId = categoryId;
-    }
-
-    public UUID getTokenId() {
-        return tokenId;
-    }
-
-    public void setTokenId(UUID tokenId) {
-        this.tokenId = tokenId;
-    }
-
-    public Instant getCastAt() {
-        return castAt;
-    }
-
-    public void setCastAt(Instant castAt) {
-        this.castAt = castAt;
-    }
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

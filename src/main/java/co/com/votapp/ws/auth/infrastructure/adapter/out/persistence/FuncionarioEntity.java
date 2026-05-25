@@ -9,7 +9,7 @@ import java.util.UUID;
  * Solo se usa en la capa de infraestructura.
  */
 @Entity
-@Table(name = "funcionarios", schema = "test_votaappdb")
+@Table(name = "funcionarios")
 public class FuncionarioEntity {
 
     @Id

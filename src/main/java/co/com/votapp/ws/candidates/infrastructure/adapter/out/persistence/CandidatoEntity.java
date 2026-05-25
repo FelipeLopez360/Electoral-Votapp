@@ -5,61 +5,50 @@ import jakarta.persistence.*;
 import java.util.UUID;
 
 /**
- * Entidad JPA para la tabla {@code test_votaappdb.candidatos}.
- * Solo se usa en la capa de infraestructura.
+ * JPA entity for the {@code candidatos} table (MVP schema).
+ * Lives in the infrastructure layer only — never imported by domain.
  */
 @Entity
-@Table(name = "candidatos", schema = "test_votaappdb")
+@Table(name = "candidatos")
 public class CandidatoEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "UUID")
+    private UUID id;
 
-    @Column(name = "uuid", updatable = false, insertable = false)
-    private UUID uuid;
+    @Column(name = "eleccion_id", nullable = false, columnDefinition = "UUID")
+    private UUID eleccionId;
 
-    @Column(name = "eleccion_id", nullable = false)
-    private Integer eleccionId;
+    @Column(name = "nombre", nullable = false)
+    private String nombre;
 
-    @Column(name = "categoria_id")
-    private Integer categoriaId;
+    @Column(name = "descripcion")
+    private String descripcion;
 
-    @Column(name = "nombres", nullable = false)
-    private String nombres;
+    @Column(name = "es_voto_en_blanco", nullable = false)
+    private Boolean esVotoEnBlanco = false;
 
-    @Column(name = "apellidos", nullable = false)
-    private String apellidos;
-
-    @Column(name = "es_voto_blanco")
-    private Boolean esVotoBlanco;
-
-    @Column(name = "activo")
-    private Boolean activo;
+    @Column(name = "numero_orden", nullable = false)
+    private Integer numeroOrden;
 
     // ─── Getters & Setters ───────────────────────────────────────────────────
 
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
-    public UUID getUuid() { return uuid; }
-    public void setUuid(UUID uuid) { this.uuid = uuid; }
+    public UUID getEleccionId() { return eleccionId; }
+    public void setEleccionId(UUID eleccionId) { this.eleccionId = eleccionId; }
 
-    public Integer getEleccionId() { return eleccionId; }
-    public void setEleccionId(Integer eleccionId) { this.eleccionId = eleccionId; }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
 
-    public Integer getCategoriaId() { return categoriaId; }
-    public void setCategoriaId(Integer categoriaId) { this.categoriaId = categoriaId; }
+    public String getDescripcion() { return descripcion; }
+    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
 
-    public String getNombres() { return nombres; }
-    public void setNombres(String nombres) { this.nombres = nombres; }
+    public Boolean getEsVotoEnBlanco() { return esVotoEnBlanco; }
+    public void setEsVotoEnBlanco(Boolean esVotoEnBlanco) { this.esVotoEnBlanco = esVotoEnBlanco; }
 
-    public String getApellidos() { return apellidos; }
-    public void setApellidos(String apellidos) { this.apellidos = apellidos; }
-
-    public Boolean getEsVotoBlanco() { return esVotoBlanco; }
-    public void setEsVotoBlanco(Boolean esVotoBlanco) { this.esVotoBlanco = esVotoBlanco; }
-
-    public Boolean getActivo() { return activo; }
-    public void setActivo(Boolean activo) { this.activo = activo; }
+    public Integer getNumeroOrden() { return numeroOrden; }
+    public void setNumeroOrden(Integer numeroOrden) { this.numeroOrden = numeroOrden; }
 }

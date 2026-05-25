@@ -3,10 +3,11 @@ package co.com.votapp.ws.candidates.domain.port.out;
 import co.com.votapp.ws.candidates.domain.Candidato;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
- * Puerto de salida para acceder al repositorio de candidatos.
+ * Output port for candidate repository access.
  */
 public interface CandidatoRepositoryPort {
-    List<Candidato> findByEleccionIdAndActivoTrue(Integer eleccionId);
+    List<Candidato> findByEleccionId(UUID eleccionId);
 }

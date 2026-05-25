@@ -5,7 +5,6 @@ import co.com.votapp.ws.candidates.domain.port.in.GetCandidatosPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,9 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
- * Controlador REST para el módulo de candidatos.
+ * REST controller for the candidates module.
  */
 @Tag(name = "Candidates", description = "Query candidates for an election")
 @RestController
@@ -29,34 +29,27 @@ public class CandidatesController {
         this.getCandidatosPort = getCandidatosPort;
     }
 
-    @Operation(
-            summary = "Get candidates by election",
-            description = "Returns the list of candidates registered for the given election ID.",
-            security = @SecurityRequirement(name = "basicAuth")
-    )
+    @Operation(summary = "Get candidates by election")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "List of candidates returned (may be empty)"),
-            @ApiResponse(responseCode = "401", description = "Authentication required — HTTP Basic credentials missing or invalid")
+            @ApiResponse(responseCode = "200", description = "List of candidates returned"),
+            @ApiResponse(responseCode = "401", description = "Authentication required")
     })
     @GetMapping("/eleccion/{eleccionId}")
-    public ResponseEntity<List<CandidatoResponse>> getCandidatos(@PathVariable Integer eleccionId) {
+    public ResponseEntity<List<CandidatoResponse>> getCandidatos(@PathVariable UUID eleccionId) {
         List<CandidatoResponse> response = getCandidatosPort.findByEleccionId(eleccionId)
                 .stream()
                 .map(c -> new CandidatoResponse(
-                        c.getUuid().toString(),
-                        c.getNombres(),
-                        c.getApellidos(),
-                        c.getNombreCompleto(),
-                        c.isEsVotoBlanco()
+                        c.getId().toString(),
+                        c.getNombre(),
+                        c.isEsVotoEnBlanco(),
+                        c.getNumeroOrden()
                 ))
                 .toList();
         return ResponseEntity.ok(response);
     }
 
-    /** DTO de salida (Record — obligatorio por arquitectura). */
-    public record CandidatoResponse(String uuid,
-                                    String nombres,
-                                    String apellidos,
-                                    String nombreCompleto,
-                                    boolean esVotoBlanco) {}
+    public record CandidatoResponse(String id,
+                                    String nombre,
+                                    boolean esVotoEnBlanco,
+                                    int numeroOrden) {}
 }
