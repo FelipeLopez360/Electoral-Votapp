@@ -33,6 +33,8 @@ jobs:
     env:
       SPRING_REDIS_HOST: localhost
       SPRING_REDIS_PORT: 6379
+      DOCKER_HOST: unix:///var/run/docker.sock
+      TESTCONTAINERS_RYUK_DISABLED: "true"
 
     steps:
       - name: Checkout del código

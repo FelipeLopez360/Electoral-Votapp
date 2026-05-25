@@ -9,15 +9,9 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import co.com.votapp.ws.TestcontainersDockerConfig;
-
 @SpringBootTest
 @Testcontainers
 class ElectoralVotappApplicationTests {
-
-	static {
-		TestcontainersDockerConfig.configure();
-	}
 
 	@Container
 	private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")

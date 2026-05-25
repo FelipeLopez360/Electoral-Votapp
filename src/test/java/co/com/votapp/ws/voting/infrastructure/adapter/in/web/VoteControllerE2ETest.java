@@ -1,6 +1,5 @@
 package co.com.votapp.ws.voting.infrastructure.adapter.in.web;
 
-import co.com.votapp.ws.TestcontainersDockerConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,10 +41,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 )
 @Testcontainers
 class VoteControllerE2ETest {
-
-    static {
-        TestcontainersDockerConfig.configure();
-    }
 
     @Container
     private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
