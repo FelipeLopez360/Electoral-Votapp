@@ -5,11 +5,13 @@ import co.com.votapp.ws.electoral.application.command.CreateElectionCommand;
 import co.com.votapp.ws.electoral.domain.Ballot;
 import co.com.votapp.ws.electoral.domain.Candidate;
 import co.com.votapp.ws.electoral.domain.Election;
+import co.com.votapp.ws.electoral.domain.ElectionStatus;
 import co.com.votapp.ws.electoral.domain.port.in.ActivateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.AddCandidateUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.CreateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.FinalizeElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.GetBallotUseCase;
+import co.com.votapp.ws.electoral.domain.port.out.CandidateRepositoryPort;
 import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -18,9 +20,11 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -49,6 +53,7 @@ public class ElectionController {
     private final GetBallotUseCase getBallotUseCase;
     private final AddCandidateUseCase addCandidateUseCase;
     private final ElectionRepositoryPort electionRepository;
+    private final CandidateRepositoryPort candidateRepository;
 
     public ElectionController(
             CreateElectionUseCase createElectionUseCase,
@@ -56,13 +61,15 @@ public class ElectionController {
             FinalizeElectionUseCase finalizeElectionUseCase,
             GetBallotUseCase getBallotUseCase,
             AddCandidateUseCase addCandidateUseCase,
-            ElectionRepositoryPort electionRepository) {
+            ElectionRepositoryPort electionRepository,
+            CandidateRepositoryPort candidateRepository) {
         this.createElectionUseCase = createElectionUseCase;
         this.activateElectionUseCase = activateElectionUseCase;
         this.finalizeElectionUseCase = finalizeElectionUseCase;
         this.getBallotUseCase = getBallotUseCase;
         this.addCandidateUseCase = addCandidateUseCase;
         this.electionRepository = electionRepository;
+        this.candidateRepository = candidateRepository;
     }
 
     @PostMapping
@@ -108,6 +115,101 @@ public class ElectionController {
                 .map(ElectionResponse::from)
                 .toList();
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}")
+    @Operation(
+            summary = "Get election by ID",
+            description = "Returns a single election with all its fields.",
+            security = @SecurityRequirement(name = "basicAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Election found"),
+            @ApiResponse(responseCode = "401", description = "Authentication required"),
+            @ApiResponse(responseCode = "404", description = "Election not found")
+    })
+    public ResponseEntity<ElectionResponse> getElection(@PathVariable UUID id) {
+        Election election = electionRepository.findById(id)
+                .orElseThrow(() -> new java.util.NoSuchElementException("Election not found: " + id));
+        return ResponseEntity.ok(ElectionResponse.from(election));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(
+            summary = "Update an election",
+            description = "Updates nombre, fechaInicio and fechaFin of a PROGRAMADA election.",
+            security = @SecurityRequirement(name = "basicAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Election updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "401", description = "Authentication required"),
+            @ApiResponse(responseCode = "409", description = "Election is not PROGRAMADA")
+    })
+    public ResponseEntity<ElectionResponse> updateElection(
+            @PathVariable UUID id,
+            @RequestBody UpdateElectionRequest request) {
+        Election existing = electionRepository.findById(id)
+                .orElseThrow(() -> new java.util.NoSuchElementException("Election not found: " + id));
+        if (existing.status() != ElectionStatus.PROGRAMADA) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        LocalDateTime start = parseDateTime(request.fechaInicio());
+        LocalDateTime end = parseDateTime(request.fechaFin());
+        Election updated = new Election(
+                existing.id(), existing.codigo(), request.nombre() != null ? request.nombre() : existing.nombre(),
+                existing.status(),
+                start != null ? start : existing.fechaInicio(),
+                end != null ? end : existing.fechaFin()
+        );
+        return ResponseEntity.ok(ElectionResponse.from(electionRepository.save(updated)));
+    }
+
+    @GetMapping("/{id}/candidates")
+    @Operation(
+            summary = "List candidates for an election",
+            description = "Returns the ordered list of candidates (admin endpoint, no token required).",
+            security = @SecurityRequirement(name = "basicAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Candidate list"),
+            @ApiResponse(responseCode = "401", description = "Authentication required")
+    })
+    public ResponseEntity<List<CandidateResponse>> listCandidates(@PathVariable UUID id) {
+        List<Candidate> candidates = candidateRepository.findByEleccionIdOrderByNumeroOrden(id);
+        List<CandidateResponse> response = candidates.stream()
+                .map(c -> new CandidateResponse(c.id().toString(), c.nombre(), c.numeroOrden()))
+                .toList();
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}/candidates/{candidateId}")
+    @Operation(
+            summary = "Remove a candidate",
+            description = "Deletes a candidate from a PROGRAMADA election. Cannot remove blank vote candidate.",
+            security = @SecurityRequirement(name = "basicAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Candidate removed"),
+            @ApiResponse(responseCode = "401", description = "Authentication required"),
+            @ApiResponse(responseCode = "404", description = "Candidate not found"),
+            @ApiResponse(responseCode = "409", description = "Election is not PROGRAMADA or candidate is blank vote")
+    })
+    public ResponseEntity<Void> removeCandidate(
+            @PathVariable UUID id,
+            @PathVariable UUID candidateId) {
+        Election existing = electionRepository.findById(id)
+                .orElseThrow(() -> new java.util.NoSuchElementException("Election not found: " + id));
+        if (existing.status() != ElectionStatus.PROGRAMADA) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        Candidate candidate = candidateRepository.findByIdAndEleccionId(candidateId, id)
+                .orElseThrow(() -> new java.util.NoSuchElementException("Candidate not found: " + candidateId));
+        if (candidate.esVotoEnBlanco()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        candidateRepository.deleteById(candidateId);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{eleccionId}/candidates")
@@ -278,5 +380,12 @@ public class ElectionController {
             String id,
             String nombre,
             int numeroOrden
+    ) {}
+
+    /** Request body for updating an election. All fields are optional — omitted fields keep their current value. */
+    public record UpdateElectionRequest(
+            String nombre,
+            String fechaInicio,
+            String fechaFin
     ) {}
 }

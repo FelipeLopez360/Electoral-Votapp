@@ -57,6 +57,11 @@ public class CandidateRepositoryAdapter implements CandidateRepositoryPort {
                 .map(this::toDomain);
     }
 
+    @Override
+    public void deleteById(UUID candidateId) {
+        jpaRepository.deleteById(candidateId);
+    }
+
     // ─── Mapping ─────────────────────────────────────────────────────────────
 
     private Candidate toDomain(CandidatoEntity entity) {

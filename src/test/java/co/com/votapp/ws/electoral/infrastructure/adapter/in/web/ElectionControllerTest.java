@@ -11,6 +11,7 @@ import co.com.votapp.ws.electoral.domain.port.in.CreateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.AddCandidateUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.FinalizeElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.GetBallotUseCase;
+import co.com.votapp.ws.electoral.domain.port.out.CandidateRepositoryPort;
 import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -48,6 +49,7 @@ class ElectionControllerTest {
     @Mock private GetBallotUseCase getBallotUseCase;
     @Mock private AddCandidateUseCase addCandidateUseCase;
     @Mock private ElectionRepositoryPort electionRepository;
+    @Mock private CandidateRepositoryPort candidateRepository;
 
     private ElectionController controller;
 
@@ -64,7 +66,8 @@ class ElectionControllerTest {
                 finalizeElectionUseCase,
                 getBallotUseCase,
                 addCandidateUseCase,
-                electionRepository
+                electionRepository,
+                candidateRepository
         );
     }
 
