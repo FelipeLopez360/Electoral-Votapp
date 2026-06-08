@@ -42,9 +42,17 @@ class LoginUseCaseTest {
                 1,
                 "EMP-001",
                 "12345678",
+                "Juan",
+                "Pérez",
+                "CC",
                 "juan.perez@votapp.co",
+                null,
+                null,
+                null,
+                null,
                 true,
-                estadoLaboral
+                estadoLaboral,
+                false
         );
     }
 
