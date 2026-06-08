@@ -33,8 +33,11 @@ public class ParticipacionEntity {
     @Column(name = "funcionario_id", nullable = false)
     private Integer funcionarioId;
 
-    @Column(name = "voted_at", nullable = false)
-    private Instant votedAt;
+    @Column(name = "completado", nullable = false)
+    private Boolean completado = false;
+
+    @Column(name = "completed_at")
+    private Instant completedAt;
 
     // ─── Getters & Setters ───────────────────────────────────────────────────
 
@@ -47,6 +50,9 @@ public class ParticipacionEntity {
     public Integer getFuncionarioId() { return funcionarioId; }
     public void setFuncionarioId(Integer funcionarioId) { this.funcionarioId = funcionarioId; }
 
-    public Instant getVotedAt() { return votedAt; }
-    public void setVotedAt(Instant votedAt) { this.votedAt = votedAt; }
+    public Boolean getCompletado() { return completado; }
+    public void setCompletado(Boolean completado) { this.completado = completado; }
+
+    public Instant getCompletedAt() { return completedAt; }
+    public void setCompletedAt(Instant completedAt) { this.completedAt = completedAt; }
 }

@@ -28,7 +28,8 @@ public class ParticipacionRepositoryAdapter implements ParticipacionRepositoryPo
         // id is null → DB generates UUID via @GeneratedValue(UUID)
         entity.setEleccionId(eleccionId);
         entity.setFuncionarioId(funcionarioId);
-        entity.setVotedAt(votedAt);
+        entity.setCompletado(true);
+        entity.setCompletedAt(votedAt);
         jpaRepository.save(entity);
     }
 }
