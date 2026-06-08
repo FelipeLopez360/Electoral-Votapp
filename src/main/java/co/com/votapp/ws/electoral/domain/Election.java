@@ -18,7 +18,6 @@ public record Election(
         LocalDateTime fechaFin
 ) {
     public Election {
-        if (id == null) throw new IllegalArgumentException("id must not be null");
         if (codigo == null || codigo.isBlank()) throw new IllegalArgumentException("codigo must not be blank");
         if (nombre == null || nombre.isBlank()) throw new IllegalArgumentException("nombre must not be blank");
         if (status == null) throw new IllegalArgumentException("status must not be null");

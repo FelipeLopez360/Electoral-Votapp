@@ -2,6 +2,7 @@ package co.com.votapp.ws.electoral.domain.port.out;
 
 import co.com.votapp.ws.electoral.domain.Election;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -28,4 +29,9 @@ public interface ElectionRepositoryPort {
      * @return the saved election (may have generated id)
      */
     Election save(Election election);
+
+    /**
+     * Return all elections ordered by creation date descending.
+     */
+    List<Election> findAll();
 }

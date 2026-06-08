@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,8 +39,20 @@ public class ElectionRepositoryAdapter implements ElectionRepositoryPort {
     }
 
     @Override
+    public List<Election> findAll() {
+        return jpaRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     public Election save(Election election) {
         EleccionEntity entity = toEntity(election);
+        if (election.id() == null) {
+            // New entity — null id keeps Persistable.isNew()=true → persist()
+            entity.setId(null);
+        }
         EleccionEntity saved = jpaRepository.save(entity);
         return toDomain(saved);
     }

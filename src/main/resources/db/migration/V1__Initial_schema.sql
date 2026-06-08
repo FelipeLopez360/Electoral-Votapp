@@ -10,9 +10,7 @@
 --   • participacion_electoral is a separate materialised table
 -- ============================================================
 
--- Extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+-- Extensions — none needed: gen_random_uuid() is built into PostgreSQL 13+
 
 -- ============================================================
 -- ORGANISATIONAL STRUCTURE
@@ -75,7 +73,7 @@ CREATE INDEX idx_funcionarios_estado    ON funcionarios(estado_laboral);
 -- ============================================================
 
 CREATE TABLE elecciones (
-    id   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     codigo  VARCHAR(50) NOT NULL UNIQUE,
     nombre  VARCHAR(200) NOT NULL,
     descripcion TEXT,
@@ -96,7 +94,7 @@ CREATE INDEX idx_elecciones_fechas  ON elecciones(fecha_inicio, fecha_fin);
 -- ============================================================
 
 CREATE TABLE candidatos (
-    id   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     eleccion_id  UUID NOT NULL REFERENCES elecciones(id) ON DELETE CASCADE,
     nombre  VARCHAR(200) NOT NULL,
     descripcion TEXT,
@@ -115,7 +113,7 @@ CREATE INDEX idx_candidatos_eleccion ON candidatos(eleccion_id);
 -- ============================================================
 
 CREATE TABLE tokens_votacion (
-    id   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     eleccion_id  UUID NOT NULL REFERENCES elecciones(id),
     funcionario_id     INTEGER NOT NULL REFERENCES funcionarios(id),
     token_hash  VARCHAR(64) NOT NULL UNIQUE,
@@ -143,7 +141,7 @@ CREATE INDEX idx_tokens_status       ON tokens_votacion(status);
 -- ============================================================
 
 CREATE TABLE votos (
-    id   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     eleccion_id  UUID NOT NULL REFERENCES elecciones(id),
     candidato_id UUID NOT NULL REFERENCES candidatos(id),
     token_id     UUID NOT NULL UNIQUE REFERENCES tokens_votacion(id),
@@ -158,7 +156,7 @@ CREATE INDEX idx_votos_candidato  ON votos(candidato_id);
 -- ============================================================
 
 CREATE TABLE participacion_electoral (
-    id   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     eleccion_id  UUID NOT NULL REFERENCES elecciones(id),
     funcionario_id     INTEGER NOT NULL REFERENCES funcionarios(id),
     completado  BOOLEAN NOT NULL DEFAULT false,
@@ -175,7 +173,7 @@ CREATE INDEX idx_participacion_funcionario ON participacion_electoral(funcionari
 -- ============================================================
 
 CREATE TABLE auditoria_eventos (
-    id   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tipo  VARCHAR(30) NOT NULL
         CHECK (tipo IN (
             'TOKEN_ISSUED',

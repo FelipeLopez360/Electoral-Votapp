@@ -45,7 +45,11 @@ class CreateElectionUseCaseTest {
         // Given
         var command = validCommand("ELEC-2026-001");
         when(electionRepository.findByCodigo("ELEC-2026-001")).thenReturn(Optional.empty());
-        when(electionRepository.save(any(Election.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(electionRepository.save(any(Election.class))).thenAnswer(inv -> {
+            Election arg = inv.getArgument(0);
+            // Simulate JPA-generated UUID by assigning one
+            return new Election(UUID.randomUUID(), arg.codigo(), arg.nombre(), arg.status(), arg.fechaInicio(), arg.fechaFin());
+        });
 
         // When
         Election result = useCase.create(command);

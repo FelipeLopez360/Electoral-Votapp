@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.springframework.data.domain.Persistable;
+
 /**
  * JPA entity for the {@code tokens_votacion} table.
  *
@@ -19,12 +21,15 @@ import java.util.UUID;
                 @Index(name = "idx_tokens_votacion_eleccion_funcionario", columnList = "eleccion_id,funcionario_id")
         }
 )
-public class VotingTokenEntity {
+public class VotingTokenEntity implements Persistable<UUID> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(columnDefinition = "UUID")
     private UUID id;
+
+    @Transient
+    private boolean isNew = true;
 
     @Column(name = "eleccion_id", nullable = false, columnDefinition = "UUID")
     private UUID eleccionId;
@@ -53,10 +58,21 @@ public class VotingTokenEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    // ─── Persistable ─────────────────────────────────────────────────────────
+
+    @Override
+    public UUID getId() { return id; }
+
+    @Override
+    @Transient
+    public boolean isNew() { return isNew; }
+
     // ─── Getters & Setters ───────────────────────────────────────────────────
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public void setId(UUID id) {
+        this.id = id;
+        if (id != null) this.isNew = false;
+    }
 
     public UUID getEleccionId() { return eleccionId; }
     public void setEleccionId(UUID eleccionId) { this.eleccionId = eleccionId; }

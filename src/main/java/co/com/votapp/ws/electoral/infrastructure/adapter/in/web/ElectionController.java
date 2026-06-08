@@ -1,12 +1,16 @@
 package co.com.votapp.ws.electoral.infrastructure.adapter.in.web;
 
+import co.com.votapp.ws.electoral.application.command.AddCandidateCommand;
 import co.com.votapp.ws.electoral.application.command.CreateElectionCommand;
 import co.com.votapp.ws.electoral.domain.Ballot;
+import co.com.votapp.ws.electoral.domain.Candidate;
 import co.com.votapp.ws.electoral.domain.Election;
 import co.com.votapp.ws.electoral.domain.port.in.ActivateElectionUseCase;
+import co.com.votapp.ws.electoral.domain.port.in.AddCandidateUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.CreateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.FinalizeElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.GetBallotUseCase;
+import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -22,7 +26,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,16 +47,22 @@ public class ElectionController {
     private final ActivateElectionUseCase activateElectionUseCase;
     private final FinalizeElectionUseCase finalizeElectionUseCase;
     private final GetBallotUseCase getBallotUseCase;
+    private final AddCandidateUseCase addCandidateUseCase;
+    private final ElectionRepositoryPort electionRepository;
 
     public ElectionController(
             CreateElectionUseCase createElectionUseCase,
             ActivateElectionUseCase activateElectionUseCase,
             FinalizeElectionUseCase finalizeElectionUseCase,
-            GetBallotUseCase getBallotUseCase) {
+            GetBallotUseCase getBallotUseCase,
+            AddCandidateUseCase addCandidateUseCase,
+            ElectionRepositoryPort electionRepository) {
         this.createElectionUseCase = createElectionUseCase;
         this.activateElectionUseCase = activateElectionUseCase;
         this.finalizeElectionUseCase = finalizeElectionUseCase;
         this.getBallotUseCase = getBallotUseCase;
+        this.addCandidateUseCase = addCandidateUseCase;
+        this.electionRepository = electionRepository;
     }
 
     @PostMapping
@@ -66,15 +78,63 @@ public class ElectionController {
             @ApiResponse(responseCode = "409", description = "Business rule violation")
     })
     public ResponseEntity<ElectionResponse> createElection(@RequestBody CreateElectionRequest request) {
+        // Accept both "2025-11-01T08:00:00" (local) and "2025-11-01T08:00:00Z" (UTC)
+        LocalDateTime start = parseDateTime(request.fechaInicio());
+        LocalDateTime end = parseDateTime(request.fechaFin());
         CreateElectionCommand command = new CreateElectionCommand(
                 request.codigo(),
                 request.nombre(),
                 null,
-                LocalDateTime.parse(request.fechaInicio()),
-                LocalDateTime.parse(request.fechaFin())
+                start,
+                end
         );
         Election election = createElectionUseCase.create(command);
         return ResponseEntity.status(HttpStatus.CREATED).body(ElectionResponse.from(election));
+    }
+
+    @GetMapping
+    @Operation(
+            summary = "List all elections",
+            description = "Returns all elections ordered by creation date. Requires admin credentials.",
+            security = @SecurityRequirement(name = "basicAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "List of elections"),
+            @ApiResponse(responseCode = "401", description = "Authentication required")
+    })
+    public ResponseEntity<List<ElectionResponse>> listElections() {
+        List<Election> elections = electionRepository.findAll();
+        List<ElectionResponse> response = elections.stream()
+                .map(ElectionResponse::from)
+                .toList();
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{eleccionId}/candidates")
+    @Operation(
+            summary = "Add a candidate to an election",
+            description = "Adds a candidate to a PROGRAMADA or ACTIVA election. "
+                    + "Requires admin credentials.",
+            security = @SecurityRequirement(name = "basicAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Candidate created"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "401", description = "Authentication required"),
+            @ApiResponse(responseCode = "409", description = "Duplicate order number or election not accepting candidates")
+    })
+    public ResponseEntity<CandidateResponse> addCandidate(
+            @PathVariable UUID eleccionId,
+            @RequestBody AddCandidateRequest request) {
+        AddCandidateCommand command = new AddCandidateCommand(
+                eleccionId,
+                request.nombre(),
+                request.descripcion() != null ? request.descripcion() : "",
+                request.numeroOrden()
+        );
+        Candidate candidate = addCandidateUseCase.addCandidate(command);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                new CandidateResponse(candidate.id().toString(), candidate.nombre(), candidate.numeroOrden()));
     }
 
     @PostMapping("/{id}/activate")
@@ -127,6 +187,20 @@ public class ElectionController {
         // then returns the ordered candidates. The {id} path param is informational for routing.
         Ballot ballot = getBallotUseCase.getBallot(token);
         return ResponseEntity.ok(BallotResponse.from(ballot));
+    }
+
+    // ── Helpers ─────────────────────────────────────────────────────────────
+
+    /**
+     * Parse an ISO-8601 datetime string as LocalDateTime.
+     * Handles both {@code "2025-11-01T08:00:00"} and {@code "2025-11-01T08:00:00Z"}.
+     */
+    private static LocalDateTime parseDateTime(String value) {
+        if (value == null) return null;
+        if (value.endsWith("Z") || value.endsWith("z")) {
+            return LocalDateTime.ofInstant(Instant.parse(value), ZoneId.systemDefault());
+        }
+        return LocalDateTime.parse(value);
     }
 
     // ── Request / Response records ──────────────────────────────────────────
@@ -190,5 +264,19 @@ public class ElectionController {
             String id,
             String nombre,
             boolean esVotoEnBlanco
+    ) {}
+
+    /** Request body for adding a candidate. */
+    public record AddCandidateRequest(
+            String nombre,
+            String descripcion,
+            int numeroOrden
+    ) {}
+
+    /** Response projection for a created candidate. */
+    public record CandidateResponse(
+            String id,
+            String nombre,
+            int numeroOrden
     ) {}
 }

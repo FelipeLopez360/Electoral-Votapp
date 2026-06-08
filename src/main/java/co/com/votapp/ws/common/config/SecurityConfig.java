@@ -9,6 +9,14 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.List;
+
 /**
  * Security configuration for the Votapp REST API.
  *
@@ -32,6 +40,8 @@ public class SecurityConfig {
         http
                 // REST APIs are stateless — CSRF only matters for browser-based session auth
                 .csrf(AbstractHttpConfigurer::disable)
+                // CORS: allow SPA origin (localhost:5173 in dev)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 // No HTTP session — each request must carry credentials
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -45,9 +55,30 @@ public class SecurityConfig {
                                         "/api/v1/voters/**"
                                 ).permitAll()
                                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                                // Allow CORS preflight (OPTIONS) without auth
+                                .requestMatchers(this::isPreFlight).permitAll()
                                 .requestMatchers("/api/**").authenticated()
                                 .anyRequest().permitAll())
                 .httpBasic(basic -> basic.authenticationEntryPoint(suppressBrowserPopup));
         return http.build();
+    }
+
+    /** CORS: allow the SPA (Vite dev server or deployed frontend) to call the API. */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
+    /** Detect CORS preflight requests. */
+    private boolean isPreFlight(HttpServletRequest request) {
+        return "OPTIONS".equalsIgnoreCase(request.getMethod());
     }
 }

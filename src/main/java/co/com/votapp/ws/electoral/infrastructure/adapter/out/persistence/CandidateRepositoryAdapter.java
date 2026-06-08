@@ -71,7 +71,7 @@ public class CandidateRepositoryAdapter implements CandidateRepositoryPort {
 
     private CandidatoEntity toEntity(Candidate candidate) {
         CandidatoEntity entity = new CandidatoEntity();
-        entity.setId(candidate.id());
+        // NOT setting ID — Persistable.isNew() checks id==null, so JPA calls persist() not merge()
         entity.setEleccionId(candidate.eleccionId());
         entity.setNombre(candidate.nombre());
         entity.setEsVotoEnBlanco(candidate.esVotoEnBlanco());

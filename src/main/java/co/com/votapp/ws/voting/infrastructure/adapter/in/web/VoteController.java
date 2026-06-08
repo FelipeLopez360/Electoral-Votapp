@@ -47,7 +47,7 @@ public class VoteController {
                 UUID.fromString(request.candidateId())
         );
         castVoteUseCase.cast(command);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     public record CastVoteRequest(
