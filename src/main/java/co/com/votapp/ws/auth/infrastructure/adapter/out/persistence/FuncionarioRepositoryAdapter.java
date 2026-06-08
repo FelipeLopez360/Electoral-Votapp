@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Adaptador de persistencia para el módulo auth.
@@ -71,14 +72,42 @@ public class FuncionarioRepositoryAdapter implements FuncionarioRepositoryPort {
 
     /**
      * Creates a new funcionario and sets its {@code passwordHash}.
-     * Used by {@code CreateFuncionarioUseCaseImpl}.
+     * Auto-generates {@code numeroEmpleado} when the domain object carries {@code null}
+     * (the domain intentionally does not require it as input — it is an infrastructure detail).
+     *
+     * <p>The final value is derived from the DB-generated id ({@code EMP000123}), so it is
+     * guaranteed unique and stays within the schema limit ({@code VARCHAR(20)}).
+     *
+     * <p>Used by {@code CreateFuncionarioUseCaseImpl}.
      */
     public Funcionario saveWithHash(Funcionario funcionario, String passwordHash) {
         FuncionarioEntity entity = new FuncionarioEntity();
         applyDomainToEntity(funcionario, entity);
         entity.setPasswordHash(passwordHash);
+        boolean numeroEmpleadoWasMissing = entity.getNumeroEmpleado() == null;
+
+        // The schema requires numero_empleado on insert, so use a temporary unique value
+        // before replacing it with the stable id-based employee number.
+        if (numeroEmpleadoWasMissing) {
+            entity.setNumeroEmpleado(generateTemporaryNumeroEmpleado());
+        }
+
         FuncionarioEntity saved = jpaRepository.save(entity);
+        if (numeroEmpleadoWasMissing) {
+            saved.setNumeroEmpleado(generateNumeroEmpleado(saved.getId()));
+            saved = jpaRepository.save(saved);
+        }
         return toDomain(saved);
+    }
+
+    private String generateTemporaryNumeroEmpleado() {
+        return "TMP" + UUID.randomUUID().toString().replace("-", "")
+                .substring(0, 12)
+                .toUpperCase();
+    }
+
+    private String generateNumeroEmpleado(Integer id) {
+        return "EMP%06d".formatted(id);
     }
 
     @Override

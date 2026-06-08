@@ -108,6 +108,41 @@ class FuncionarioRepositoryAdapterIT {
     }
 
     @Test
+    @DisplayName("Should auto-generate numeroEmpleado from persisted id when create receives null")
+    void shouldGenerateNumeroEmpleado_whenCreateReceivesNull() {
+        // Given
+        String documento = "AUTO-NUM-" + System.nanoTime();
+        Funcionario funcionario = new Funcionario(
+                null,
+                null,
+                documento,
+                "Pedro",
+                "Ramirez",
+                "CC",
+                "pedro.ramirez@test.com",
+                null,
+                1,
+                4,
+                null,
+                true,
+                "ACTIVO",
+                true
+        );
+
+        // When
+        Funcionario saved = adapter.saveWithHash(funcionario, "$2a$10$test-hash-auto");
+
+        // Then
+        assertThat(saved.getId()).isNotNull();
+        assertThat(saved.getNumeroEmpleado()).isEqualTo("EMP%06d".formatted(saved.getId()));
+        assertThat(saved.getNumeroEmpleado()).hasSizeLessThanOrEqualTo(20);
+
+        Funcionario reloaded = adapter.findById(saved.getId())
+                .orElseThrow(() -> new AssertionError("Funcionario not found after create"));
+        assertThat(reloaded.getNumeroEmpleado()).isEqualTo(saved.getNumeroEmpleado());
+    }
+
+    @Test
     @DisplayName("Should find funcionarios matching a partial search term")
     void shouldFindBySearchTerm() {
         // Given — two distinct funcionarios
@@ -152,6 +187,53 @@ class FuncionarioRepositoryAdapterIT {
         // When & Then
         assertThat(adapter.existsByDocumentoIdentidad(documento)).isTrue();
         assertThat(adapter.existsByDocumentoIdentidad("DOES-NOT-EXIST-9999")).isFalse();
+    }
+
+    /**
+     * ROOT CAUSE REGRESSION: CreateFuncionarioUseCaseImpl passes numeroEmpleado=null because
+     * it is not a request field. The adapter must auto-generate a non-null unique value
+     * so that the DB NOT NULL UNIQUE constraint on numero_empleado is satisfied.
+     * Before the fix this scenario caused a 500 Internal Server Error.
+     */
+    @Test
+    @DisplayName("Should auto-generate numeroEmpleado when domain provides null (create flow root cause fix)")
+    void saveWithHash_shouldAutoGenerateNumeroEmpleado_whenDomainProvidesNull() {
+        // Given — domain object built exactly as CreateFuncionarioUseCaseImpl does: null numeroEmpleado
+        String documento = "NULL-EMP-" + System.nanoTime();
+        Funcionario withNullNumeroEmpleado = new Funcionario(
+                null,       // id — DB generated
+                null,       // numeroEmpleado — NULL as in the create use case
+                documento,
+                "Nuevo",
+                "Funcionario",
+                "CC",
+                "nuevo@test.com",
+                null,
+                null,
+                null,
+                null,
+                true,
+                "ACTIVO",
+                true
+        );
+
+        // When — this must NOT throw a ConstraintViolationException
+        Funcionario saved = adapter.saveWithHash(withNullNumeroEmpleado, "$2a$10$test-hash-null-emp");
+
+        // Then — record was persisted and has an auto-generated non-blank employee number
+        assertThat(saved.getId()).isNotNull();
+        assertThat(saved.getNumeroEmpleado())
+                .as("numeroEmpleado must be auto-generated when domain passes null")
+                .isNotNull()
+                .isNotBlank()
+                .isEqualTo("EMP%06d".formatted(saved.getId()));
+
+        // Confirm the value survived a DB round-trip
+        Optional<Funcionario> reloaded = adapter.findById(saved.getId());
+        assertThat(reloaded).isPresent();
+        assertThat(reloaded.get().getNumeroEmpleado())
+                .isNotNull()
+                .isEqualTo(saved.getNumeroEmpleado());
     }
 
     @Test
