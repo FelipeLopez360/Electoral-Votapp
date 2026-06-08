@@ -32,4 +32,9 @@ public class ParticipacionRepositoryAdapter implements ParticipacionRepositoryPo
         entity.setCompletedAt(votedAt);
         jpaRepository.save(entity);
     }
+
+    @Override
+    public boolean hasParticipated(UUID eleccionId, Long funcionarioId) {
+        return jpaRepository.existsByEleccionIdAndFuncionarioId(eleccionId, funcionarioId.intValue());
+    }
 }

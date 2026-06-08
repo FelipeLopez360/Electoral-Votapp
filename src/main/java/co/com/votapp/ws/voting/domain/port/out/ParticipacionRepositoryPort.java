@@ -21,4 +21,13 @@ public interface ParticipacionRepositoryPort {
      * @param votedAt       the exact timestamp of voting
      */
     void markParticipation(UUID eleccionId, Integer funcionarioId, Instant votedAt);
+
+    /**
+     * Check if a funcionario has already voted in this election.
+     *
+     * @param eleccionId    the election UUID
+     * @param funcionarioId the funcionario id (Long, as used in the voting domain)
+     * @return true if a participation record exists for this funcionario+election pair
+     */
+    boolean hasParticipated(UUID eleccionId, Long funcionarioId);
 }

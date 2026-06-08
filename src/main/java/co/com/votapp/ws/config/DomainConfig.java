@@ -3,8 +3,13 @@ package co.com.votapp.ws.config;
 import co.com.votapp.ws.audit.domain.port.in.RegisterAuditEventPort;
 import co.com.votapp.ws.audit.domain.port.out.AuditoriaRepositoryPort;
 import co.com.votapp.ws.audit.domain.usecase.RegisterAuditEventUseCase;
+import co.com.votapp.ws.auth.domain.port.in.CreateFuncionarioUseCase;
+import co.com.votapp.ws.auth.domain.port.in.UpdateFuncionarioUseCase;
 import co.com.votapp.ws.auth.domain.port.out.FuncionarioRepositoryPort;
+import co.com.votapp.ws.auth.domain.port.out.PasswordEncoderPort;
 import co.com.votapp.ws.auth.domain.usecase.AuthenticateFuncionarioUseCase;
+import co.com.votapp.ws.auth.domain.usecase.CreateFuncionarioUseCaseImpl;
+import co.com.votapp.ws.auth.domain.usecase.UpdateFuncionarioUseCaseImpl;
 import co.com.votapp.ws.candidates.domain.port.out.CandidatoRepositoryPort;
 import co.com.votapp.ws.candidates.domain.usecase.GetCandidatosUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.ActivateElectionUseCase;
@@ -70,6 +75,19 @@ public class DomainConfig {
         return new AuthenticateFuncionarioUseCase(funcionarioRepository);
     }
 
+    // ─── gestion-funcionarios: Funcionario CRUD use cases ────────────────────
+
+    @Bean
+    public CreateFuncionarioUseCase createFuncionarioUseCase(FuncionarioRepositoryPort funcionarioRepository,
+                                                              PasswordEncoderPort passwordEncoder) {
+        return new CreateFuncionarioUseCaseImpl(funcionarioRepository, passwordEncoder);
+    }
+
+    @Bean
+    public UpdateFuncionarioUseCase updateFuncionarioUseCase(FuncionarioRepositoryPort funcionarioRepository) {
+        return new UpdateFuncionarioUseCaseImpl(funcionarioRepository);
+    }
+
     // ─── PR 2: Electoral use cases ────────────────────────────────────────────
 
     @Bean
@@ -105,8 +123,9 @@ public class DomainConfig {
 
     @Bean
     public IssueVotingTokenUseCaseImpl issueVotingTokenUseCase(VotingTokenRepository votingTokenRepository,
-                                                                VoterEligibilityRepositoryPort eligibilityRepository) {
-        return new IssueVotingTokenUseCaseImpl(votingTokenRepository, eligibilityRepository);
+                                                                VoterEligibilityRepositoryPort eligibilityRepository,
+                                                                ParticipacionRepositoryPort participacionRepository) {
+        return new IssueVotingTokenUseCaseImpl(votingTokenRepository, eligibilityRepository, participacionRepository);
     }
 
     @Bean

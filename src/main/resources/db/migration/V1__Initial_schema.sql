@@ -57,6 +57,7 @@ CREATE TABLE funcionarios (
         CHECK (estado_laboral IN ('ACTIVO','INACTIVO','SUSPENDIDO','RETIRADO')),
     password_hash      VARCHAR(255) NOT NULL,
     puede_votar BOOLEAN DEFAULT true,
+    debe_cambiar_password BOOLEAN DEFAULT true,
     ultimo_acceso      TIMESTAMP,
     intentos_fallidos  INTEGER DEFAULT 0,
     bloqueado_hasta    TIMESTAMP,

@@ -6,6 +6,7 @@ import co.com.votapp.ws.voting.domain.IssuedVotingToken;
 import co.com.votapp.ws.voting.domain.TokenStatus;
 import co.com.votapp.ws.voting.domain.VotingToken;
 import co.com.votapp.ws.voting.domain.port.in.IssueVotingTokenUseCase;
+import co.com.votapp.ws.voting.domain.port.out.ParticipacionRepositoryPort;
 import co.com.votapp.ws.voting.domain.port.out.VotingTokenRepository;
 import co.com.votapp.ws.votereligibility.domain.port.out.VoterEligibilityRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,11 +39,14 @@ class IssueVotingTokenUseCaseTest {
     @Mock
     private VoterEligibilityRepositoryPort eligibilityRepository;
 
+    @Mock
+    private ParticipacionRepositoryPort participacionRepository;
+
     private IssueVotingTokenUseCase useCase;
 
     @BeforeEach
     void setUp() {
-        useCase = new IssueVotingTokenUseCaseImpl(votingTokenRepository, eligibilityRepository);
+        useCase = new IssueVotingTokenUseCaseImpl(votingTokenRepository, eligibilityRepository, participacionRepository);
     }
 
     @Test
@@ -55,6 +59,7 @@ class IssueVotingTokenUseCaseTest {
 
         when(eligibilityRepository.isEligible(funcionarioId)).thenReturn(true);
         when(votingTokenRepository.existsIssuedTokenFor(eleccionId, funcionarioId)).thenReturn(false);
+        when(participacionRepository.hasParticipated(eleccionId, funcionarioId)).thenReturn(false);
         when(votingTokenRepository.saveIssued(any(VotingToken.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // When
@@ -75,6 +80,7 @@ class IssueVotingTokenUseCaseTest {
 
         when(eligibilityRepository.isEligible(funcionarioId)).thenReturn(true);
         when(votingTokenRepository.existsIssuedTokenFor(eleccionId, funcionarioId)).thenReturn(false);
+        when(participacionRepository.hasParticipated(eleccionId, funcionarioId)).thenReturn(false);
         when(votingTokenRepository.saveIssued(any(VotingToken.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // When
@@ -101,6 +107,7 @@ class IssueVotingTokenUseCaseTest {
 
         when(eligibilityRepository.isEligible(anyLong())).thenReturn(true);
         when(votingTokenRepository.existsIssuedTokenFor(any(), anyLong())).thenReturn(false);
+        when(participacionRepository.hasParticipated(any(), anyLong())).thenReturn(false);
         when(votingTokenRepository.saveIssued(any(VotingToken.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // When
@@ -124,7 +131,7 @@ class IssueVotingTokenUseCaseTest {
         // When & Then
         assertThatThrownBy(() -> useCase.issue(command))
                 .isInstanceOf(DomainException.class)
-                .hasMessageContaining("eligible");
+                .hasMessageContaining("no está habilitado");
 
         verify(votingTokenRepository, never()).saveIssued(any());
     }
@@ -143,7 +150,27 @@ class IssueVotingTokenUseCaseTest {
         // When & Then
         assertThatThrownBy(() -> useCase.issue(command))
                 .isInstanceOf(DomainException.class)
-                .hasMessageContaining("already");
+                .hasMessageContaining("ya tiene un token");
+
+        verify(votingTokenRepository, never()).saveIssued(any());
+    }
+
+    @Test
+    @DisplayName("Should throw DomainException when funcionario has already voted in the election")
+    void issue_shouldThrowDomainException_whenFuncionarioHasAlreadyVoted() {
+        // Given
+        UUID eleccionId = UUID.randomUUID();
+        Long funcionarioId = 42L;
+        var command = new IssueVotingTokenCommand(funcionarioId, eleccionId);
+
+        when(eligibilityRepository.isEligible(funcionarioId)).thenReturn(true);
+        when(votingTokenRepository.existsIssuedTokenFor(eleccionId, funcionarioId)).thenReturn(false);
+        when(participacionRepository.hasParticipated(eleccionId, funcionarioId)).thenReturn(true);
+
+        // When & Then
+        assertThatThrownBy(() -> useCase.issue(command))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("ya votó");
 
         verify(votingTokenRepository, never()).saveIssued(any());
     }
