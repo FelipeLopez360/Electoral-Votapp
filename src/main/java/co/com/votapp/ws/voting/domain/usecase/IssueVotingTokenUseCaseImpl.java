@@ -6,6 +6,7 @@ import co.com.votapp.ws.voting.domain.IssuedVotingToken;
 import co.com.votapp.ws.voting.domain.TokenStatus;
 import co.com.votapp.ws.voting.domain.VotingToken;
 import co.com.votapp.ws.voting.domain.port.in.IssueVotingTokenUseCase;
+import co.com.votapp.ws.voting.domain.port.out.ParticipacionRepositoryPort;
 import co.com.votapp.ws.voting.domain.port.out.VotingTokenRepository;
 import co.com.votapp.ws.votereligibility.domain.port.out.VoterEligibilityRepositoryPort;
 
@@ -31,24 +32,32 @@ public class IssueVotingTokenUseCaseImpl implements IssueVotingTokenUseCase {
 
     private final VotingTokenRepository votingTokenRepository;
     private final VoterEligibilityRepositoryPort eligibilityRepository;
+    private final ParticipacionRepositoryPort participacionRepository;
 
     public IssueVotingTokenUseCaseImpl(VotingTokenRepository votingTokenRepository,
-                                       VoterEligibilityRepositoryPort eligibilityRepository) {
+                                       VoterEligibilityRepositoryPort eligibilityRepository,
+                                       ParticipacionRepositoryPort participacionRepository) {
         this.votingTokenRepository = votingTokenRepository;
         this.eligibilityRepository = eligibilityRepository;
+        this.participacionRepository = participacionRepository;
     }
 
     @Override
     public IssuedVotingToken issue(IssueVotingTokenCommand command) {
         if (!eligibilityRepository.isEligible(command.funcionarioId())) {
             throw new DomainException(
-                    "Funcionario " + command.funcionarioId() + " is not eligible to vote");
+                    "El funcionario " + command.funcionarioId() + " no está habilitado para votar");
         }
 
         if (votingTokenRepository.existsIssuedTokenFor(command.eleccionId(), command.funcionarioId())) {
             throw new DomainException(
-                    "Funcionario " + command.funcionarioId() +
-                    " already has an ISSUED token for election " + command.eleccionId());
+                    "El funcionario " + command.funcionarioId() +
+                    " ya tiene un token emitido para esta elección");
+        }
+
+        if (participacionRepository.hasParticipated(command.eleccionId(), command.funcionarioId())) {
+            throw new DomainException(
+                    "Este funcionario ya votó en esta elección");
         }
 
         // Generate 32 cryptographically random bytes and hex-encode them

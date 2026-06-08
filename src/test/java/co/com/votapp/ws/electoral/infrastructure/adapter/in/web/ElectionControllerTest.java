@@ -55,8 +55,8 @@ class ElectionControllerTest {
 
     private static final UUID ELECTION_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final UUID CANDIDATE_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
-    private static final LocalDateTime START = LocalDateTime.of(2025, 11, 1, 8, 0, 0);
-    private static final LocalDateTime END = LocalDateTime.of(2025, 11, 1, 18, 0, 0);
+    private static final LocalDateTime START = LocalDateTime.now().plusDays(30);
+    private static final LocalDateTime END = START.plusHours(10);
 
     @BeforeEach
     void setUp() {
@@ -80,20 +80,23 @@ class ElectionControllerTest {
         Election created = new Election(ELECTION_ID, "ELEC-2025", "Elección General", ElectionStatus.PROGRAMADA, START, END);
         when(createElectionUseCase.create(any())).thenReturn(created);
 
+        String startStr = START.toString();
+        String endStr = END.toString();
         ElectionController.CreateElectionRequest request = new ElectionController.CreateElectionRequest(
                 "ELEC-2025", "Elección General",
-                "2025-11-01T08:00:00", "2025-11-01T18:00:00"
+                startStr, endStr
         );
 
         // When
-        ResponseEntity<ElectionController.ElectionResponse> response = controller.createElection(request);
+        ResponseEntity<?> response = controller.createElection(request);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().id()).isEqualTo(ELECTION_ID.toString());
-        assertThat(response.getBody().codigo()).isEqualTo("ELEC-2025");
-        assertThat(response.getBody().estado()).isEqualTo("PROGRAMADA");
+        var body = (ElectionController.ElectionResponse) response.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.id()).isEqualTo(ELECTION_ID.toString());
+        assertThat(body.codigo()).isEqualTo("ELEC-2025");
+        assertThat(body.estado()).isEqualTo("PROGRAMADA");
     }
 
     @Test
@@ -103,9 +106,11 @@ class ElectionControllerTest {
         Election created = new Election(ELECTION_ID, "ELEC-2025", "Test", ElectionStatus.PROGRAMADA, START, END);
         when(createElectionUseCase.create(any())).thenReturn(created);
 
+        String startStr = START.toString();
+        String endStr = END.toString();
         ElectionController.CreateElectionRequest request = new ElectionController.CreateElectionRequest(
                 "ELEC-2025", "Test",
-                "2025-11-01T08:00:00", "2025-11-01T18:00:00"
+                startStr, endStr
         );
 
         // When

@@ -84,10 +84,17 @@ public class ElectionController {
             @ApiResponse(responseCode = "401", description = "Authentication required"),
             @ApiResponse(responseCode = "409", description = "Business rule violation")
     })
-    public ResponseEntity<ElectionResponse> createElection(@RequestBody CreateElectionRequest request) {
-        // Accept both "2025-11-01T08:00:00" (local) and "2025-11-01T08:00:00Z" (UTC)
+    public ResponseEntity<?> createElection(@RequestBody CreateElectionRequest request) {
         LocalDateTime start = parseDateTime(request.fechaInicio());
         LocalDateTime end = parseDateTime(request.fechaFin());
+
+        if (start != null && start.toLocalDate().isBefore(java.time.LocalDate.now())) {
+            return ResponseEntity.badRequest().body("La fecha de inicio no puede ser anterior al día de hoy");
+        }
+        if (end != null && start != null && !end.isAfter(start)) {
+            return ResponseEntity.badRequest().body("La fecha de fin debe ser posterior a la fecha de inicio");
+        }
+
         CreateElectionCommand command = new CreateElectionCommand(
                 request.codigo(),
                 request.nombre(),
@@ -146,7 +153,7 @@ public class ElectionController {
             @ApiResponse(responseCode = "401", description = "Authentication required"),
             @ApiResponse(responseCode = "409", description = "Election is not PROGRAMADA")
     })
-    public ResponseEntity<ElectionResponse> updateElection(
+    public ResponseEntity<?> updateElection(
             @PathVariable UUID id,
             @RequestBody UpdateElectionRequest request) {
         Election existing = electionRepository.findById(id)
@@ -156,11 +163,21 @@ public class ElectionController {
         }
         LocalDateTime start = parseDateTime(request.fechaInicio());
         LocalDateTime end = parseDateTime(request.fechaFin());
+
+        if (start != null && start.toLocalDate().isBefore(java.time.LocalDate.now())) {
+            return ResponseEntity.badRequest().body("La fecha de inicio no puede ser anterior al día de hoy");
+        }
+
+        LocalDateTime resolvedStart = start != null ? start : existing.fechaInicio();
+        LocalDateTime resolvedEnd = end != null ? end : existing.fechaFin();
+        if (!resolvedEnd.isAfter(resolvedStart)) {
+            return ResponseEntity.badRequest().body("La fecha de fin debe ser posterior a la fecha de inicio");
+        }
+
         Election updated = new Election(
                 existing.id(), existing.codigo(), request.nombre() != null ? request.nombre() : existing.nombre(),
                 existing.status(),
-                start != null ? start : existing.fechaInicio(),
-                end != null ? end : existing.fechaFin()
+                resolvedStart, resolvedEnd
         );
         return ResponseEntity.ok(ElectionResponse.from(electionRepository.save(updated)));
     }

@@ -10,4 +10,6 @@ import java.util.UUID;
  * <p>Used exclusively by {@link ParticipacionRepositoryAdapter}.
  */
 public interface ParticipacionJpaRepository extends JpaRepository<ParticipacionEntity, UUID> {
+
+    boolean existsByEleccionIdAndFuncionarioId(UUID eleccionId, Integer funcionarioId);
 }
