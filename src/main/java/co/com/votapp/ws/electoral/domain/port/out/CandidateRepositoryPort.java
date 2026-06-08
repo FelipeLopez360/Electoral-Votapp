@@ -36,4 +36,9 @@ public interface CandidateRepositoryPort {
      * Find a candidate by its id within a specific election.
      */
     Optional<Candidate> findByIdAndEleccionId(UUID candidateId, UUID eleccionId);
+
+    /**
+     * Delete a candidate by id.
+     */
+    void deleteById(UUID candidateId);
 }
