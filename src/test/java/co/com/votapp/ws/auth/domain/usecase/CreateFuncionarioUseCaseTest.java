@@ -173,6 +173,36 @@ class CreateFuncionarioUseCaseTest {
         verify(funcionarioRepository, never()).saveWithHash(any(), anyString());
     }
 
+    /**
+     * ROOT CAUSE REGRESSION TEST: the use case must NOT set numeroEmpleado — it passes null
+     * to the Funcionario constructor and delegates number generation to the adapter.
+     * If the use case were to pass blank (not null) the domain would throw immediately;
+     * null is the correct signal for "infrastructure should generate this".
+     */
+    @Test
+    @DisplayName("Should pass null numeroEmpleado to repository — generation is adapter responsibility")
+    void create_shouldPassNullNumeroEmpleado_toRepositoryForAutoGeneration() {
+        // Given
+        var command = validCommand();
+        var savedFuncionario = buildSavedFuncionario("10000001");
+
+        when(funcionarioRepository.existsByDocumentoIdentidad("10000001")).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$hashed");
+        when(funcionarioRepository.saveWithHash(any(Funcionario.class), anyString()))
+                .thenReturn(savedFuncionario);
+
+        // When
+        useCase.create(command);
+
+        // Then — the Funcionario passed to saveWithHash must have null numeroEmpleado
+        ArgumentCaptor<Funcionario> captor = ArgumentCaptor.forClass(Funcionario.class);
+        verify(funcionarioRepository).saveWithHash(captor.capture(), anyString());
+
+        assertThat(captor.getValue().getNumeroEmpleado())
+                .as("numeroEmpleado must be null so the adapter can auto-generate it")
+                .isNull();
+    }
+
     @Test
     @DisplayName("Should throw DomainException when documentoIdentidad already exists")
     void create_shouldThrowDomainException_whenDocumentoIdentidadDuplicate() {
