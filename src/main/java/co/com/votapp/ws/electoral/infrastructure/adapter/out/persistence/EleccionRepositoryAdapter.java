@@ -1,13 +1,13 @@
 package co.com.votapp.ws.electoral.infrastructure.adapter.out.persistence;
 
-import co.com.votapp.ws.electoral.application.port.out.EleccionRepositoryPort;
 import co.com.votapp.ws.electoral.domain.Eleccion;
+import co.com.votapp.ws.electoral.domain.port.out.EleccionRepositoryPort;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
 /**
- * Adaptador de persistencia para el módulo electoral.
+ * Persistence adapter for the electoral module.
  */
 @Component
 public class EleccionRepositoryAdapter implements EleccionRepositoryPort {
@@ -26,7 +26,7 @@ public class EleccionRepositoryAdapter implements EleccionRepositoryPort {
 
     private Eleccion toDomain(EleccionEntity entity) {
         return new Eleccion(
-                entity.getUuid(),
+                entity.getId(),
                 entity.getCodigo(),
                 entity.getNombre(),
                 entity.getEstado(),

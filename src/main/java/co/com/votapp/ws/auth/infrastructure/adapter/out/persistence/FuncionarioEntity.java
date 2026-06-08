@@ -2,22 +2,17 @@ package co.com.votapp.ws.auth.infrastructure.adapter.out.persistence;
 
 import jakarta.persistence.*;
 
-import java.util.UUID;
-
 /**
- * Entidad JPA para la tabla {@code test_votaappdb.funcionarios}.
- * Solo se usa en la capa de infraestructura.
+ * JPA entity for the {@code funcionarios} table (MVP schema).
+ * Lives in the infrastructure layer only — never imported by domain.
  */
 @Entity
-@Table(name = "funcionarios", schema = "test_votaappdb")
+@Table(name = "funcionarios")
 public class FuncionarioEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
-    @Column(name = "uuid", updatable = false, insertable = false)
-    private UUID uuid;
 
     @Column(name = "numero_empleado", nullable = false, unique = true)
     private String numeroEmpleado;
@@ -41,9 +36,6 @@ public class FuncionarioEntity {
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
-
-    public UUID getUuid() { return uuid; }
-    public void setUuid(UUID uuid) { this.uuid = uuid; }
 
     public String getNumeroEmpleado() { return numeroEmpleado; }
     public void setNumeroEmpleado(String numeroEmpleado) { this.numeroEmpleado = numeroEmpleado; }

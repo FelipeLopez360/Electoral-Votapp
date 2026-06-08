@@ -7,7 +7,7 @@ import jakarta.persistence.*;
  * Solo se usa en la capa de infraestructura.
  */
 @Entity
-@Table(name = "departamentos", schema = "test_votaappdb")
+@Table(name = "departamentos")
 public class DepartamentoEntity {
 
     @Id

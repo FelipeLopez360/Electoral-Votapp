@@ -10,8 +10,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import co.com.votapp.ws.TestcontainersDockerConfig;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
@@ -25,10 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 @Testcontainers
 class RedisTokenLockAdapterTest {
-
-    static {
-        TestcontainersDockerConfig.configure();
-    }
 
     @Container
     private static final GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine")

@@ -1,14 +1,15 @@
 package co.com.votapp.ws.candidates.infrastructure.adapter.out.persistence;
 
-import co.com.votapp.ws.candidates.application.port.out.CandidatoRepositoryPort;
 import co.com.votapp.ws.candidates.domain.Candidato;
+import co.com.votapp.ws.candidates.domain.port.out.CandidatoRepositoryPort;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Adaptador de persistencia para el módulo candidates.
+ * Persistence adapter for the candidates module.
  */
 @Component
 public class CandidatoRepositoryAdapter implements CandidatoRepositoryPort {
@@ -20,21 +21,19 @@ public class CandidatoRepositoryAdapter implements CandidatoRepositoryPort {
     }
 
     @Override
-    public List<Candidato> findByEleccionIdAndActivoTrue(Integer eleccionId) {
-        return jpaRepository.findByEleccionIdAndActivoTrue(eleccionId).stream()
+    public List<Candidato> findByEleccionId(UUID eleccionId) {
+        return jpaRepository.findByEleccionId(eleccionId).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
     private Candidato toDomain(CandidatoEntity entity) {
         return new Candidato(
-                entity.getUuid(),
+                entity.getId(),
                 entity.getEleccionId(),
-                entity.getCategoriaId(),
-                entity.getNombres(),
-                entity.getApellidos(),
-                Boolean.TRUE.equals(entity.getEsVotoBlanco()),
-                Boolean.TRUE.equals(entity.getActivo())
+                entity.getNombre(),
+                Boolean.TRUE.equals(entity.getEsVotoEnBlanco()),
+                entity.getNumeroOrden()
         );
     }
 }

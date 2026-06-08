@@ -1,7 +1,7 @@
 package co.com.votapp.ws.auth.infrastructure.adapter.in.web;
 
-import co.com.votapp.ws.auth.application.port.in.AuthenticateFuncionarioPort;
 import co.com.votapp.ws.auth.domain.Funcionario;
+import co.com.votapp.ws.auth.domain.port.in.AuthenticateFuncionarioPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -46,7 +46,7 @@ public class AuthController {
                 request.password()
         );
         return ResponseEntity.ok(new FuncionarioResponse(
-                funcionario.getUuid().toString(),
+                funcionario.getId(),
                 funcionario.getNumeroEmpleado(),
                 funcionario.getEmail(),
                 funcionario.isPuedeVotar()
@@ -57,9 +57,8 @@ public class AuthController {
     public record LoginRequest(String documentoIdentidad, String password) {}
 
     /** DTO de salida (Record — obligatorio por arquitectura). */
-    public record FuncionarioResponse(String uuid,
+    public record FuncionarioResponse(Integer id,
                                       String numeroEmpleado,
                                       String email,
                                       boolean puedeVotar) {}
 }
-

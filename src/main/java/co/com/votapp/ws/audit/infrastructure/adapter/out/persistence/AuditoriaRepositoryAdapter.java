@@ -1,11 +1,13 @@
 package co.com.votapp.ws.audit.infrastructure.adapter.out.persistence;
 
-import co.com.votapp.ws.audit.application.port.out.AuditoriaRepositoryPort;
 import co.com.votapp.ws.audit.domain.AuditoriaEvento;
+import co.com.votapp.ws.audit.domain.port.out.AuditoriaRepositoryPort;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+
 /**
- * Adaptador de persistencia para el módulo audit.
+ * Persistence adapter for the audit module (MVP schema: auditoria_eventos).
  */
 @Component
 public class AuditoriaRepositoryAdapter implements AuditoriaRepositoryPort {
@@ -24,13 +26,12 @@ public class AuditoriaRepositoryAdapter implements AuditoriaRepositoryPort {
 
     private AuditoriaEntity toEntity(AuditoriaEvento evento) {
         AuditoriaEntity entity = new AuditoriaEntity();
-        entity.setTablaAfectada(evento.getTablaAfectada());
-        entity.setRegistroId(evento.getRegistroId());
-        entity.setAccion(evento.getAccion());
-        entity.setUsuarioId(evento.getUsuarioId());
-        entity.setUsuarioTipo(evento.getUsuarioTipo());
-        entity.setTimestampAccion(evento.getTimestampAccion());
-        entity.setDescripcion(evento.getDescripcion());
+        entity.setTipo(evento.getTipo());
+        entity.setEleccionId(evento.getEleccionId());
+        entity.setFuncionarioId(evento.getFuncionarioId());
+        entity.setCandidatoId(evento.getCandidatoId());
+        entity.setMetadata(evento.getMetadata());
+        entity.setCreatedAt(evento.getCreatedAt() != null ? evento.getCreatedAt() : Instant.now());
         return entity;
     }
 }

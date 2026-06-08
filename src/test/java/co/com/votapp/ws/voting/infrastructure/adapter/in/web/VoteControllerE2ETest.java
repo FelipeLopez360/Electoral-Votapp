@@ -1,6 +1,5 @@
 package co.com.votapp.ws.voting.infrastructure.adapter.in.web;
 
-import co.com.votapp.ws.TestcontainersDockerConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +8,6 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.client.RestClient;
@@ -28,12 +26,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * E2E integration test for {@link VoteController}.
  *
- * <p>Exercises the full HTTP → CastVoteUseCase → RedisTokenLockAdapter stack using
+ * <p>Exercises the full HTTP → CastVoteUseCaseImpl → RedisTokenLockAdapter stack using
  * real Testcontainers (PostgreSQL + Redis).
  *
- * <p>Uses Spring's {@link RestClient} directly (Spring Boot 4 removed TestRestTemplate from the
- * default auto-configuration path when spring-boot-restclient is not on the classpath).
- * HTTP Basic authentication uses the default Spring Security user configured via properties.
+ * <p>MVP: CastVoteRequest uses rawToken + candidateId.
+ * The use case derives a lock key from rawToken via UUID.nameUUIDFromBytes.
  */
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -44,10 +41,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 )
 @Testcontainers
 class VoteControllerE2ETest {
-
-    static {
-        TestcontainersDockerConfig.configure();
-    }
 
     @Container
     private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
@@ -76,11 +69,10 @@ class VoteControllerE2ETest {
     private StringRedisTemplate redisTemplate;
 
     private RestClient client;
-    private String tokenId;
+    private String rawToken;
 
     @BeforeEach
     void setUp() {
-        // Build a RestClient with HTTP Basic auth baked in via a default header
         String credentials = Base64.getEncoder()
                 .encodeToString("test:test".getBytes());
         client = RestClient.builder()
@@ -88,15 +80,18 @@ class VoteControllerE2ETest {
                 .defaultHeader("Authorization", "Basic " + credentials)
                 .build();
 
-        // Generate a fresh UUID token per test to avoid collisions across runs
-        // (Ryuk is disabled so Redis persists between JVM runs)
-        tokenId = UUID.randomUUID().toString();
-        redisTemplate.delete("token_lock:" + tokenId);
+        rawToken = UUID.randomUUID().toString();
+        // Compute the same lock key as CastVoteUseCaseImpl to allow cleanup
+        UUID lockKey = UUID.nameUUIDFromBytes(rawToken.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        redisTemplate.delete("token_lock:" + lockKey.toString());
     }
 
     @Test
     void castVote_returnsCreated_whenTokenIsNew() {
-        CastVoteRequest request = new CastVoteRequest(tokenId, 1L, 1L, 1L);
+        CastVoteRequest request = new CastVoteRequest(
+                rawToken,
+                UUID.randomUUID().toString()
+        );
 
         ResponseEntity<Void> response = client.post()
                 .uri("/api/v1/votes")
@@ -109,7 +104,8 @@ class VoteControllerE2ETest {
 
     @Test
     void castVote_returnsConflict_whenTokenAlreadyUsed() {
-        CastVoteRequest request = new CastVoteRequest(tokenId, 1L, 1L, 1L);
+        String candidateId = UUID.randomUUID().toString();
+        CastVoteRequest request = new CastVoteRequest(rawToken, candidateId);
 
         // First call — should succeed with 201
         ResponseEntity<Void> first = client.post()
@@ -119,7 +115,7 @@ class VoteControllerE2ETest {
                 .toBodilessEntity();
         assertThat(first.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
-        // Second call with same tokenId — Redis lock already set → DomainException → 409 Conflict
+        // Second call with same rawToken — Redis lock already set → DomainException → 409 Conflict
         assertThatThrownBy(() ->
                 client.post()
                         .uri("/api/v1/votes")
@@ -135,11 +131,9 @@ class VoteControllerE2ETest {
 
     @Test
     void castVote_returnsBadRequest_whenBodyMissing() {
-        // Empty body (no Content-Type JSON body) → Spring MVC returns 400 Bad Request
         assertThatThrownBy(() ->
                 client.post()
                         .uri("/api/v1/votes")
-                        // no .body() call — sends request without body
                         .retrieve()
                         .toBodilessEntity()
         )
@@ -149,6 +143,6 @@ class VoteControllerE2ETest {
                 ).isEqualTo(HttpStatus.BAD_REQUEST));
     }
 
-    // Record mirrors VoteController.CastVoteRequest — keeping it local to the test is cleaner
-    record CastVoteRequest(String tokenId, Long electionId, Long candidateId, Long categoryId) {}
+    // Record mirrors VoteController.CastVoteRequest
+    record CastVoteRequest(String rawToken, String candidateId) {}
 }

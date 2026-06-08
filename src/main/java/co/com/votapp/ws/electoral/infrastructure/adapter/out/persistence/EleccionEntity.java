@@ -6,19 +6,17 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Entidad JPA para la tabla {@code test_votaappdb.elecciones}.
- * Solo se usa en la capa de infraestructura.
+ * JPA entity for the {@code elecciones} table (MVP schema).
+ * Lives in the infrastructure layer only — never imported by domain.
  */
 @Entity
-@Table(name = "elecciones", schema = "test_votaappdb")
+@Table(name = "elecciones")
 public class EleccionEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-
-    @Column(name = "uuid", updatable = false, insertable = false)
-    private UUID uuid;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "UUID")
+    private UUID id;
 
     @Column(name = "codigo", nullable = false, unique = true)
     private String codigo;
@@ -26,7 +24,7 @@ public class EleccionEntity {
     @Column(name = "nombre", nullable = false)
     private String nombre;
 
-    @Column(name = "estado")
+    @Column(name = "estado", nullable = false, length = 20)
     private String estado;
 
     @Column(name = "fecha_inicio", nullable = false)
@@ -35,13 +33,16 @@ public class EleccionEntity {
     @Column(name = "fecha_fin", nullable = false)
     private Instant fechaFin;
 
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
     // ─── Getters & Setters ───────────────────────────────────────────────────
 
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
-
-    public UUID getUuid() { return uuid; }
-    public void setUuid(UUID uuid) { this.uuid = uuid; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
     public String getCodigo() { return codigo; }
     public void setCodigo(String codigo) { this.codigo = codigo; }
@@ -57,4 +58,10 @@ public class EleccionEntity {
 
     public Instant getFechaFin() { return fechaFin; }
     public void setFechaFin(Instant fechaFin) { this.fechaFin = fechaFin; }
+
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }

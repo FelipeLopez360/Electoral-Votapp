@@ -1,65 +1,65 @@
 package co.com.votapp.ws.audit.infrastructure.adapter.out.persistence;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
 
 /**
- * Entidad JPA para la tabla {@code test_votaappdb.auditoria_sistema}.
- * Solo se usa en la capa de infraestructura.
+ * JPA entity for the {@code auditoria_eventos} table (MVP schema).
+ * Lives in the infrastructure layer only — never imported by domain.
  */
 @Entity
-@Table(name = "auditoria_sistema", schema = "test_votaappdb")
+@Table(name = "auditoria_eventos")
 public class AuditoriaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "UUID")
+    private UUID id;
 
-    @Column(name = "tabla_afectada")
-    private String tablaAfectada;
+    @Column(name = "tipo", nullable = false, length = 50)
+    private String tipo;
 
-    @Column(name = "registro_id")
-    private Integer registroId;
+    @Column(name = "eleccion_id", columnDefinition = "UUID")
+    private UUID eleccionId;
 
-    @Column(name = "accion")
-    private String accion;
+    @Column(name = "funcionario_id")
+    private Integer funcionarioId;
 
-    @Column(name = "usuario_id")
-    private Integer usuarioId;
+    @Column(name = "candidato_id", columnDefinition = "UUID")
+    private UUID candidatoId;
 
-    @Column(name = "usuario_tipo")
-    private String usuarioTipo;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metadata", columnDefinition = "jsonb")
+    private Map<String, Object> metadata;
 
-    @Column(name = "timestamp_accion")
-    private Instant timestampAccion;
-
-    @Column(name = "descripcion")
-    private String descripcion;
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
 
     // ─── Getters & Setters ───────────────────────────────────────────────────
 
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
-    public String getTablaAfectada() { return tablaAfectada; }
-    public void setTablaAfectada(String tablaAfectada) { this.tablaAfectada = tablaAfectada; }
+    public String getTipo() { return tipo; }
+    public void setTipo(String tipo) { this.tipo = tipo; }
 
-    public Integer getRegistroId() { return registroId; }
-    public void setRegistroId(Integer registroId) { this.registroId = registroId; }
+    public UUID getEleccionId() { return eleccionId; }
+    public void setEleccionId(UUID eleccionId) { this.eleccionId = eleccionId; }
 
-    public String getAccion() { return accion; }
-    public void setAccion(String accion) { this.accion = accion; }
+    public Integer getFuncionarioId() { return funcionarioId; }
+    public void setFuncionarioId(Integer funcionarioId) { this.funcionarioId = funcionarioId; }
 
-    public Integer getUsuarioId() { return usuarioId; }
-    public void setUsuarioId(Integer usuarioId) { this.usuarioId = usuarioId; }
+    public UUID getCandidatoId() { return candidatoId; }
+    public void setCandidatoId(UUID candidatoId) { this.candidatoId = candidatoId; }
 
-    public String getUsuarioTipo() { return usuarioTipo; }
-    public void setUsuarioTipo(String usuarioTipo) { this.usuarioTipo = usuarioTipo; }
+    public Map<String, Object> getMetadata() { return metadata; }
+    public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata; }
 
-    public Instant getTimestampAccion() { return timestampAccion; }
-    public void setTimestampAccion(Instant timestampAccion) { this.timestampAccion = timestampAccion; }
-
-    public String getDescripcion() { return descripcion; }
-    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }
