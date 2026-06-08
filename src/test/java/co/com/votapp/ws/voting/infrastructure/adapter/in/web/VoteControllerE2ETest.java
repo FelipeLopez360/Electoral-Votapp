@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 import org.testcontainers.containers.GenericContainer;
@@ -31,6 +32,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  *
  * <p>MVP: CastVoteRequest uses rawToken + candidateId.
  * The use case derives a lock key from rawToken via UUID.nameUUIDFromBytes.
+ *
+ * <p>Test data is seeded via {@code vote-controller-test-data.sql} before each test method.
  */
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -40,6 +43,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
         }
 )
 @Testcontainers
+@Sql("/vote-controller-test-data.sql")
 class VoteControllerE2ETest {
 
     @Container
@@ -71,6 +75,10 @@ class VoteControllerE2ETest {
     private RestClient client;
     private String rawToken;
 
+    private static final String TEST_RAW_TOKEN = "e2e-test-raw-token-001";
+    private static final String TEST_CANDIDATE_ID = "55d9a2a3-7e05-51fe-836d-4680dc900b58";
+    private static final String TEST_TOKEN_ID = "4843a300-6bb8-52f0-9471-a692de52c3c4";
+
     @BeforeEach
     void setUp() {
         String credentials = Base64.getEncoder()
@@ -80,17 +88,16 @@ class VoteControllerE2ETest {
                 .defaultHeader("Authorization", "Basic " + credentials)
                 .build();
 
-        rawToken = UUID.randomUUID().toString();
-        // Compute the same lock key as CastVoteUseCaseImpl to allow cleanup
-        UUID lockKey = UUID.nameUUIDFromBytes(rawToken.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        redisTemplate.delete("token_lock:" + lockKey.toString());
+        rawToken = TEST_RAW_TOKEN;
+        // Clean any stale Redis lock key from a previous test run
+        redisTemplate.delete("token_lock:" + TEST_TOKEN_ID);
     }
 
     @Test
     void castVote_returnsCreated_whenTokenIsNew() {
         CastVoteRequest request = new CastVoteRequest(
                 rawToken,
-                UUID.randomUUID().toString()
+                TEST_CANDIDATE_ID
         );
 
         ResponseEntity<Void> response = client.post()
@@ -104,8 +111,7 @@ class VoteControllerE2ETest {
 
     @Test
     void castVote_returnsConflict_whenTokenAlreadyUsed() {
-        String candidateId = UUID.randomUUID().toString();
-        CastVoteRequest request = new CastVoteRequest(rawToken, candidateId);
+        CastVoteRequest request = new CastVoteRequest(rawToken, TEST_CANDIDATE_ID);
 
         // First call — should succeed with 201
         ResponseEntity<Void> first = client.post()
