@@ -20,6 +20,12 @@ public interface VotingTokenRepository {
     Optional<VotingToken> findValidByHash(String tokenHash, UUID electionId);
 
     /**
+     * Find any ISSUED token by its SHA-256 hash alone (without knowing the election).
+     * Used by GetBallotUseCase where the election is derived from the token.
+     */
+    Optional<VotingToken> findIssuedByHash(String tokenHash);
+
+    /**
      * Check if a funcionario already has an ISSUED token for the given election.
      * Used to enforce the one-token-per-funcionario-per-election invariant.
      */
