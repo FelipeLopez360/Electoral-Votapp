@@ -35,11 +35,17 @@ public class SecurityConfig {
                 // No HTTP session — each request must carry credentials
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Require authentication for all API endpoints; HTTP Basic is the default.
-                // SpringDoc paths are explicitly permitted so docs are accessible without credentials.
+                // Public endpoints: vote casting (token IS the auth), ballot viewing, eligibility check.
+                // Admin endpoints (elections CRUD, token issuance) require HTTP Basic auth.
+                // SpringDoc paths are always permitted.
                 .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/api/**").authenticated()
+                        auth.requestMatchers(
+                                        "/api/v1/votes/**",
+                                        "/api/v1/elections/*/ballot",
+                                        "/api/v1/voters/**"
+                                ).permitAll()
                                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                                .requestMatchers("/api/**").authenticated()
                                 .anyRequest().permitAll())
                 .httpBasic(basic -> basic.authenticationEntryPoint(suppressBrowserPopup));
         return http.build();
