@@ -5,18 +5,27 @@ import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.springframework.data.domain.Persistable;
+
 /**
  * JPA entity for the {@code elecciones} table (MVP schema).
  * Lives in the infrastructure layer only — never imported by domain.
+ *
+ * <p>Implements {@link Persistable} so Spring Data JPA detects isNew() correctly.
+ * Without this, Hibernate 7's save() delegates to merge() for entities with
+ * non-null IDs and throws StaleObjectStateException when @Version is absent.
  */
 @Entity
 @Table(name = "elecciones")
-public class EleccionEntity {
+public class EleccionEntity implements Persistable<UUID> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(columnDefinition = "UUID")
     private UUID id;
+
+    @Transient
+    private boolean isNew = true;
 
     @Column(name = "codigo", nullable = false, unique = true)
     private String codigo;
@@ -39,10 +48,21 @@ public class EleccionEntity {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+    // ─── Persistable ─────────────────────────────────────────────────────────
+
+    @Override
+    public UUID getId() { return id; }
+
+    @Override
+    @Transient
+    public boolean isNew() { return isNew; }
+
     // ─── Getters & Setters ───────────────────────────────────────────────────
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public void setId(UUID id) {
+        this.id = id;
+        if (id != null) this.isNew = false;
+    }
 
     public String getCodigo() { return codigo; }
     public void setCodigo(String codigo) { this.codigo = codigo; }

@@ -1,13 +1,17 @@
 package co.com.votapp.ws.electoral.infrastructure.adapter.in.web;
 
+import co.com.votapp.ws.electoral.application.command.AddCandidateCommand;
 import co.com.votapp.ws.electoral.domain.Ballot;
+import co.com.votapp.ws.electoral.domain.Candidate;
 import co.com.votapp.ws.electoral.domain.CandidateOption;
 import co.com.votapp.ws.electoral.domain.Election;
 import co.com.votapp.ws.electoral.domain.ElectionStatus;
 import co.com.votapp.ws.electoral.domain.port.in.ActivateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.CreateElectionUseCase;
+import co.com.votapp.ws.electoral.domain.port.in.AddCandidateUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.FinalizeElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.GetBallotUseCase;
+import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,6 +46,8 @@ class ElectionControllerTest {
     @Mock private ActivateElectionUseCase activateElectionUseCase;
     @Mock private FinalizeElectionUseCase finalizeElectionUseCase;
     @Mock private GetBallotUseCase getBallotUseCase;
+    @Mock private AddCandidateUseCase addCandidateUseCase;
+    @Mock private ElectionRepositoryPort electionRepository;
 
     private ElectionController controller;
 
@@ -56,7 +62,9 @@ class ElectionControllerTest {
                 createElectionUseCase,
                 activateElectionUseCase,
                 finalizeElectionUseCase,
-                getBallotUseCase
+                getBallotUseCase,
+                addCandidateUseCase,
+                electionRepository
         );
     }
 
@@ -169,6 +177,53 @@ class ElectionControllerTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         verify(finalizeElectionUseCase).finalize(ELECTION_ID);
+    }
+
+    // ── addCandidate ──────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("Should return 201 with candidate response when creation succeeds")
+    void addCandidate_shouldReturn201_whenCreationSucceeds() {
+        // Given
+        Candidate candidate = new Candidate(CANDIDATE_ID, ELECTION_ID, "Candidato A", false, 1);
+        when(addCandidateUseCase.addCandidate(any())).thenReturn(candidate);
+
+        ElectionController.AddCandidateRequest request = new ElectionController.AddCandidateRequest(
+                "Candidato A", "Candidate description", 1);
+
+        // When
+        ResponseEntity<ElectionController.CandidateResponse> response =
+                controller.addCandidate(ELECTION_ID, request);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().id()).isEqualTo(CANDIDATE_ID.toString());
+        assertThat(response.getBody().nombre()).isEqualTo("Candidato A");
+        assertThat(response.getBody().numeroOrden()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Should build AddCandidateCommand with path variable and request body")
+    void addCandidate_shouldBuildCommand_fromPathVariableAndBody() {
+        // Given
+        Candidate candidate = new Candidate(CANDIDATE_ID, ELECTION_ID, "Candidato B", false, 2);
+        when(addCandidateUseCase.addCandidate(any())).thenReturn(candidate);
+
+        ElectionController.AddCandidateRequest request = new ElectionController.AddCandidateRequest(
+                "Candidato B", "Another candidate", 2);
+
+        // When
+        controller.addCandidate(ELECTION_ID, request);
+
+        // Then
+        ArgumentCaptor<AddCandidateCommand> captor = ArgumentCaptor.forClass(AddCandidateCommand.class);
+        verify(addCandidateUseCase).addCandidate(captor.capture());
+        AddCandidateCommand command = captor.getValue();
+        assertThat(command.eleccionId()).isEqualTo(ELECTION_ID);
+        assertThat(command.nombre()).isEqualTo("Candidato B");
+        assertThat(command.descripcion()).isEqualTo("Another candidate");
+        assertThat(command.numeroOrden()).isEqualTo(2);
     }
 
     // ── getBallot ────────────────────────────────────────────────────────────

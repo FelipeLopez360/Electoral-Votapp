@@ -74,7 +74,7 @@ public class VotingTokenRepositoryAdapter implements VotingTokenRepository {
 
     private VotingTokenEntity toEntity(VotingToken token) {
         VotingTokenEntity entity = new VotingTokenEntity();
-        entity.setId(token.id());
+        // NOT setting ID — Persistable.isNew() stays true, JPA calls persist() not merge()
         entity.setEleccionId(token.eleccionId());
         entity.setFuncionarioId(token.funcionarioId().intValue());
         entity.setTokenHash(token.tokenHash());

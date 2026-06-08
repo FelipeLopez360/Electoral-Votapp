@@ -7,8 +7,6 @@ import co.com.votapp.ws.electoral.domain.ElectionStatus;
 import co.com.votapp.ws.electoral.domain.port.in.CreateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;
 
-import java.util.UUID;
-
 /**
  * Use case implementation: create a new election in PROGRAMADA state.
  *
@@ -30,7 +28,7 @@ public class CreateElectionUseCaseImpl implements CreateElectionUseCase {
         });
 
         Election election = new Election(
-                UUID.randomUUID(),
+                null,
                 command.codigo(),
                 command.nombre(),
                 ElectionStatus.PROGRAMADA,

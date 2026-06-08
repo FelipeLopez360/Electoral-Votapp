@@ -106,20 +106,20 @@ class VoteControllerE2ETest {
                 .retrieve()
                 .toBodilessEntity();
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 
     @Test
     void castVote_returnsConflict_whenTokenAlreadyUsed() {
         CastVoteRequest request = new CastVoteRequest(rawToken, TEST_CANDIDATE_ID);
 
-        // First call — should succeed with 201
+        // First call — should succeed with 204
         ResponseEntity<Void> first = client.post()
                 .uri("/api/v1/votes")
                 .body(request)
                 .retrieve()
                 .toBodilessEntity();
-        assertThat(first.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(first.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         // Second call with same rawToken — Redis lock already set → DomainException → 409 Conflict
         assertThatThrownBy(() ->
