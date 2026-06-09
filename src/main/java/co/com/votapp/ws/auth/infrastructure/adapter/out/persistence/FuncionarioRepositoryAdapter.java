@@ -4,6 +4,7 @@ import co.com.votapp.ws.auth.domain.Funcionario;
 import co.com.votapp.ws.auth.domain.port.out.FuncionarioRepositoryPort;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -113,6 +114,43 @@ public class FuncionarioRepositoryAdapter implements FuncionarioRepositoryPort {
     @Override
     public boolean existsByDocumentoIdentidad(String documentoIdentidad) {
         return jpaRepository.existsByDocumentoIdentidad(documentoIdentidad);
+    }
+
+    // ─── Portal auth: lockout support ────────────────────────────────────────
+
+    @Override
+    public Optional<String> findPasswordHashByDocumentoIdentidad(String documentoIdentidad) {
+        return jpaRepository.findPasswordHashByDocumentoIdentidad(documentoIdentidad);
+    }
+
+    @Override
+    public void incrementFailedAttempts(String documentoIdentidad) {
+        jpaRepository.incrementFailedAttempts(documentoIdentidad);
+    }
+
+    @Override
+    public void resetFailedAttempts(String documentoIdentidad) {
+        jpaRepository.resetFailedAttempts(documentoIdentidad);
+    }
+
+    @Override
+    public void lockAccount(String documentoIdentidad, LocalDateTime lockedUntil) {
+        jpaRepository.lockAccount(documentoIdentidad, lockedUntil);
+    }
+
+    @Override
+    public Optional<LocalDateTime> findBloqueadoHasta(String documentoIdentidad) {
+        return jpaRepository.findBloqueadoHasta(documentoIdentidad);
+    }
+
+    @Override
+    public int findFailedAttempts(String documentoIdentidad) {
+        return jpaRepository.findFailedAttempts(documentoIdentidad);
+    }
+
+    @Override
+    public void updateUltimoAcceso(String documentoIdentidad, LocalDateTime accessTime) {
+        jpaRepository.updateUltimoAcceso(documentoIdentidad, accessTime);
     }
 
     // ─── Mapping ─────────────────────────────────────────────────────────────
