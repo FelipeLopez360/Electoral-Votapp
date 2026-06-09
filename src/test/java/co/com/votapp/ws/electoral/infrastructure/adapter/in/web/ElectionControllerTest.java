@@ -260,7 +260,7 @@ class ElectionControllerTest {
     }
 
     @Test
-    @DisplayName("Should pass rawToken to use case — id path var is for routing only")
+    @DisplayName("Should pass rawToken to use case when path id matches ballot's eleccionId")
     void getBallot_shouldPassRawTokenToUseCase() {
         // Given
         String rawToken = "my-raw-token";

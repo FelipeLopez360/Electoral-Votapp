@@ -303,8 +303,13 @@ public class ElectionController {
             @PathVariable String id,
             @RequestParam String token) {
         // The use case hashes rawToken, validates it is ISSUED, checks the election is ACTIVA,
-        // then returns the ordered candidates. The {id} path param is informational for routing.
+        // then returns the ordered candidates. The path param {id} must match the token's election.
         Ballot ballot = getBallotUseCase.getBallot(token);
+        UUID requestedEleccionId = UUID.fromString(id);
+        if (!requestedEleccionId.equals(ballot.eleccionId())) {
+            throw new co.com.votapp.ws.common.exception.DomainException(
+                    "El token no pertenece a la elección indicada — token no pertenece a esta elección");
+        }
         return ResponseEntity.ok(BallotResponse.from(ballot));
     }
 

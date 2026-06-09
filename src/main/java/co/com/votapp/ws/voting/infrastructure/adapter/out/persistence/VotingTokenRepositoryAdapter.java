@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -71,6 +72,14 @@ public class VotingTokenRepositoryAdapter implements VotingTokenRepository {
     @Override
     public Optional<VotingToken> findById(UUID tokenId) {
         return jpaRepository.findById(tokenId).map(this::toDomain);
+    }
+
+    @Override
+    public List<VotingToken> findAllByFuncionarioId(Integer funcionarioId) {
+        return jpaRepository.findAllByFuncionarioId(funcionarioId)
+                .stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     // ─── Mapping ─────────────────────────────────────────────────────────────
