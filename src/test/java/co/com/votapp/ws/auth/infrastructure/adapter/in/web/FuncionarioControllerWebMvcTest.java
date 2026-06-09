@@ -4,6 +4,7 @@ import co.com.votapp.ws.auth.domain.Funcionario;
 import co.com.votapp.ws.auth.domain.port.in.CreateFuncionarioUseCase;
 import co.com.votapp.ws.auth.domain.port.in.UpdateFuncionarioUseCase;
 import co.com.votapp.ws.auth.domain.port.out.FuncionarioRepositoryPort;
+import co.com.votapp.ws.auth.domain.port.out.PortalSessionPort;
 import co.com.votapp.ws.common.exception.DomainException;
 import co.com.votapp.ws.common.exception.GlobalExceptionHandler;
 import co.com.votapp.ws.common.exception.NotFoundException;
@@ -54,6 +55,9 @@ class FuncionarioControllerWebMvcTest {
     private CreateFuncionarioUseCase createFuncionarioUseCase;
     @MockitoBean
     private UpdateFuncionarioUseCase updateFuncionarioUseCase;
+    // Required by SecurityConfig.portalAuthFilter bean (portal session support)
+    @MockitoBean
+    private PortalSessionPort portalSessionPort;
 
     // ── Fixture ───────────────────────────────────────────────────────────────
 
