@@ -3,6 +3,7 @@ package co.com.votapp.ws.voting.domain.port.out;
 import co.com.votapp.ws.voting.domain.VotingToken;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -68,4 +69,13 @@ public interface VotingTokenRepository {
      * @return the token if found, or empty
      */
     Optional<VotingToken> findById(UUID tokenId);
+
+    /**
+     * Find all tokens (any status) for a given funcionario.
+     * Used by the portal dashboard to show the list of elections the funcionario can participate in.
+     *
+     * @param funcionarioId the funcionario's integer DB id
+     * @return all tokens for the funcionario across all elections
+     */
+    List<VotingToken> findAllByFuncionarioId(Integer funcionarioId);
 }
