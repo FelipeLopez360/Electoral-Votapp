@@ -212,15 +212,17 @@ INSERT INTO cargos (codigo, nombre, nivel_jerarquico) VALUES
     ('FUNC',      'Funcionario',         1);
 
 -- Test funcionarios: ACTIVO + puede_votar = true (required by eligibility spec)
+-- password_hash: BCrypt(cost=12) of 'TestPass123!' — all seeded accounts share the same test password
+-- Generated hash: $2a$12$oh1BlAf6ayCaBVKOdf/kQenUt0ds2icSqmi2un0/rF1zcR0EJ4xVa
 INSERT INTO funcionarios
     (numero_empleado, documento_identidad, nombres, apellidos, email,
      departamento_id, cargo_id, estado_laboral, puede_votar, password_hash)
 VALUES
     ('EMP001','10000001','Juan Carlos','Pérez González','juan.perez@votapp.test',
-     1,4,'ACTIVO',true,'$2a$12$placeholder_hash_001'),
+     1,4,'ACTIVO',true,'$2a$12$oh1BlAf6ayCaBVKOdf/kQenUt0ds2icSqmi2un0/rF1zcR0EJ4xVa'),
     ('EMP002','10000002','María Isabel','García López','maria.garcia@votapp.test',
-     2,4,'ACTIVO',true,'$2a$12$placeholder_hash_002'),
+     2,4,'ACTIVO',true,'$2a$12$oh1BlAf6ayCaBVKOdf/kQenUt0ds2icSqmi2un0/rF1zcR0EJ4xVa'),
     ('EMP003','10000003','Carlos Alberto','Rodríguez Mejía','carlos.rodriguez@votapp.test',
-     3,3,'ACTIVO',true,'$2a$12$placeholder_hash_003'),
+     3,3,'ACTIVO',true,'$2a$12$oh1BlAf6ayCaBVKOdf/kQenUt0ds2icSqmi2un0/rF1zcR0EJ4xVa'),
     ('EMP004','10000004','Ana Lucía','Martínez Torres','ana.martinez@votapp.test',
-     1,4,'INACTIVO',false,'$2a$12$placeholder_hash_004');
+     1,4,'INACTIVO',false,'$2a$12$oh1BlAf6ayCaBVKOdf/kQenUt0ds2icSqmi2un0/rF1zcR0EJ4xVa');

@@ -3,6 +3,7 @@ package co.com.votapp.ws.auth.infrastructure.adapter.out.persistence;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * JPA entity for the {@code funcionarios} table (MVP schema).
@@ -58,6 +59,15 @@ public class FuncionarioEntity {
     @Column(name = "debe_cambiar_password")
     private Boolean debeCambiarPassword;
 
+    @Column(name = "ultimo_acceso")
+    private LocalDateTime ultimoAcceso;
+
+    @Column(name = "intentos_fallidos")
+    private Integer intentosFallidos;
+
+    @Column(name = "bloqueado_hasta")
+    private LocalDateTime bloqueadoHasta;
+
     // ─── Getters & Setters ───────────────────────────────────────────────────
 
     public Integer getId() { return id; }
@@ -104,4 +114,13 @@ public class FuncionarioEntity {
 
     public Boolean getDebeCambiarPassword() { return debeCambiarPassword; }
     public void setDebeCambiarPassword(Boolean debeCambiarPassword) { this.debeCambiarPassword = debeCambiarPassword; }
+
+    public LocalDateTime getUltimoAcceso() { return ultimoAcceso; }
+    public void setUltimoAcceso(LocalDateTime ultimoAcceso) { this.ultimoAcceso = ultimoAcceso; }
+
+    public Integer getIntentosFallidos() { return intentosFallidos; }
+    public void setIntentosFallidos(Integer intentosFallidos) { this.intentosFallidos = intentosFallidos; }
+
+    public LocalDateTime getBloqueadoHasta() { return bloqueadoHasta; }
+    public void setBloqueadoHasta(LocalDateTime bloqueadoHasta) { this.bloqueadoHasta = bloqueadoHasta; }
 }

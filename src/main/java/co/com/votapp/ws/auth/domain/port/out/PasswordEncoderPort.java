@@ -16,4 +16,16 @@ public interface PasswordEncoderPort {
      * @return the encoded hash safe to store
      */
     String encode(String rawPassword);
+
+    /**
+     * Verifies whether the given raw password matches the stored encoded hash.
+     *
+     * <p>Delegates to BCrypt's constant-time comparison — domain never touches
+     * the crypto directly.
+     *
+     * @param rawPassword    the plain-text password provided at login
+     * @param encodedPassword the BCrypt hash stored in the DB
+     * @return {@code true} if the raw password matches the hash; {@code false} otherwise
+     */
+    boolean matches(String rawPassword, String encodedPassword);
 }

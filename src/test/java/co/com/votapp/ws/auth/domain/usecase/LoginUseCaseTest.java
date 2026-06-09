@@ -1,18 +1,23 @@
 package co.com.votapp.ws.auth.domain.usecase;
 
 import co.com.votapp.ws.auth.domain.Funcionario;
+import co.com.votapp.ws.auth.domain.exception.AccountInactiveException;
+import co.com.votapp.ws.auth.domain.exception.InvalidCredentialsException;
 import co.com.votapp.ws.auth.domain.port.out.FuncionarioRepositoryPort;
-import co.com.votapp.ws.common.exception.DomainException;
+import co.com.votapp.ws.auth.domain.port.out.PasswordEncoderPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 /**
@@ -26,11 +31,14 @@ class LoginUseCaseTest {
     @Mock
     private FuncionarioRepositoryPort repositoryPort;
 
+    @Mock
+    private PasswordEncoderPort passwordEncoderPort;
+
     private AuthenticateFuncionarioUseCase useCase;
 
     @BeforeEach
     void setUp() {
-        useCase = new AuthenticateFuncionarioUseCase(repositoryPort);
+        useCase = new AuthenticateFuncionarioUseCase(repositoryPort, passwordEncoderPort);
     }
 
     // -----------------------------------------------------------------------
@@ -63,8 +71,10 @@ class LoginUseCaseTest {
     @Test
     void authenticate_returnsFuncionario_whenActiveAndFound() {
         Funcionario active = buildFuncionario("ACTIVO");
-        when(repositoryPort.findByDocumentoIdentidad("12345678"))
-                .thenReturn(Optional.of(active));
+        when(repositoryPort.findBloqueadoHasta("12345678")).thenReturn(Optional.empty());
+        when(repositoryPort.findByDocumentoIdentidad("12345678")).thenReturn(Optional.of(active));
+        when(repositoryPort.findPasswordHashByDocumentoIdentidad("12345678")).thenReturn(Optional.of("hash"));
+        when(passwordEncoderPort.matches("any-password", "hash")).thenReturn(true);
 
         Funcionario result = useCase.authenticate("12345678", "any-password");
 
@@ -75,22 +85,22 @@ class LoginUseCaseTest {
 
     @Test
     void authenticate_throwsDomainException_whenNotFound() {
-        when(repositoryPort.findByDocumentoIdentidad("99999999"))
-                .thenReturn(Optional.empty());
+        when(repositoryPort.findBloqueadoHasta("99999999")).thenReturn(Optional.empty());
+        when(repositoryPort.findByDocumentoIdentidad("99999999")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.authenticate("99999999", "any-password"))
-                .isInstanceOf(DomainException.class)
+                .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessage("Credenciales inválidas");
     }
 
     @Test
     void authenticate_throwsDomainException_whenInactive() {
         Funcionario inactive = buildFuncionario("INACTIVO");
-        when(repositoryPort.findByDocumentoIdentidad("12345678"))
-                .thenReturn(Optional.of(inactive));
+        when(repositoryPort.findBloqueadoHasta("12345678")).thenReturn(Optional.empty());
+        when(repositoryPort.findByDocumentoIdentidad("12345678")).thenReturn(Optional.of(inactive));
 
         assertThatThrownBy(() -> useCase.authenticate("12345678", "any-password"))
-                .isInstanceOf(DomainException.class)
+                .isInstanceOf(AccountInactiveException.class)
                 .hasMessage("Funcionario inactivo");
     }
 }
