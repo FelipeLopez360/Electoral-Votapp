@@ -51,4 +51,13 @@ public interface VotingTokenJpaRepository extends JpaRepository<VotingTokenEntit
                  @Param("usedAt") Instant usedAt,
                  @Param("usedIp") String usedIp,
                  @Param("userAgent") String userAgent);
+
+    // ─── Portal voting support ─────────────────────────────────────────────────
+
+    /**
+     * Find the single ISSUED token for a funcionario in a specific election.
+     * Portal can resolve the tokenId without knowing the rawToken.
+     */
+    Optional<VotingTokenEntity> findByFuncionarioIdAndEleccionIdAndStatus(
+            Integer funcionarioId, UUID eleccionId, String status);
 }

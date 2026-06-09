@@ -59,6 +59,20 @@ public class VotingTokenRepositoryAdapter implements VotingTokenRepository {
         return rows == 1;
     }
 
+    // ─── Portal voting support ────────────────────────────────────────────────
+
+    @Override
+    public Optional<VotingToken> findIssuedByFuncionarioAndEleccion(Integer funcionarioId, UUID eleccionId) {
+        return jpaRepository
+                .findByFuncionarioIdAndEleccionIdAndStatus(funcionarioId, eleccionId, TokenStatus.ISSUED.name())
+                .map(this::toDomain);
+    }
+
+    @Override
+    public Optional<VotingToken> findById(UUID tokenId) {
+        return jpaRepository.findById(tokenId).map(this::toDomain);
+    }
+
     // ─── Mapping ─────────────────────────────────────────────────────────────
 
     private VotingToken toDomain(VotingTokenEntity entity) {

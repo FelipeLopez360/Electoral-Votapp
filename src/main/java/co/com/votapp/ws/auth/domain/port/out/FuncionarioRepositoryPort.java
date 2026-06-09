@@ -2,6 +2,7 @@ package co.com.votapp.ws.auth.domain.port.out;
 
 import co.com.votapp.ws.auth.domain.Funcionario;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,4 +44,54 @@ public interface FuncionarioRepositoryPort {
     Funcionario saveWithHash(Funcionario funcionario, String passwordHash);
 
     boolean existsByDocumentoIdentidad(String documentoIdentidad);
+
+    // ─── Portal auth: lockout support ────────────────────────────────────────
+
+    /**
+     * Returns only the BCrypt password hash for the given documento.
+     * The hash is intentionally separated from the domain {@link Funcionario} object
+     * to prevent accidental exposure.
+     *
+     * @param documentoIdentidad the funcionario's document identifier
+     * @return the stored BCrypt hash, or empty if no funcionario found
+     */
+    Optional<String> findPasswordHashByDocumentoIdentidad(String documentoIdentidad);
+
+    /**
+     * Increments the {@code intentos_fallidos} counter by 1 for the given funcionario.
+     * Called on every failed login attempt.
+     */
+    void incrementFailedAttempts(String documentoIdentidad);
+
+    /**
+     * Resets {@code intentos_fallidos} to 0 for the given funcionario.
+     * Called after a successful login.
+     */
+    void resetFailedAttempts(String documentoIdentidad);
+
+    /**
+     * Sets {@code bloqueado_hasta} to the given timestamp.
+     * Triggered when failed attempts reach the maximum threshold (3).
+     *
+     * @param documentoIdentidad the funcionario's document identifier
+     * @param lockedUntil        the timestamp until which the account is locked
+     */
+    void lockAccount(String documentoIdentidad, LocalDateTime lockedUntil);
+
+    /**
+     * Returns the {@code bloqueado_hasta} timestamp for the given funcionario,
+     * or empty if the account is not locked.
+     */
+    Optional<LocalDateTime> findBloqueadoHasta(String documentoIdentidad);
+
+    /**
+     * Returns the current {@code intentos_fallidos} count for the given funcionario.
+     */
+    int findFailedAttempts(String documentoIdentidad);
+
+    /**
+     * Updates the {@code ultimo_acceso} timestamp to now for the given funcionario.
+     * Called after a successful login.
+     */
+    void updateUltimoAcceso(String documentoIdentidad, LocalDateTime accessTime);
 }

@@ -103,7 +103,8 @@ class FuncionarioControllerWebMvcTest {
         mockMvc.perform(post("/api/v1/funcionarios")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("nombres es obligatorio"));
     }
 
     // ── POST /api/v1/funcionarios → 409 when documento is duplicate ───────────
@@ -130,7 +131,8 @@ class FuncionarioControllerWebMvcTest {
         mockMvc.perform(post("/api/v1/funcionarios")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("10000001 ya existe"));
     }
 
     // ── PUT /api/v1/funcionarios/{id} → 404 when not found ───────────────────
@@ -153,7 +155,8 @@ class FuncionarioControllerWebMvcTest {
         mockMvc.perform(put("/api/v1/funcionarios/999")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Funcionario 999 no encontrado"));
     }
 
     // ── PUT /api/v1/funcionarios/{id} → debeCambiarPassword=false in response ─

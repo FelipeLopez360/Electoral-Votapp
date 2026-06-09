@@ -32,6 +32,7 @@ import co.com.votapp.ws.voting.domain.port.out.ParticipacionRepositoryPort;
 import co.com.votapp.ws.voting.domain.port.out.TokenLockPort;
 import co.com.votapp.ws.voting.domain.port.out.VoteRepositoryPort;
 import co.com.votapp.ws.voting.domain.port.out.VotingTokenRepository;
+import co.com.votapp.ws.voting.domain.usecase.CastVoteByTokenIdUseCaseImpl;
 import co.com.votapp.ws.voting.domain.usecase.CastVoteUseCaseImpl;
 import co.com.votapp.ws.voting.domain.usecase.IssueVotingTokenUseCaseImpl;
 import co.com.votapp.ws.votereligibility.domain.port.out.VoterEligibilityRepositoryPort;
@@ -71,8 +72,9 @@ public class DomainConfig {
     }
 
     @Bean
-    public AuthenticateFuncionarioUseCase authenticateFuncionarioUseCase(FuncionarioRepositoryPort funcionarioRepository) {
-        return new AuthenticateFuncionarioUseCase(funcionarioRepository);
+    public AuthenticateFuncionarioUseCase authenticateFuncionarioUseCase(FuncionarioRepositoryPort funcionarioRepository,
+                                                                          PasswordEncoderPort passwordEncoder) {
+        return new AuthenticateFuncionarioUseCase(funcionarioRepository, passwordEncoder);
     }
 
     // ─── gestion-funcionarios: Funcionario CRUD use cases ────────────────────
@@ -137,6 +139,25 @@ public class DomainConfig {
                                                ParticipacionRepositoryPort participacionRepository,
                                                RegisterAuditEventPort auditPort) {
         return new CastVoteUseCaseImpl(
+                votingTokenRepository,
+                tokenLockPort,
+                electionRepository,
+                candidateRepository,
+                voteRepository,
+                participacionRepository,
+                auditPort
+        );
+    }
+
+    @Bean
+    public CastVoteByTokenIdUseCaseImpl castVoteByTokenIdUseCase(VotingTokenRepository votingTokenRepository,
+                                                                   TokenLockPort tokenLockPort,
+                                                                   ElectionRepositoryPort electionRepository,
+                                                                   CandidateRepositoryPort candidateRepository,
+                                                                   VoteRepositoryPort voteRepository,
+                                                                   ParticipacionRepositoryPort participacionRepository,
+                                                                   RegisterAuditEventPort auditPort) {
+        return new CastVoteByTokenIdUseCaseImpl(
                 votingTokenRepository,
                 tokenLockPort,
                 electionRepository,
