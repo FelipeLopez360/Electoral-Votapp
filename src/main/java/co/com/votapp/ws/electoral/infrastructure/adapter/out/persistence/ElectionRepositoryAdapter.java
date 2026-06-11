@@ -5,6 +5,7 @@ import co.com.votapp.ws.electoral.domain.ElectionStatus;
 import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -47,12 +48,26 @@ public class ElectionRepositoryAdapter implements ElectionRepositoryPort {
     }
 
     @Override
+    public List<Election> findByStatusAndFechaInicioLessThanEqual(ElectionStatus status, LocalDateTime now) {
+        Instant nowInstant = now.toInstant(ZoneOffset.UTC);
+        return jpaRepository.findByEstadoAndFechaInicioLessThanEqual(status.name(), nowInstant)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Election> findByStatusAndFechaFinLessThanEqual(ElectionStatus status, LocalDateTime now) {
+        Instant nowInstant = now.toInstant(ZoneOffset.UTC);
+        return jpaRepository.findByEstadoAndFechaFinLessThanEqual(status.name(), nowInstant)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     public Election save(Election election) {
         EleccionEntity entity = toEntity(election);
-        if (election.id() == null) {
-            // New entity — null id keeps Persistable.isNew()=true → persist()
-            entity.setId(null);
-        }
         EleccionEntity saved = jpaRepository.save(entity);
         return toDomain(saved);
     }
@@ -72,15 +87,25 @@ public class ElectionRepositoryAdapter implements ElectionRepositoryPort {
 
     private EleccionEntity toEntity(Election election) {
         EleccionEntity entity = new EleccionEntity();
-        // Preserve existing id on update; null means INSERT (DB generates UUID)
         entity.setId(election.id());
         entity.setCodigo(election.codigo());
         entity.setNombre(election.nombre());
         entity.setEstado(election.status().name());
         entity.setFechaInicio(election.fechaInicio().toInstant(ZoneOffset.UTC));
         entity.setFechaFin(election.fechaFin().toInstant(ZoneOffset.UTC));
-        entity.setCreatedAt(java.time.Instant.now());
-        entity.setUpdatedAt(java.time.Instant.now());
+
+        if (election.id() != null) {
+            // UPDATE: preserve original createdAt from the DB row — never reset it
+            Instant existingCreatedAt = jpaRepository.findById(election.id())
+                    .map(EleccionEntity::getCreatedAt)
+                    .orElse(Instant.now());
+            entity.setCreatedAt(existingCreatedAt);
+        } else {
+            // INSERT: set createdAt once on first persist
+            entity.setCreatedAt(Instant.now());
+        }
+
+        entity.setUpdatedAt(Instant.now());
         return entity;
     }
 }
