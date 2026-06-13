@@ -153,6 +153,11 @@ public class FuncionarioRepositoryAdapter implements FuncionarioRepositoryPort {
         jpaRepository.updateUltimoAcceso(documentoIdentidad, accessTime);
     }
 
+    @Override
+    public void updatePasswordHash(String documentoIdentidad, String newPasswordHash) {
+        jpaRepository.updatePasswordHash(documentoIdentidad, newPasswordHash);
+    }
+
     // ─── Mapping ─────────────────────────────────────────────────────────────
 
     private Funcionario toDomain(FuncionarioEntity entity) {

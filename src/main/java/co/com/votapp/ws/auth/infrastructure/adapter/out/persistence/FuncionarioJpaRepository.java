@@ -58,4 +58,9 @@ public interface FuncionarioJpaRepository extends JpaRepository<FuncionarioEntit
     @Transactional
     @Query("UPDATE FuncionarioEntity f SET f.ultimoAcceso = :accessTime WHERE f.documentoIdentidad = :doc")
     void updateUltimoAcceso(@Param("doc") String documentoIdentidad, @Param("accessTime") LocalDateTime accessTime);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE FuncionarioEntity f SET f.passwordHash = :newHash WHERE f.documentoIdentidad = :doc")
+    void updatePasswordHash(@Param("doc") String documentoIdentidad, @Param("newHash") String newHash);
 }

@@ -94,4 +94,13 @@ public interface FuncionarioRepositoryPort {
      * Called after a successful login.
      */
     void updateUltimoAcceso(String documentoIdentidad, LocalDateTime accessTime);
+
+    /**
+     * Updates the BCrypt password hash for the given funcionario.
+     * Called by {@code ChangePasswordUseCaseImpl} after validating and encoding the new password.
+     *
+     * @param documentoIdentidad the funcionario's document identifier
+     * @param newPasswordHash    the new BCrypt-encoded hash to store
+     */
+    void updatePasswordHash(String documentoIdentidad, String newPasswordHash);
 }

@@ -3,13 +3,20 @@ package co.com.votapp.ws.config;
 import co.com.votapp.ws.audit.domain.port.in.RegisterAuditEventPort;
 import co.com.votapp.ws.audit.domain.port.out.AuditoriaRepositoryPort;
 import co.com.votapp.ws.audit.domain.usecase.RegisterAuditEventUseCase;
+import co.com.votapp.ws.auth.domain.port.in.ChangePasswordUseCase;
 import co.com.votapp.ws.auth.domain.port.in.CreateFuncionarioUseCase;
+import co.com.votapp.ws.auth.domain.port.in.LogoutUseCase;
 import co.com.votapp.ws.auth.domain.port.in.UpdateFuncionarioUseCase;
+import co.com.votapp.ws.auth.domain.port.in.UpdateProfileUseCase;
 import co.com.votapp.ws.auth.domain.port.out.FuncionarioRepositoryPort;
 import co.com.votapp.ws.auth.domain.port.out.PasswordEncoderPort;
+import co.com.votapp.ws.auth.domain.port.out.PortalSessionPort;
 import co.com.votapp.ws.auth.domain.usecase.AuthenticateFuncionarioUseCase;
+import co.com.votapp.ws.auth.domain.usecase.ChangePasswordUseCaseImpl;
 import co.com.votapp.ws.auth.domain.usecase.CreateFuncionarioUseCaseImpl;
+import co.com.votapp.ws.auth.domain.usecase.LogoutUseCaseImpl;
 import co.com.votapp.ws.auth.domain.usecase.UpdateFuncionarioUseCaseImpl;
+import co.com.votapp.ws.auth.domain.usecase.UpdateProfileUseCaseImpl;
 import co.com.votapp.ws.candidates.domain.port.out.CandidatoRepositoryPort;
 import co.com.votapp.ws.candidates.domain.usecase.GetCandidatosUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.ActivateElectionUseCase;
@@ -78,6 +85,22 @@ public class DomainConfig {
     }
 
     // ─── gestion-funcionarios: Funcionario CRUD use cases ────────────────────
+
+    @Bean
+    public ChangePasswordUseCase changePasswordUseCase(FuncionarioRepositoryPort funcionarioRepository,
+                                                        PasswordEncoderPort passwordEncoder) {
+        return new ChangePasswordUseCaseImpl(funcionarioRepository, passwordEncoder);
+    }
+
+    @Bean
+    public UpdateProfileUseCase updateProfileUseCase(FuncionarioRepositoryPort funcionarioRepository) {
+        return new UpdateProfileUseCaseImpl(funcionarioRepository);
+    }
+
+    @Bean
+    public LogoutUseCase logoutUseCase(PortalSessionPort sessionPort) {
+        return new LogoutUseCaseImpl(sessionPort);
+    }
 
     @Bean
     public CreateFuncionarioUseCase createFuncionarioUseCase(FuncionarioRepositoryPort funcionarioRepository,
