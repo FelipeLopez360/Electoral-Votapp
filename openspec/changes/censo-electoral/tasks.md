@@ -44,11 +44,11 @@ Chain strategy: stacked-to-main
 
 ## Phase 3: Eligibility & Token Issuance Modification
 
-- [ ] 3.1 Update `co/com/votapp/ws/votereligibility/domain/port/out/VoterEligibilityRepositoryPort.java` to add `isEligibleForElection(Long funcionarioId, UUID eleccionId)`.
-- [ ] 3.2 Update `co/com/votapp/ws/votereligibility/infrastructure/adapter/out/persistence/VoterEligibilityRepositoryAdapter.java` to implement the new method checking global AND election-scoped census fallback (injecting `CensoJpaRepository`).
-- [ ] 3.3 Update `co/com/votapp/ws/voting/domain/usecase/IssueVotingTokenUseCaseImplTest.java` (TDD RED): Add tests asserting rejection if not in census, and rejection if election is not `ACTIVA`.
-- [ ] 3.4 Update `co/com/votapp/ws/voting/domain/usecase/IssueVotingTokenUseCaseImpl.java` (GREEN & REFACTOR): Add `ElectionRepositoryPort` to constructor to enforce `ACTIVA` state, and use `isEligibleForElection` from `VoterEligibilityRepositoryPort`.
-- [ ] 3.5 Update `co/com/votapp/ws/config/DomainConfig.java` to supply the new dependency to `IssueVotingTokenUseCaseImpl`.
+- [x] 3.1 Update `co/com/votapp/ws/votereligibility/domain/port/out/VoterEligibilityRepositoryPort.java` to add `isEligibleForElection(Long funcionarioId, UUID eleccionId)`.
+- [x] 3.2 Update `co/com/votapp/ws/votereligibility/infrastructure/adapter/out/persistence/VoterEligibilityRepositoryAdapter.java` to implement the new method checking global AND election-scoped census fallback (injecting `CensoJpaRepository`).
+- [x] 3.3 Update `co/com/votapp/ws/voting/domain/usecase/IssueVotingTokenUseCaseImplTest.java` (TDD RED): Add tests asserting rejection if not in census, and rejection if election is not `ACTIVA`.
+- [x] 3.4 Update `co/com/votapp/ws/voting/domain/usecase/IssueVotingTokenUseCaseImpl.java` (GREEN & REFACTOR): Add `ElectionRepositoryPort` to constructor to enforce `ACTIVA` state, and use `isEligibleForElection` from `VoterEligibilityRepositoryPort`.
+- [x] 3.5 Update `co/com/votapp/ws/config/DomainConfig.java` to supply the new dependency to `IssueVotingTokenUseCaseImpl`.
 
 ## Phase 4: API Layer and Controllers
 

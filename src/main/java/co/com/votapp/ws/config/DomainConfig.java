@@ -161,8 +161,10 @@ public class DomainConfig {
     @Bean
     public IssueVotingTokenUseCaseImpl issueVotingTokenUseCase(VotingTokenRepository votingTokenRepository,
                                                                 VoterEligibilityRepositoryPort eligibilityRepository,
-                                                                ParticipacionRepositoryPort participacionRepository) {
-        return new IssueVotingTokenUseCaseImpl(votingTokenRepository, eligibilityRepository, participacionRepository);
+                                                                ParticipacionRepositoryPort participacionRepository,
+                                                                ElectionRepositoryPort electionRepository) {
+        return new IssueVotingTokenUseCaseImpl(
+                votingTokenRepository, eligibilityRepository, participacionRepository, electionRepository);
     }
 
     @Bean
