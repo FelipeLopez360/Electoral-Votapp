@@ -103,4 +103,30 @@ public interface FuncionarioRepositoryPort {
      * @param newPasswordHash    the new BCrypt-encoded hash to store
      */
     void updatePasswordHash(String documentoIdentidad, String newPasswordHash);
+
+    // ─── Census bulk-add queries (used by electoral context) ─────────────────
+
+    /**
+     * Returns all globally eligible funcionarios from a given department.
+     *
+     * <p>Eligible means: {@code estadoLaboral = 'ACTIVO'} AND {@code puede_votar = true}.
+     * Used by {@code ManageCensoUseCaseImpl.addByDepartamento()} to build the bulk-add list.
+     *
+     * @param departamentoId the department to query
+     * @return list of eligible funcionarios
+     */
+    List<Funcionario> findEligibleByDepartamento(Integer departamentoId);
+
+    /**
+     * Returns globally eligible funcionarios matching flexible filter criteria.
+     *
+     * <p>All parameters are applied as AND conditions when non-null.
+     * Used by {@code ManageCensoUseCaseImpl.addByFilters()}.
+     *
+     * @param departamentoId optional department filter (null = all departments)
+     * @param estadoLaboral  optional labor status filter (null = any status)
+     * @param puedeVotar     optional voting eligibility filter (null = any)
+     * @return list of matching funcionarios
+     */
+    List<Funcionario> findEligibleByFilters(Integer departamentoId, String estadoLaboral, Boolean puedeVotar);
 }

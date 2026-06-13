@@ -24,7 +24,9 @@ import co.com.votapp.ws.electoral.domain.port.in.AddCandidateUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.CreateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.FinalizeElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.GetBallotUseCase;
+import co.com.votapp.ws.electoral.domain.port.in.ManageCensoUseCase;
 import co.com.votapp.ws.electoral.domain.port.out.CandidateRepositoryPort;
+import co.com.votapp.ws.electoral.domain.port.out.CensoRepositoryPort;
 import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;
 import co.com.votapp.ws.electoral.domain.port.out.EleccionRepositoryPort;
 import co.com.votapp.ws.electoral.domain.usecase.ActivateElectionUseCaseImpl;
@@ -33,6 +35,7 @@ import co.com.votapp.ws.electoral.domain.usecase.CreateElectionUseCaseImpl;
 import co.com.votapp.ws.electoral.domain.usecase.FinalizeElectionUseCaseImpl;
 import co.com.votapp.ws.electoral.domain.usecase.GetBallotUseCaseImpl;
 import co.com.votapp.ws.electoral.domain.usecase.GetEleccionUseCase;
+import co.com.votapp.ws.electoral.domain.usecase.ManageCensoUseCaseImpl;
 import co.com.votapp.ws.organization.domain.port.out.DepartamentoRepositoryPort;
 import co.com.votapp.ws.organization.domain.usecase.GetDepartamentosUseCase;
 import co.com.votapp.ws.voting.domain.port.out.ParticipacionRepositoryPort;
@@ -111,6 +114,15 @@ public class DomainConfig {
     @Bean
     public UpdateFuncionarioUseCase updateFuncionarioUseCase(FuncionarioRepositoryPort funcionarioRepository) {
         return new UpdateFuncionarioUseCaseImpl(funcionarioRepository);
+    }
+
+    // ─── censo-electoral: ManageCenso use case ───────────────────────────────
+
+    @Bean
+    public ManageCensoUseCase manageCensoUseCase(ElectionRepositoryPort electionRepository,
+                                                   FuncionarioRepositoryPort funcionarioRepository,
+                                                   CensoRepositoryPort censoRepository) {
+        return new ManageCensoUseCaseImpl(electionRepository, funcionarioRepository, censoRepository);
     }
 
     // ─── PR 2: Electoral use cases ────────────────────────────────────────────

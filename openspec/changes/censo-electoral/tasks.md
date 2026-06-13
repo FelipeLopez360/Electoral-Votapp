@@ -35,12 +35,12 @@ Chain strategy: stacked-to-main
 
 ## Phase 2: Electoral Domain & Adapters
 
-- [ ] 2.1 Create domain record `CensoEntry.java` in `co/com/votapp/ws/electoral/domain/model`.
-- [ ] 2.2 Create output port `CensoRepositoryPort.java` in `co/com/votapp/ws/electoral/domain/port/out`.
-- [ ] 2.3 Create input port `ManageCensoUseCase.java` in `co/com/votapp/ws/electoral/domain/port/in`.
-- [ ] 2.4 Implement TDD RED -> GREEN for `CensoRepositoryAdapter.java` implementing `CensoRepositoryPort` by writing `CensoRepositoryAdapterIT.java` (Testcontainers).
-- [ ] 2.5 Implement TDD RED -> GREEN for `ManageCensoUseCaseImpl.java` enforcing `PROGRAMADA` status. Write tests in `ManageCensoUseCaseImplTest.java` mocking ports.
-- [ ] 2.6 Wire `ManageCensoUseCaseImpl` in `co/com/votapp/ws/config/DomainConfig.java`.
+- [x] 2.1 Create domain record `CensoEntry.java` in `co/com/votapp/ws/electoral/domain/model`.
+- [x] 2.2 Create output port `CensoRepositoryPort.java` in `co/com/votapp/ws/electoral/domain/port/out`.
+- [x] 2.3 Create input port `ManageCensoUseCase.java` in `co/com/votapp/ws/electoral/domain/port/in`.
+- [x] 2.4 Implement TDD RED -> GREEN for `CensoRepositoryAdapter.java` implementing `CensoRepositoryPort` by writing `CensoRepositoryAdapterIT.java` (Testcontainers).
+- [x] 2.5 Implement TDD RED -> GREEN for `ManageCensoUseCaseImpl.java` enforcing `PROGRAMADA` status. Write tests in `ManageCensoUseCaseImplTest.java` mocking ports.
+- [x] 2.6 Wire `ManageCensoUseCaseImpl` in `co/com/votapp/ws/config/DomainConfig.java`.
 
 ## Phase 3: Eligibility & Token Issuance Modification
 
