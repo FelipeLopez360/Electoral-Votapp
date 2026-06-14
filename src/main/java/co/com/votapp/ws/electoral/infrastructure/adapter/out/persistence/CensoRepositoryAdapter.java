@@ -1,6 +1,7 @@
 package co.com.votapp.ws.electoral.infrastructure.adapter.out.persistence;
 
 import co.com.votapp.ws.electoral.domain.model.CensoEntry;
+import co.com.votapp.ws.electoral.domain.model.PageResult;
 import co.com.votapp.ws.electoral.domain.port.out.CensoRepositoryPort;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,14 +32,36 @@ public class CensoRepositoryAdapter implements CensoRepositoryPort {
         return saved.toDomain();
     }
 
+    /**
+     * Bulk insert using per-row native {@code ON CONFLICT DO NOTHING} queries.
+     *
+     * <p>Each row is inserted individually via the native query, which skips the row
+     * if it would violate the {@code UNIQUE(eleccion_id, funcionario_id)} constraint.
+     * This avoids {@code DataIntegrityViolationException} that would occur with
+     * {@code jpaRepository.saveAll()} on duplicate composite keys.
+     *
+     * <p>A per-row approach is used instead of a set-based {@code unnest()} query
+     * because Spring Data JPA cannot bind a {@code List<Integer>} to PostgreSQL's
+     * {@code unnest()} in native queries (JDBC type-mapping limitation).
+     *
+     * <p>Returns the entries that were passed in. Callers that need inserted-vs-skipped
+     * counts should use {@link #existsByEleccionIdAndFuncionarioId} before calling this method.
+     */
     @Override
     public List<CensoEntry> saveAll(List<CensoEntry> entries) {
-        List<CensoEntity> entities = entries.stream()
-                .map(CensoEntity::fromDomain)
-                .toList();
-        return jpaRepository.saveAll(entities).stream()
-                .map(CensoEntity::toDomain)
-                .toList();
+        if (entries.isEmpty()) {
+            return List.of();
+        }
+
+        for (CensoEntry entry : entries) {
+            jpaRepository.insertOnConflictDoNothing(
+                    entry.eleccionId(),
+                    entry.funcionarioId(),
+                    entry.agregadoPor()
+            );
+        }
+
+        return entries;
     }
 
     @Override
@@ -51,11 +74,22 @@ public class CensoRepositoryAdapter implements CensoRepositoryPort {
         jpaRepository.deleteAllByEleccionId(eleccionId);
     }
 
+    /**
+     * Maps Spring {@code Page<CensoEntity>} to the pure-Java {@link PageResult} at the
+     * adapter boundary, so callers in the domain layer never see Spring types.
+     */
     @Override
-    public Page<CensoEntry> findByEleccionId(UUID eleccionId, int page, int size) {
-        return jpaRepository
+    public PageResult<CensoEntry> findByEleccionId(UUID eleccionId, int page, int size) {
+        Page<CensoEntry> springPage = jpaRepository
                 .findByEleccionId(eleccionId, PageRequest.of(page, size))
                 .map(CensoEntity::toDomain);
+        return new PageResult<>(
+                springPage.getContent(),
+                springPage.getNumber(),
+                springPage.getSize(),
+                springPage.getTotalElements(),
+                springPage.getTotalPages()
+        );
     }
 
     @Override

@@ -6,10 +6,10 @@ import co.com.votapp.ws.common.exception.DomainException;
 import co.com.votapp.ws.electoral.domain.ElectionStatus;
 import co.com.votapp.ws.electoral.domain.exception.ElectionNotModifiableException;
 import co.com.votapp.ws.electoral.domain.model.CensoEntry;
+import co.com.votapp.ws.electoral.domain.model.PageResult;
 import co.com.votapp.ws.electoral.domain.port.in.ManageCensoUseCase;
 import co.com.votapp.ws.electoral.domain.port.out.CensoRepositoryPort;
 import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;
-import org.springframework.data.domain.Page;
 
 import java.time.Instant;
 import java.util.List;
@@ -86,7 +86,7 @@ public class ManageCensoUseCaseImpl implements ManageCensoUseCase {
     }
 
     @Override
-    public Page<CensoEntry> listCenso(UUID eleccionId, int page, int size) {
+    public PageResult<CensoEntry> listCenso(UUID eleccionId, int page, int size) {
         return censoRepository.findByEleccionId(eleccionId, page, size);
     }
 

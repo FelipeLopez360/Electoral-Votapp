@@ -9,6 +9,7 @@ import co.com.votapp.ws.electoral.domain.exception.ElectionNotModifiableExceptio
 import co.com.votapp.ws.electoral.domain.model.CensoEntry;
 import co.com.votapp.ws.electoral.domain.port.in.ManageCensoUseCase;
 import co.com.votapp.ws.electoral.domain.port.out.CensoRepositoryPort;
+import co.com.votapp.ws.electoral.domain.model.PageResult;
 import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -343,15 +343,15 @@ class ManageCensoUseCaseImplTest {
     void listCenso_shouldDelegate_toCensoRepository() {
         // Given
         var entry = new CensoEntry(UUID.randomUUID(), ELECCION_ID, FUNCIONARIO_ID, ADMIN_ID, Instant.now());
-        var page = new PageImpl<>(List.of(entry));
+        var page = new PageResult<>(List.of(entry), 0, 10, 1L, 1);
         when(censoRepository.findByEleccionId(ELECCION_ID, 0, 10)).thenReturn(page);
 
         // When
         var result = useCase.listCenso(ELECCION_ID, 0, 10);
 
         // Then
-        assertThat(result.getTotalElements()).isEqualTo(1);
-        assertThat(result.getContent().get(0).eleccionId()).isEqualTo(ELECCION_ID);
+        assertThat(result.totalElements()).isEqualTo(1);
+        assertThat(result.content().get(0).eleccionId()).isEqualTo(ELECCION_ID);
     }
 
     // ─── countCenso ───────────────────────────────────────────────────────────

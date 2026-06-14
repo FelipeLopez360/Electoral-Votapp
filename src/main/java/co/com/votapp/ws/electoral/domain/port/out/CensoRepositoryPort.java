@@ -1,7 +1,7 @@
 package co.com.votapp.ws.electoral.domain.port.out;
 
 import co.com.votapp.ws.electoral.domain.model.CensoEntry;
-import org.springframework.data.domain.Page;
+import co.com.votapp.ws.electoral.domain.model.PageResult;
 
 import java.util.List;
 import java.util.UUID;
@@ -9,9 +9,9 @@ import java.util.UUID;
 /**
  * Output port for censo_electoral persistence.
  *
- * <p>Defined by the domain — ZERO Spring or infrastructure imports
- * except for {@link Page} which is a data-carrier abstraction used as
- * a return type convention in this project.
+ * <p>Defined by the domain — ZERO Spring or infrastructure imports.
+ * Uses {@link PageResult} as a pure-Java pagination abstraction
+ * to avoid importing Spring framework types into the domain layer.
  *
  * <p>Implementations live in {@code infrastructure/adapter/out/persistence}.
  */
@@ -45,7 +45,7 @@ public interface CensoRepositoryPort {
     /**
      * Return a paginated view of the census for an election.
      */
-    Page<CensoEntry> findByEleccionId(UUID eleccionId, int page, int size);
+    PageResult<CensoEntry> findByEleccionId(UUID eleccionId, int page, int size);
 
     /**
      * Check whether a funcionario is already in an election's census.

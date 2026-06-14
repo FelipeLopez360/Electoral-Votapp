@@ -1,7 +1,7 @@
 package co.com.votapp.ws.electoral.domain.port.in;
 
 import co.com.votapp.ws.electoral.domain.model.CensoEntry;
-import org.springframework.data.domain.Page;
+import co.com.votapp.ws.electoral.domain.model.PageResult;
 
 import java.util.UUID;
 
@@ -76,9 +76,9 @@ public interface ManageCensoUseCase {
      * @param eleccionId the election UUID
      * @param page       zero-based page number
      * @param size       page size
-     * @return paginated census entries
+     * @return paginated census entries (pure Java — no Spring Page)
      */
-    Page<CensoEntry> listCenso(UUID eleccionId, int page, int size);
+    PageResult<CensoEntry> listCenso(UUID eleccionId, int page, int size);
 
     /**
      * Count the total number of entries in an election's census.

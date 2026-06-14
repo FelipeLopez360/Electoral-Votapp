@@ -1,6 +1,7 @@
 package co.com.votapp.ws.electoral.infrastructure.adapter.out.persistence;
 
 import co.com.votapp.ws.electoral.domain.model.CensoEntry;
+import co.com.votapp.ws.electoral.domain.model.PageResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -71,22 +72,32 @@ class CensoRepositoryAdapterTest {
     // ─── saveAll ─────────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("Should save all entries and return domain records")
-    void saveAll_shouldReturnAllSavedEntries_whenListIsGiven() {
-        // Given
+    @DisplayName("Should bulk-insert all entries using per-row ON CONFLICT DO NOTHING native query")
+    void saveAll_shouldUseBulkInsert_andReturnPassedEntries() {
+        // Given — adapter uses insertOnConflictDoNothing per row, not saveAll
         var entry1 = new CensoEntry(null, ELECCION_ID, 1, 99, NOW);
         var entry2 = new CensoEntry(null, ELECCION_ID, 2, 99, NOW);
-        var savedEntity1 = savedEntity(UUID.randomUUID(), ELECCION_ID, 1, 99, NOW);
-        var savedEntity2 = savedEntity(UUID.randomUUID(), ELECCION_ID, 2, 99, NOW);
-        when(jpaRepository.saveAll(any())).thenReturn(List.of(savedEntity1, savedEntity2));
+        when(jpaRepository.insertOnConflictDoNothing(eq(ELECCION_ID), eq(1), eq(99))).thenReturn(1);
+        when(jpaRepository.insertOnConflictDoNothing(eq(ELECCION_ID), eq(2), eq(99))).thenReturn(1);
 
         // When
         var result = adapter.saveAll(List.of(entry1, entry2));
 
-        // Then
+        // Then — the input entries are returned (native query doesn't return entities)
         assertThat(result).hasSize(2);
         assertThat(result.get(0).eleccionId()).isEqualTo(ELECCION_ID);
-        verify(jpaRepository).saveAll(any());
+        verify(jpaRepository).insertOnConflictDoNothing(eq(ELECCION_ID), eq(1), eq(99));
+        verify(jpaRepository).insertOnConflictDoNothing(eq(ELECCION_ID), eq(2), eq(99));
+    }
+
+    @Test
+    @DisplayName("Should return empty list when saveAll is called with empty input")
+    void saveAll_shouldReturnEmptyList_whenInputIsEmpty() {
+        // When
+        var result = adapter.saveAll(List.of());
+
+        // Then
+        assertThat(result).isEmpty();
     }
 
     // ─── delete ──────────────────────────────────────────────────────────────
@@ -114,19 +125,19 @@ class CensoRepositoryAdapterTest {
     // ─── findByEleccionId ────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("Should return paginated domain entries for an election")
-    void findByEleccionId_shouldReturnPage_whenEntriesExist() {
+    @DisplayName("Should return PageResult mapped from Spring Page for an election")
+    void findByEleccionId_shouldReturnPageResult_whenEntriesExist() {
         // Given
         var entity = savedEntity(ENTRY_ID, ELECCION_ID, FUNCIONARIO_ID, 99, NOW);
         Page<CensoEntity> entityPage = new PageImpl<>(List.of(entity), PageRequest.of(0, 10), 1);
         when(jpaRepository.findByEleccionId(eq(ELECCION_ID), any())).thenReturn(entityPage);
 
         // When
-        var result = adapter.findByEleccionId(ELECCION_ID, 0, 10);
+        PageResult<CensoEntry> result = adapter.findByEleccionId(ELECCION_ID, 0, 10);
 
-        // Then
-        assertThat(result.getTotalElements()).isEqualTo(1);
-        assertThat(result.getContent().get(0).funcionarioId()).isEqualTo(FUNCIONARIO_ID);
+        // Then — PageResult uses record accessors (no getters)
+        assertThat(result.totalElements()).isEqualTo(1);
+        assertThat(result.content().get(0).funcionarioId()).isEqualTo(FUNCIONARIO_ID);
     }
 
     // ─── existsByEleccionIdAndFuncionarioId ──────────────────────────────────

@@ -2,13 +2,13 @@ package co.com.votapp.ws.electoral.infrastructure.adapter.out.persistence;
 
 import co.com.votapp.ws.TestcontainersDockerConfig;
 import co.com.votapp.ws.electoral.domain.model.CensoEntry;
+import co.com.votapp.ws.electoral.domain.model.PageResult;
 import co.com.votapp.ws.electoral.domain.port.out.CensoRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -125,19 +125,19 @@ class CensoRepositoryAdapterIT {
     // ─── saveAll / bulkInsert ─────────────────────────────────────────────────
 
     @Test
-    @DisplayName("Should save all entries via saveAll and return domain records")
+    @DisplayName("Should save all entries via saveAll and persist them to the database")
     void saveAll_shouldPersistAllEntries() {
         // Given
         var entry1 = new CensoEntry(null, eleccionId, funcionarioId, null, Instant.now());
         var entry2 = new CensoEntry(null, eleccionId, funcionarioId2, null, Instant.now());
 
         // When
-        List<CensoEntry> saved = censoRepository.saveAll(List.of(entry1, entry2));
+        censoRepository.saveAll(List.of(entry1, entry2));
 
-        // Then
-        assertThat(saved).hasSize(2);
-        assertThat(saved).allSatisfy(e -> assertThat(e.id()).isNotNull());
+        // Then — verify persistence via count (native query returns input entries without DB-generated IDs)
         assertThat(censoRepository.countByEleccionId(eleccionId)).isEqualTo(2);
+        assertThat(censoRepository.existsByEleccionIdAndFuncionarioId(eleccionId, funcionarioId)).isTrue();
+        assertThat(censoRepository.existsByEleccionIdAndFuncionarioId(eleccionId, funcionarioId2)).isTrue();
     }
 
     @Test
@@ -168,11 +168,11 @@ class CensoRepositoryAdapterIT {
         ));
 
         // When
-        Page<CensoEntry> page = censoRepository.findByEleccionId(eleccionId, 0, 10);
+        PageResult<CensoEntry> page = censoRepository.findByEleccionId(eleccionId, 0, 10);
 
         // Then
-        assertThat(page.getTotalElements()).isEqualTo(2);
-        assertThat(page.getContent()).allSatisfy(e -> assertThat(e.eleccionId()).isEqualTo(eleccionId));
+        assertThat(page.totalElements()).isEqualTo(2);
+        assertThat(page.content()).allSatisfy(e -> assertThat(e.eleccionId()).isEqualTo(eleccionId));
     }
 
     @Test
@@ -181,11 +181,11 @@ class CensoRepositoryAdapterIT {
         // Given — no entries added
 
         // When
-        Page<CensoEntry> page = censoRepository.findByEleccionId(eleccionId, 0, 10);
+        PageResult<CensoEntry> page = censoRepository.findByEleccionId(eleccionId, 0, 10);
 
         // Then
-        assertThat(page.getTotalElements()).isEqualTo(0);
-        assertThat(page.getContent()).isEmpty();
+        assertThat(page.totalElements()).isEqualTo(0);
+        assertThat(page.content()).isEmpty();
     }
 
     // ─── existsByEleccionIdAndFuncionarioId ──────────────────────────────────
