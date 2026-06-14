@@ -1,6 +1,9 @@
 package co.com.votapp.ws.voting.domain.usecase;
 
 import co.com.votapp.ws.common.exception.DomainException;
+import co.com.votapp.ws.electoral.domain.Election;
+import co.com.votapp.ws.electoral.domain.ElectionStatus;
+import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;
 import co.com.votapp.ws.voting.application.command.IssueVotingTokenCommand;
 import co.com.votapp.ws.voting.domain.IssuedVotingToken;
 import co.com.votapp.ws.voting.domain.TokenStatus;
@@ -17,14 +20,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -42,24 +45,31 @@ class IssueVotingTokenUseCaseTest {
     @Mock
     private ParticipacionRepositoryPort participacionRepository;
 
+    @Mock
+    private ElectionRepositoryPort electionRepository;
+
     private IssueVotingTokenUseCase useCase;
+
+    private static final UUID ELECCION_ID = UUID.randomUUID();
+    private static final Long FUNCIONARIO_ID = 42L;
 
     @BeforeEach
     void setUp() {
-        useCase = new IssueVotingTokenUseCaseImpl(votingTokenRepository, eligibilityRepository, participacionRepository);
+        useCase = new IssueVotingTokenUseCaseImpl(
+                votingTokenRepository, eligibilityRepository, participacionRepository, electionRepository);
     }
+
+    // ─── Happy path ────────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("Should return IssuedVotingToken with rawToken and tokenId when all conditions are met")
-    void issue_shouldReturnIssuedToken_whenFuncionarioIsEligibleAndNoExistingToken() {
+    void issue_shouldReturnIssuedToken_whenFuncionarioIsInCensusAndElectionIsActiva() {
         // Given
-        UUID eleccionId = UUID.randomUUID();
-        Long funcionarioId = 42L;
-        var command = new IssueVotingTokenCommand(funcionarioId, eleccionId);
-
-        when(eligibilityRepository.isEligible(funcionarioId)).thenReturn(true);
-        when(votingTokenRepository.existsIssuedTokenFor(eleccionId, funcionarioId)).thenReturn(false);
-        when(participacionRepository.hasParticipated(eleccionId, funcionarioId)).thenReturn(false);
+        var command = new IssueVotingTokenCommand(FUNCIONARIO_ID, ELECCION_ID);
+        when(electionRepository.findById(ELECCION_ID)).thenReturn(Optional.of(activaElection()));
+        when(eligibilityRepository.isEligibleForElection(FUNCIONARIO_ID, ELECCION_ID)).thenReturn(true);
+        when(votingTokenRepository.existsIssuedTokenFor(ELECCION_ID, FUNCIONARIO_ID)).thenReturn(false);
+        when(participacionRepository.hasParticipated(ELECCION_ID, FUNCIONARIO_ID)).thenReturn(false);
         when(votingTokenRepository.saveIssued(any(VotingToken.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // When
@@ -74,13 +84,11 @@ class IssueVotingTokenUseCaseTest {
     @DisplayName("Should NOT persist rawToken — only the SHA-256 hash is saved")
     void issue_shouldPersistHashNotRawToken_whenTokenIsIssued() {
         // Given
-        UUID eleccionId = UUID.randomUUID();
-        Long funcionarioId = 42L;
-        var command = new IssueVotingTokenCommand(funcionarioId, eleccionId);
-
-        when(eligibilityRepository.isEligible(funcionarioId)).thenReturn(true);
-        when(votingTokenRepository.existsIssuedTokenFor(eleccionId, funcionarioId)).thenReturn(false);
-        when(participacionRepository.hasParticipated(eleccionId, funcionarioId)).thenReturn(false);
+        var command = new IssueVotingTokenCommand(FUNCIONARIO_ID, ELECCION_ID);
+        when(electionRepository.findById(ELECCION_ID)).thenReturn(Optional.of(activaElection()));
+        when(eligibilityRepository.isEligibleForElection(FUNCIONARIO_ID, ELECCION_ID)).thenReturn(true);
+        when(votingTokenRepository.existsIssuedTokenFor(ELECCION_ID, FUNCIONARIO_ID)).thenReturn(false);
+        when(participacionRepository.hasParticipated(ELECCION_ID, FUNCIONARIO_ID)).thenReturn(false);
         when(votingTokenRepository.saveIssued(any(VotingToken.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // When
@@ -93,19 +101,21 @@ class IssueVotingTokenUseCaseTest {
 
         assertThat(persisted.tokenHash()).isNotEqualTo(issued.rawToken());
         assertThat(persisted.status()).isEqualTo(TokenStatus.ISSUED);
-        assertThat(persisted.eleccionId()).isEqualTo(eleccionId);
-        assertThat(persisted.funcionarioId()).isEqualTo(funcionarioId);
+        assertThat(persisted.eleccionId()).isEqualTo(ELECCION_ID);
+        assertThat(persisted.funcionarioId()).isEqualTo(FUNCIONARIO_ID);
     }
 
     @Test
     @DisplayName("Should generate unique rawToken per invocation")
     void issue_shouldGenerateUniqueRawTokens_onEachCall() {
         // Given
-        UUID eleccionId = UUID.randomUUID();
-        var command1 = new IssueVotingTokenCommand(1L, eleccionId);
-        var command2 = new IssueVotingTokenCommand(2L, eleccionId);
+        UUID anotherEleccionId = UUID.randomUUID();
+        var command1 = new IssueVotingTokenCommand(1L, ELECCION_ID);
+        var command2 = new IssueVotingTokenCommand(2L, anotherEleccionId);
 
-        when(eligibilityRepository.isEligible(anyLong())).thenReturn(true);
+        when(electionRepository.findById(ELECCION_ID)).thenReturn(Optional.of(activaElection(ELECCION_ID)));
+        when(electionRepository.findById(anotherEleccionId)).thenReturn(Optional.of(activaElection(anotherEleccionId)));
+        when(eligibilityRepository.isEligibleForElection(anyLong(), any(UUID.class))).thenReturn(true);
         when(votingTokenRepository.existsIssuedTokenFor(any(), anyLong())).thenReturn(false);
         when(participacionRepository.hasParticipated(any(), anyLong())).thenReturn(false);
         when(votingTokenRepository.saveIssued(any(VotingToken.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -118,15 +128,64 @@ class IssueVotingTokenUseCaseTest {
         assertThat(token1.rawToken()).isNotEqualTo(token2.rawToken());
     }
 
-    @Test
-    @DisplayName("Should throw DomainException when funcionario is not eligible")
-    void issue_shouldThrowDomainException_whenFuncionarioIsNotEligible() {
-        // Given
-        UUID eleccionId = UUID.randomUUID();
-        Long funcionarioId = 99L;
-        var command = new IssueVotingTokenCommand(funcionarioId, eleccionId);
+    // ─── Election state guard ──────────────────────────────────────────────────
 
-        when(eligibilityRepository.isEligible(funcionarioId)).thenReturn(false);
+    @Test
+    @DisplayName("Should throw DomainException when election does not exist")
+    void issue_shouldThrowDomainException_whenElectionNotFound() {
+        // Given
+        var command = new IssueVotingTokenCommand(FUNCIONARIO_ID, ELECCION_ID);
+        when(electionRepository.findById(ELECCION_ID)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThatThrownBy(() -> useCase.issue(command))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("Elección no encontrada");
+
+        verify(votingTokenRepository, never()).saveIssued(any());
+    }
+
+    @Test
+    @DisplayName("Should throw DomainException when election is PROGRAMADA, not ACTIVA")
+    void issue_shouldThrowDomainException_whenElectionIsProgramada() {
+        // Given
+        var command = new IssueVotingTokenCommand(FUNCIONARIO_ID, ELECCION_ID);
+        when(electionRepository.findById(ELECCION_ID))
+                .thenReturn(Optional.of(electionWithStatus(ELECCION_ID, ElectionStatus.PROGRAMADA)));
+
+        // When & Then
+        assertThatThrownBy(() -> useCase.issue(command))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("no está ACTIVA");
+
+        verify(votingTokenRepository, never()).saveIssued(any());
+    }
+
+    @Test
+    @DisplayName("Should throw DomainException when election is FINALIZADA")
+    void issue_shouldThrowDomainException_whenElectionIsFinalizada() {
+        // Given
+        var command = new IssueVotingTokenCommand(FUNCIONARIO_ID, ELECCION_ID);
+        when(electionRepository.findById(ELECCION_ID))
+                .thenReturn(Optional.of(electionWithStatus(ELECCION_ID, ElectionStatus.FINALIZADA)));
+
+        // When & Then
+        assertThatThrownBy(() -> useCase.issue(command))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("no está ACTIVA");
+
+        verify(votingTokenRepository, never()).saveIssued(any());
+    }
+
+    // ─── Census eligibility ───────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("Should throw DomainException when funcionario is NOT in census for this election")
+    void issue_shouldThrowDomainException_whenFuncionarioNotInCensus() {
+        // Given
+        var command = new IssueVotingTokenCommand(FUNCIONARIO_ID, ELECCION_ID);
+        when(electionRepository.findById(ELECCION_ID)).thenReturn(Optional.of(activaElection()));
+        when(eligibilityRepository.isEligibleForElection(FUNCIONARIO_ID, ELECCION_ID)).thenReturn(false);
 
         // When & Then
         assertThatThrownBy(() -> useCase.issue(command))
@@ -137,15 +196,34 @@ class IssueVotingTokenUseCaseTest {
     }
 
     @Test
+    @DisplayName("Should issue token when census is empty (backward compatibility fallback)")
+    void issue_shouldIssueToken_whenCensusIsEmptyAndFuncionarioIsGloballyEligible() {
+        // Given — isEligibleForElection returns true when census is empty (adapter-level fallback)
+        var command = new IssueVotingTokenCommand(FUNCIONARIO_ID, ELECCION_ID);
+        when(electionRepository.findById(ELECCION_ID)).thenReturn(Optional.of(activaElection()));
+        when(eligibilityRepository.isEligibleForElection(FUNCIONARIO_ID, ELECCION_ID)).thenReturn(true);
+        when(votingTokenRepository.existsIssuedTokenFor(ELECCION_ID, FUNCIONARIO_ID)).thenReturn(false);
+        when(participacionRepository.hasParticipated(ELECCION_ID, FUNCIONARIO_ID)).thenReturn(false);
+        when(votingTokenRepository.saveIssued(any(VotingToken.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        IssuedVotingToken result = useCase.issue(command);
+
+        // Then — token issued successfully
+        assertThat(result.rawToken()).isNotBlank();
+        assertThat(result.tokenId()).isNotNull();
+    }
+
+    // ─── Legacy eligibility checks ────────────────────────────────────────────
+
+    @Test
     @DisplayName("Should throw DomainException when funcionario already has an ISSUED token for this election")
     void issue_shouldThrowDomainException_whenTokenAlreadyIssued() {
         // Given
-        UUID eleccionId = UUID.randomUUID();
-        Long funcionarioId = 42L;
-        var command = new IssueVotingTokenCommand(funcionarioId, eleccionId);
-
-        when(eligibilityRepository.isEligible(funcionarioId)).thenReturn(true);
-        when(votingTokenRepository.existsIssuedTokenFor(eleccionId, funcionarioId)).thenReturn(true);
+        var command = new IssueVotingTokenCommand(FUNCIONARIO_ID, ELECCION_ID);
+        when(electionRepository.findById(ELECCION_ID)).thenReturn(Optional.of(activaElection()));
+        when(eligibilityRepository.isEligibleForElection(FUNCIONARIO_ID, ELECCION_ID)).thenReturn(true);
+        when(votingTokenRepository.existsIssuedTokenFor(ELECCION_ID, FUNCIONARIO_ID)).thenReturn(true);
 
         // When & Then
         assertThatThrownBy(() -> useCase.issue(command))
@@ -159,13 +237,11 @@ class IssueVotingTokenUseCaseTest {
     @DisplayName("Should throw DomainException when funcionario has already voted in the election")
     void issue_shouldThrowDomainException_whenFuncionarioHasAlreadyVoted() {
         // Given
-        UUID eleccionId = UUID.randomUUID();
-        Long funcionarioId = 42L;
-        var command = new IssueVotingTokenCommand(funcionarioId, eleccionId);
-
-        when(eligibilityRepository.isEligible(funcionarioId)).thenReturn(true);
-        when(votingTokenRepository.existsIssuedTokenFor(eleccionId, funcionarioId)).thenReturn(false);
-        when(participacionRepository.hasParticipated(eleccionId, funcionarioId)).thenReturn(true);
+        var command = new IssueVotingTokenCommand(FUNCIONARIO_ID, ELECCION_ID);
+        when(electionRepository.findById(ELECCION_ID)).thenReturn(Optional.of(activaElection()));
+        when(eligibilityRepository.isEligibleForElection(FUNCIONARIO_ID, ELECCION_ID)).thenReturn(true);
+        when(votingTokenRepository.existsIssuedTokenFor(ELECCION_ID, FUNCIONARIO_ID)).thenReturn(false);
+        when(participacionRepository.hasParticipated(ELECCION_ID, FUNCIONARIO_ID)).thenReturn(true);
 
         // When & Then
         assertThatThrownBy(() -> useCase.issue(command))
@@ -173,5 +249,26 @@ class IssueVotingTokenUseCaseTest {
                 .hasMessageContaining("ya votó");
 
         verify(votingTokenRepository, never()).saveIssued(any());
+    }
+
+    // ─── Test data factories ──────────────────────────────────────────────────
+
+    private Election activaElection() {
+        return activaElection(ELECCION_ID);
+    }
+
+    private Election activaElection(UUID id) {
+        return electionWithStatus(id, ElectionStatus.ACTIVA);
+    }
+
+    private Election electionWithStatus(UUID id, ElectionStatus status) {
+        return new Election(
+                id,
+                "EL-001",
+                "Test Election",
+                status,
+                LocalDateTime.now().minusDays(1),
+                LocalDateTime.now().plusDays(1)
+        );
     }
 }

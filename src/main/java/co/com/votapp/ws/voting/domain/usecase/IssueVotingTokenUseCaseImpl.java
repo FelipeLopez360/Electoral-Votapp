@@ -1,6 +1,9 @@
 package co.com.votapp.ws.voting.domain.usecase;
 
 import co.com.votapp.ws.common.exception.DomainException;
+import co.com.votapp.ws.electoral.domain.Election;
+import co.com.votapp.ws.electoral.domain.ElectionStatus;
+import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;
 import co.com.votapp.ws.voting.application.command.IssueVotingTokenCommand;
 import co.com.votapp.ws.voting.domain.IssuedVotingToken;
 import co.com.votapp.ws.voting.domain.TokenStatus;
@@ -25,6 +28,15 @@ import java.util.UUID;
  * computes its SHA-256 hash, and persists the hash only.
  * Returns the ephemeral rawToken once — it is NEVER stored.
  * No Spring annotations — wired manually via DomainConfig.
+ *
+ * <p>Pre-conditions enforced (in order):
+ * <ol>
+ *   <li>Election must exist.</li>
+ *   <li>Election must be ACTIVA.</li>
+ *   <li>Funcionario must be eligible for this election (global AND census-aware).</li>
+ *   <li>No existing ISSUED token for this funcionario+election pair.</li>
+ *   <li>Funcionario has not already voted in this election.</li>
+ * </ol>
  */
 public class IssueVotingTokenUseCaseImpl implements IssueVotingTokenUseCase {
 
@@ -33,28 +45,45 @@ public class IssueVotingTokenUseCaseImpl implements IssueVotingTokenUseCase {
     private final VotingTokenRepository votingTokenRepository;
     private final VoterEligibilityRepositoryPort eligibilityRepository;
     private final ParticipacionRepositoryPort participacionRepository;
+    private final ElectionRepositoryPort electionRepository;
 
     public IssueVotingTokenUseCaseImpl(VotingTokenRepository votingTokenRepository,
                                        VoterEligibilityRepositoryPort eligibilityRepository,
-                                       ParticipacionRepositoryPort participacionRepository) {
+                                       ParticipacionRepositoryPort participacionRepository,
+                                       ElectionRepositoryPort electionRepository) {
         this.votingTokenRepository = votingTokenRepository;
         this.eligibilityRepository = eligibilityRepository;
         this.participacionRepository = participacionRepository;
+        this.electionRepository = electionRepository;
     }
 
     @Override
     public IssuedVotingToken issue(IssueVotingTokenCommand command) {
-        if (!eligibilityRepository.isEligible(command.funcionarioId())) {
+        // Guard 1: election must exist
+        Election election = electionRepository.findById(command.eleccionId())
+                .orElseThrow(() -> new DomainException(
+                        "Elección no encontrada: " + command.eleccionId()));
+
+        // Guard 2: election must be ACTIVA
+        if (election.status() != ElectionStatus.ACTIVA) {
             throw new DomainException(
-                    "El funcionario " + command.funcionarioId() + " no está habilitado para votar");
+                    "La elección " + command.eleccionId() + " no está ACTIVA (estado actual: " + election.status() + ")");
         }
 
+        // Guard 3: election-scoped eligibility (global + census-aware)
+        if (!eligibilityRepository.isEligibleForElection(command.funcionarioId(), command.eleccionId())) {
+            throw new DomainException(
+                    "El funcionario " + command.funcionarioId() + " no está habilitado para votar en esta elección");
+        }
+
+        // Guard 4: no existing ISSUED token
         if (votingTokenRepository.existsIssuedTokenFor(command.eleccionId(), command.funcionarioId())) {
             throw new DomainException(
                     "El funcionario " + command.funcionarioId() +
                     " ya tiene un token emitido para esta elección");
         }
 
+        // Guard 5: funcionario has not already voted
         if (participacionRepository.hasParticipated(command.eleccionId(), command.funcionarioId())) {
             throw new DomainException(
                     "Este funcionario ya votó en esta elección");

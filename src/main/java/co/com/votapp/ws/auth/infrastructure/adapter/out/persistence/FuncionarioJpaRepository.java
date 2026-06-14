@@ -58,4 +58,38 @@ public interface FuncionarioJpaRepository extends JpaRepository<FuncionarioEntit
     @Transactional
     @Query("UPDATE FuncionarioEntity f SET f.ultimoAcceso = :accessTime WHERE f.documentoIdentidad = :doc")
     void updateUltimoAcceso(@Param("doc") String documentoIdentidad, @Param("accessTime") LocalDateTime accessTime);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE FuncionarioEntity f SET f.passwordHash = :newHash WHERE f.documentoIdentidad = :doc")
+    void updatePasswordHash(@Param("doc") String documentoIdentidad, @Param("newHash") String newHash);
+
+    // ─── Census bulk-add queries ───────────────────────────────────────────────
+
+    /**
+     * Returns all ACTIVO + puede_votar=true funcionarios from a given department.
+     * Used by the electoral context for bulk census population.
+     */
+    @Query("""
+            SELECT f FROM FuncionarioEntity f
+            WHERE f.departamentoId = :departamentoId
+              AND f.estadoLaboral = 'ACTIVO'
+              AND f.puedeVotar = true
+            """)
+    List<FuncionarioEntity> findEligibleByDepartamento(@Param("departamentoId") Integer departamentoId);
+
+    /**
+     * Returns funcionarios matching flexible filter criteria.
+     * Null parameters are treated as "match any".
+     */
+    @Query("""
+            SELECT f FROM FuncionarioEntity f
+            WHERE (:departamentoId IS NULL OR f.departamentoId = :departamentoId)
+              AND (:estadoLaboral IS NULL OR f.estadoLaboral = :estadoLaboral)
+              AND (:puedeVotar IS NULL OR f.puedeVotar = :puedeVotar)
+            """)
+    List<FuncionarioEntity> findEligibleByFilters(
+            @Param("departamentoId") Integer departamentoId,
+            @Param("estadoLaboral") String estadoLaboral,
+            @Param("puedeVotar") Boolean puedeVotar);
 }

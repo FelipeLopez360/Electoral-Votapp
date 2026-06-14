@@ -153,6 +153,31 @@ public class FuncionarioRepositoryAdapter implements FuncionarioRepositoryPort {
         jpaRepository.updateUltimoAcceso(documentoIdentidad, accessTime);
     }
 
+    @Override
+    public void updatePasswordHash(String documentoIdentidad, String newPasswordHash) {
+        jpaRepository.updatePasswordHash(documentoIdentidad, newPasswordHash);
+    }
+
+    // ─── Census bulk-add queries ──────────────────────────────────────────────
+
+    @Override
+    public List<Funcionario> findEligibleByDepartamento(Integer departamentoId) {
+        return jpaRepository.findEligibleByDepartamento(departamentoId)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Funcionario> findEligibleByFilters(Integer departamentoId,
+                                                    String estadoLaboral,
+                                                    Boolean puedeVotar) {
+        return jpaRepository.findEligibleByFilters(departamentoId, estadoLaboral, puedeVotar)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
     // ─── Mapping ─────────────────────────────────────────────────────────────
 
     private Funcionario toDomain(FuncionarioEntity entity) {

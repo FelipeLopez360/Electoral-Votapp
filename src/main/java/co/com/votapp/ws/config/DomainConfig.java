@@ -3,13 +3,20 @@ package co.com.votapp.ws.config;
 import co.com.votapp.ws.audit.domain.port.in.RegisterAuditEventPort;
 import co.com.votapp.ws.audit.domain.port.out.AuditoriaRepositoryPort;
 import co.com.votapp.ws.audit.domain.usecase.RegisterAuditEventUseCase;
+import co.com.votapp.ws.auth.domain.port.in.ChangePasswordUseCase;
 import co.com.votapp.ws.auth.domain.port.in.CreateFuncionarioUseCase;
+import co.com.votapp.ws.auth.domain.port.in.LogoutUseCase;
 import co.com.votapp.ws.auth.domain.port.in.UpdateFuncionarioUseCase;
+import co.com.votapp.ws.auth.domain.port.in.UpdateProfileUseCase;
 import co.com.votapp.ws.auth.domain.port.out.FuncionarioRepositoryPort;
 import co.com.votapp.ws.auth.domain.port.out.PasswordEncoderPort;
+import co.com.votapp.ws.auth.domain.port.out.PortalSessionPort;
 import co.com.votapp.ws.auth.domain.usecase.AuthenticateFuncionarioUseCase;
+import co.com.votapp.ws.auth.domain.usecase.ChangePasswordUseCaseImpl;
 import co.com.votapp.ws.auth.domain.usecase.CreateFuncionarioUseCaseImpl;
+import co.com.votapp.ws.auth.domain.usecase.LogoutUseCaseImpl;
 import co.com.votapp.ws.auth.domain.usecase.UpdateFuncionarioUseCaseImpl;
+import co.com.votapp.ws.auth.domain.usecase.UpdateProfileUseCaseImpl;
 import co.com.votapp.ws.candidates.domain.port.out.CandidatoRepositoryPort;
 import co.com.votapp.ws.candidates.domain.usecase.GetCandidatosUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.ActivateElectionUseCase;
@@ -17,7 +24,9 @@ import co.com.votapp.ws.electoral.domain.port.in.AddCandidateUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.CreateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.FinalizeElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.GetBallotUseCase;
+import co.com.votapp.ws.electoral.domain.port.in.ManageCensoUseCase;
 import co.com.votapp.ws.electoral.domain.port.out.CandidateRepositoryPort;
+import co.com.votapp.ws.electoral.domain.port.out.CensoRepositoryPort;
 import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;
 import co.com.votapp.ws.electoral.domain.port.out.EleccionRepositoryPort;
 import co.com.votapp.ws.electoral.domain.usecase.ActivateElectionUseCaseImpl;
@@ -26,6 +35,7 @@ import co.com.votapp.ws.electoral.domain.usecase.CreateElectionUseCaseImpl;
 import co.com.votapp.ws.electoral.domain.usecase.FinalizeElectionUseCaseImpl;
 import co.com.votapp.ws.electoral.domain.usecase.GetBallotUseCaseImpl;
 import co.com.votapp.ws.electoral.domain.usecase.GetEleccionUseCase;
+import co.com.votapp.ws.electoral.domain.usecase.ManageCensoUseCaseImpl;
 import co.com.votapp.ws.organization.domain.port.out.DepartamentoRepositoryPort;
 import co.com.votapp.ws.organization.domain.usecase.GetDepartamentosUseCase;
 import co.com.votapp.ws.voting.domain.port.out.ParticipacionRepositoryPort;
@@ -80,6 +90,22 @@ public class DomainConfig {
     // ─── gestion-funcionarios: Funcionario CRUD use cases ────────────────────
 
     @Bean
+    public ChangePasswordUseCase changePasswordUseCase(FuncionarioRepositoryPort funcionarioRepository,
+                                                        PasswordEncoderPort passwordEncoder) {
+        return new ChangePasswordUseCaseImpl(funcionarioRepository, passwordEncoder);
+    }
+
+    @Bean
+    public UpdateProfileUseCase updateProfileUseCase(FuncionarioRepositoryPort funcionarioRepository) {
+        return new UpdateProfileUseCaseImpl(funcionarioRepository);
+    }
+
+    @Bean
+    public LogoutUseCase logoutUseCase(PortalSessionPort sessionPort) {
+        return new LogoutUseCaseImpl(sessionPort);
+    }
+
+    @Bean
     public CreateFuncionarioUseCase createFuncionarioUseCase(FuncionarioRepositoryPort funcionarioRepository,
                                                               PasswordEncoderPort passwordEncoder) {
         return new CreateFuncionarioUseCaseImpl(funcionarioRepository, passwordEncoder);
@@ -88,6 +114,15 @@ public class DomainConfig {
     @Bean
     public UpdateFuncionarioUseCase updateFuncionarioUseCase(FuncionarioRepositoryPort funcionarioRepository) {
         return new UpdateFuncionarioUseCaseImpl(funcionarioRepository);
+    }
+
+    // ─── censo-electoral: ManageCenso use case ───────────────────────────────
+
+    @Bean
+    public ManageCensoUseCase manageCensoUseCase(ElectionRepositoryPort electionRepository,
+                                                   FuncionarioRepositoryPort funcionarioRepository,
+                                                   CensoRepositoryPort censoRepository) {
+        return new ManageCensoUseCaseImpl(electionRepository, funcionarioRepository, censoRepository);
     }
 
     // ─── PR 2: Electoral use cases ────────────────────────────────────────────
@@ -126,8 +161,10 @@ public class DomainConfig {
     @Bean
     public IssueVotingTokenUseCaseImpl issueVotingTokenUseCase(VotingTokenRepository votingTokenRepository,
                                                                 VoterEligibilityRepositoryPort eligibilityRepository,
-                                                                ParticipacionRepositoryPort participacionRepository) {
-        return new IssueVotingTokenUseCaseImpl(votingTokenRepository, eligibilityRepository, participacionRepository);
+                                                                ParticipacionRepositoryPort participacionRepository,
+                                                                ElectionRepositoryPort electionRepository) {
+        return new IssueVotingTokenUseCaseImpl(
+                votingTokenRepository, eligibilityRepository, participacionRepository, electionRepository);
     }
 
     @Bean

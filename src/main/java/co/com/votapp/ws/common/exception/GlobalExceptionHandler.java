@@ -3,6 +3,7 @@ package co.com.votapp.ws.common.exception;
 import co.com.votapp.ws.auth.domain.exception.AccountInactiveException;
 import co.com.votapp.ws.auth.domain.exception.AccountLockedException;
 import co.com.votapp.ws.auth.domain.exception.InvalidCredentialsException;
+import co.com.votapp.ws.electoral.domain.exception.ElectionNotModifiableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -43,6 +44,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAccountInactive(AccountInactiveException ex) {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse(ex.getMessage()));
+    }
+
+    // ─── Electoral domain exceptions ──────────────────────────────────────────
+
+    @ExceptionHandler(ElectionNotModifiableException.class)
+    public ResponseEntity<ErrorResponse> handleElectionNotModifiable(ElectionNotModifiableException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(ex.getMessage()));
     }
 
