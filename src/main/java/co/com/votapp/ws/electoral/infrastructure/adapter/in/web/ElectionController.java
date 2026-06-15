@@ -2,11 +2,11 @@ package co.com.votapp.ws.electoral.infrastructure.adapter.in.web;
 
 import co.com.votapp.ws.electoral.application.command.AddCandidateCommand;
 import co.com.votapp.ws.electoral.application.command.CreateElectionCommand;
+import co.com.votapp.ws.electoral.application.service.ElectionTransitionAppService;
 import co.com.votapp.ws.electoral.domain.Ballot;
 import co.com.votapp.ws.electoral.domain.Candidate;
 import co.com.votapp.ws.electoral.domain.Election;
 import co.com.votapp.ws.electoral.domain.ElectionStatus;
-import co.com.votapp.ws.electoral.domain.port.in.ActivateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.AddCandidateUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.CreateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.FinalizeElectionUseCase;
@@ -48,7 +48,7 @@ import java.util.UUID;
 public class ElectionController {
 
     private final CreateElectionUseCase createElectionUseCase;
-    private final ActivateElectionUseCase activateElectionUseCase;
+    private final ElectionTransitionAppService electionTransitionAppService;
     private final FinalizeElectionUseCase finalizeElectionUseCase;
     private final GetBallotUseCase getBallotUseCase;
     private final AddCandidateUseCase addCandidateUseCase;
@@ -57,14 +57,14 @@ public class ElectionController {
 
     public ElectionController(
             CreateElectionUseCase createElectionUseCase,
-            ActivateElectionUseCase activateElectionUseCase,
+            ElectionTransitionAppService electionTransitionAppService,
             FinalizeElectionUseCase finalizeElectionUseCase,
             GetBallotUseCase getBallotUseCase,
             AddCandidateUseCase addCandidateUseCase,
             ElectionRepositoryPort electionRepository,
             CandidateRepositoryPort candidateRepository) {
         this.createElectionUseCase = createElectionUseCase;
-        this.activateElectionUseCase = activateElectionUseCase;
+        this.electionTransitionAppService = electionTransitionAppService;
         this.finalizeElectionUseCase = finalizeElectionUseCase;
         this.getBallotUseCase = getBallotUseCase;
         this.addCandidateUseCase = addCandidateUseCase;
@@ -268,7 +268,7 @@ public class ElectionController {
             @ApiResponse(responseCode = "409", description = "Invalid state transition")
     })
     public ResponseEntity<Void> activateElection(@PathVariable String id) {
-        activateElectionUseCase.activate(UUID.fromString(id));
+        electionTransitionAppService.activate(UUID.fromString(id));
         return ResponseEntity.noContent().build();
     }
 

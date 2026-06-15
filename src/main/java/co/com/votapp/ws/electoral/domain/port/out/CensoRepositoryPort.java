@@ -62,4 +62,15 @@ public interface CensoRepositoryPort {
      * Used for the backward-compatibility fallback (empty census → global-only check).
      */
     boolean hasCensus(UUID eleccionId);
+
+    /**
+     * Return all funcionario IDs registered in an election's census.
+     *
+     * <p>Used by {@code BulkIssueTokensUseCase} to obtain the list of
+     * funcionarios that should receive a voting token on activation.
+     *
+     * @param eleccionId the election UUID
+     * @return list of funcionario DB ids (Integer, matching the DB column type)
+     */
+    List<Integer> findAllFuncionarioIdsByEleccionId(UUID eleccionId);
 }

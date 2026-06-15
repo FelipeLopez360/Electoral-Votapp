@@ -42,6 +42,8 @@ import co.com.votapp.ws.voting.domain.port.out.ParticipacionRepositoryPort;
 import co.com.votapp.ws.voting.domain.port.out.TokenLockPort;
 import co.com.votapp.ws.voting.domain.port.out.VoteRepositoryPort;
 import co.com.votapp.ws.voting.domain.port.out.VotingTokenRepository;
+import co.com.votapp.ws.voting.domain.port.in.BulkIssueTokensUseCase;
+import co.com.votapp.ws.voting.domain.usecase.BulkIssueTokensUseCaseImpl;
 import co.com.votapp.ws.voting.domain.usecase.CastVoteByTokenIdUseCaseImpl;
 import co.com.votapp.ws.voting.domain.usecase.CastVoteUseCaseImpl;
 import co.com.votapp.ws.voting.domain.usecase.IssueVotingTokenUseCaseImpl;
@@ -154,6 +156,17 @@ public class DomainConfig {
                                               ElectionRepositoryPort electionRepository,
                                               CandidateRepositoryPort candidateRepository) {
         return new GetBallotUseCaseImpl(votingTokenRepository, electionRepository, candidateRepository);
+    }
+
+    // ─── bulk-token-on-activation: Bulk issuance use case ────────────────────
+
+    @Bean
+    public BulkIssueTokensUseCase bulkIssueTokensUseCase(CensoRepositoryPort censoRepository,
+                                                           VotingTokenRepository votingTokenRepository,
+                                                           VoterEligibilityRepositoryPort eligibilityRepository,
+                                                           FuncionarioRepositoryPort funcionarioRepository) {
+        return new BulkIssueTokensUseCaseImpl(
+                censoRepository, votingTokenRepository, eligibilityRepository, funcionarioRepository);
     }
 
     // ─── PR 2: Voting use cases ───────────────────────────────────────────────

@@ -196,6 +196,37 @@ class CensoRepositoryAdapterTest {
         assertThat(adapter.hasCensus(ELECCION_ID)).isFalse();
     }
 
+    // ─── findAllFuncionarioIdsByEleccionId ───────────────────────────────────
+
+    @Test
+    @DisplayName("Should return list of funcionario IDs for an election from census")
+    void findAllFuncionarioIdsByEleccionId_shouldReturnIds_whenCensusPopulated() {
+        // Given
+        when(jpaRepository.findFuncionarioIdsByEleccionId(ELECCION_ID))
+                .thenReturn(List.of(1, 2, 3));
+
+        // When
+        List<Integer> result = adapter.findAllFuncionarioIdsByEleccionId(ELECCION_ID);
+
+        // Then
+        assertThat(result).containsExactly(1, 2, 3);
+        verify(jpaRepository).findFuncionarioIdsByEleccionId(ELECCION_ID);
+    }
+
+    @Test
+    @DisplayName("Should return empty list when census is empty for an election")
+    void findAllFuncionarioIdsByEleccionId_shouldReturnEmptyList_whenCensusEmpty() {
+        // Given
+        when(jpaRepository.findFuncionarioIdsByEleccionId(ELECCION_ID))
+                .thenReturn(List.of());
+
+        // When
+        List<Integer> result = adapter.findAllFuncionarioIdsByEleccionId(ELECCION_ID);
+
+        // Then
+        assertThat(result).isEmpty();
+    }
+
     // ─── helpers ─────────────────────────────────────────────────────────────
 
     private CensoEntity savedEntity(UUID id, UUID eleccionId, Integer funcionarioId,

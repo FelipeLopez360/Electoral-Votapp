@@ -1,9 +1,9 @@
 package co.com.votapp.ws.electoral.infrastructure.adapter.in.web;
 
 import co.com.votapp.ws.common.exception.DomainException;
+import co.com.votapp.ws.electoral.application.service.ElectionTransitionAppService;
 import co.com.votapp.ws.electoral.domain.Ballot;
 import co.com.votapp.ws.electoral.domain.CandidateOption;
-import co.com.votapp.ws.electoral.domain.port.in.ActivateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.AddCandidateUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.CreateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.FinalizeElectionUseCase;
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.when;
 class ElectionControllerBallotValidationTest {
 
     @Mock private CreateElectionUseCase createElectionUseCase;
-    @Mock private ActivateElectionUseCase activateElectionUseCase;
+    @Mock private ElectionTransitionAppService electionTransitionAppService;
     @Mock private FinalizeElectionUseCase finalizeElectionUseCase;
     @Mock private GetBallotUseCase getBallotUseCase;
     @Mock private AddCandidateUseCase addCandidateUseCase;
@@ -51,7 +51,7 @@ class ElectionControllerBallotValidationTest {
     @BeforeEach
     void setUp() {
         controller = new ElectionController(
-                createElectionUseCase, activateElectionUseCase, finalizeElectionUseCase,
+                createElectionUseCase, electionTransitionAppService, finalizeElectionUseCase,
                 getBallotUseCase, addCandidateUseCase, electionRepository, candidateRepository
         );
     }

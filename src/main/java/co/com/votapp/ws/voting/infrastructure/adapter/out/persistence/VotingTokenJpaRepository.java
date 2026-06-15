@@ -67,4 +67,38 @@ public interface VotingTokenJpaRepository extends JpaRepository<VotingTokenEntit
      * Used by the portal dashboard.
      */
     List<VotingTokenEntity> findAllByFuncionarioId(Integer funcionarioId);
+
+    /**
+     * Idempotent single-row insert for a voting token.
+     *
+     * <p>Uses the partial unique index {@code uq_tokens_issued_per_funcionario_eleccion}
+     * (unique on {@code (eleccion_id, funcionario_id)} WHERE {@code status='ISSUED'}) to skip
+     * rows that would violate the constraint without throwing an exception.
+     *
+     * @param id            token UUID
+     * @param eleccionId    election UUID
+     * @param funcionarioId funcionario integer DB id
+     * @param tokenHash     SHA-256 hex hash of the raw token
+     * @param issuedAt      issuance timestamp
+     * @param createdAt     record creation timestamp
+     * @return number of rows inserted (1 = inserted, 0 = skipped due to conflict)
+     */
+    @Modifying
+    @Query(
+            value = """
+                    INSERT INTO tokens_votacion
+                        (id, eleccion_id, funcionario_id, token_hash, status, issued_at, created_at)
+                    VALUES
+                        (:id, :eleccionId, :funcionarioId, :tokenHash, 'ISSUED', :issuedAt, :createdAt)
+                    ON CONFLICT (eleccion_id, funcionario_id) WHERE status = 'ISSUED' DO NOTHING
+                    """,
+            nativeQuery = true
+    )
+    int insertIssuedOnConflictDoNothing(
+            @Param("id") UUID id,
+            @Param("eleccionId") UUID eleccionId,
+            @Param("funcionarioId") Integer funcionarioId,
+            @Param("tokenHash") String tokenHash,
+            @Param("issuedAt") Instant issuedAt,
+            @Param("createdAt") Instant createdAt);
 }
