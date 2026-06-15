@@ -1,14 +1,14 @@
 package co.com.votapp.ws.electoral.infrastructure.adapter.in.web;
 
 import co.com.votapp.ws.electoral.application.command.AddCandidateCommand;
+import co.com.votapp.ws.electoral.application.service.ElectionTransitionAppService;
 import co.com.votapp.ws.electoral.domain.Ballot;
 import co.com.votapp.ws.electoral.domain.Candidate;
 import co.com.votapp.ws.electoral.domain.CandidateOption;
 import co.com.votapp.ws.electoral.domain.Election;
 import co.com.votapp.ws.electoral.domain.ElectionStatus;
-import co.com.votapp.ws.electoral.domain.port.in.ActivateElectionUseCase;
-import co.com.votapp.ws.electoral.domain.port.in.CreateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.AddCandidateUseCase;
+import co.com.votapp.ws.electoral.domain.port.in.CreateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.FinalizeElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.GetBallotUseCase;
 import co.com.votapp.ws.electoral.domain.port.out.CandidateRepositoryPort;
@@ -38,13 +38,17 @@ import static org.mockito.Mockito.when;
  *
  * <p>No Spring context — all collaborators are mocked via Mockito.
  * Tests cover HTTP mapping, command assembly, and response projection.
+ *
+ * <p>Note: {@code activateElection} now delegates to {@link ElectionTransitionAppService}
+ * (which orchestrates both activation and bulk token issuance) instead of calling
+ * {@code ActivateElectionUseCase} directly.
  */
 @DisplayName("ElectionController - Election lifecycle REST adapter")
 @ExtendWith(MockitoExtension.class)
 class ElectionControllerTest {
 
     @Mock private CreateElectionUseCase createElectionUseCase;
-    @Mock private ActivateElectionUseCase activateElectionUseCase;
+    @Mock private ElectionTransitionAppService electionTransitionAppService;
     @Mock private FinalizeElectionUseCase finalizeElectionUseCase;
     @Mock private GetBallotUseCase getBallotUseCase;
     @Mock private AddCandidateUseCase addCandidateUseCase;
@@ -62,7 +66,7 @@ class ElectionControllerTest {
     void setUp() {
         controller = new ElectionController(
                 createElectionUseCase,
-                activateElectionUseCase,
+                electionTransitionAppService,
                 finalizeElectionUseCase,
                 getBallotUseCase,
                 addCandidateUseCase,
@@ -142,19 +146,19 @@ class ElectionControllerTest {
     // ── activateElection ─────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("Should return 204 when activation succeeds")
+    @DisplayName("Should return 204 when activation delegates to ElectionTransitionAppService")
     void activateElection_shouldReturn204_whenActivationSucceeds() {
         // When
         ResponseEntity<Void> response = controller.activateElection(ELECTION_ID.toString());
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-        verify(activateElectionUseCase).activate(ELECTION_ID);
+        verify(electionTransitionAppService).activate(ELECTION_ID);
     }
 
     @Test
-    @DisplayName("Should pass UUID to use case from path variable")
-    void activateElection_shouldPassUuidToUseCase_fromPathVariable() {
+    @DisplayName("Should pass UUID to ElectionTransitionAppService.activate from path variable")
+    void activateElection_shouldPassUuidToAppService_fromPathVariable() {
         // Given
         ArgumentCaptor<UUID> captor = ArgumentCaptor.forClass(UUID.class);
 
@@ -162,7 +166,7 @@ class ElectionControllerTest {
         controller.activateElection(ELECTION_ID.toString());
 
         // Then
-        verify(activateElectionUseCase).activate(captor.capture());
+        verify(electionTransitionAppService).activate(captor.capture());
         assertThat(captor.getValue()).isEqualTo(ELECTION_ID);
     }
 

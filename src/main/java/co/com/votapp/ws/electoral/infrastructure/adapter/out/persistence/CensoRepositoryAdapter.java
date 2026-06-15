@@ -106,4 +106,9 @@ public class CensoRepositoryAdapter implements CensoRepositoryPort {
     public boolean hasCensus(UUID eleccionId) {
         return jpaRepository.countByEleccionId(eleccionId) > 0;
     }
+
+    @Override
+    public List<Integer> findAllFuncionarioIdsByEleccionId(UUID eleccionId) {
+        return jpaRepository.findFuncionarioIdsByEleccionId(eleccionId);
+    }
 }

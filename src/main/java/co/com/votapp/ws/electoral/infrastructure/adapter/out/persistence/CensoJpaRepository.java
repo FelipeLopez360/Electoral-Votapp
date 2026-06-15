@@ -84,4 +84,11 @@ public interface CensoJpaRepository extends JpaRepository<CensoEntity, UUID> {
             @Param("eleccionId") UUID eleccionId,
             @Param("funcionarioId") Integer funcionarioId,
             @Param("agregadoPor") Integer agregadoPor);
+
+    /**
+     * Return all funcionario IDs registered in an election's census.
+     * Used by bulk token issuance to iterate over census members.
+     */
+    @Query("SELECT c.funcionarioId FROM CensoEntity c WHERE c.eleccionId = :eleccionId")
+    List<Integer> findFuncionarioIdsByEleccionId(@Param("eleccionId") UUID eleccionId);
 }

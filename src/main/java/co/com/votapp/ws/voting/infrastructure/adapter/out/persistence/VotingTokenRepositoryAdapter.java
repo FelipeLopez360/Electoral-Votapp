@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -51,6 +52,41 @@ public class VotingTokenRepositoryAdapter implements VotingTokenRepository {
         VotingTokenEntity entity = toEntity(token);
         VotingTokenEntity saved = jpaRepository.save(entity);
         return toDomain(saved);
+    }
+
+    /**
+     * Batch-insert ISSUED tokens with ON CONFLICT DO NOTHING on the partial unique index.
+     *
+     * <p>Each token is inserted using a native query. Tokens that already exist for a
+     * (eleccion_id, funcionario_id) pair WHERE status='ISSUED' are silently skipped.
+     * Returns ONLY the tokens that were actually inserted (insert count = 1);
+     * tokens skipped due to conflict are excluded from the returned list.
+     *
+     * <p>Callers may use {@code result.size()} to obtain the precise inserted count,
+     * which correctly reflects idempotent re-runs.
+     */
+    @Override
+    @Transactional
+    public List<VotingToken> saveAllIssued(List<VotingToken> tokens) {
+        if (tokens.isEmpty()) {
+            return List.of();
+        }
+        Instant now = Instant.now();
+        List<VotingToken> inserted = new ArrayList<>();
+        for (VotingToken token : tokens) {
+            int rows = jpaRepository.insertIssuedOnConflictDoNothing(
+                    token.id(),
+                    token.eleccionId(),
+                    token.funcionarioId().intValue(),
+                    token.tokenHash(),
+                    token.issuedAt(),
+                    now
+            );
+            if (rows == 1) {
+                inserted.add(token);
+            }
+        }
+        return inserted;
     }
 
     @Override

@@ -40,6 +40,18 @@ public interface VotingTokenRepository {
     VotingToken saveIssued(VotingToken token);
 
     /**
+     * Batch-persist a list of ISSUED tokens with idempotent behavior.
+     *
+     * <p>Uses {@code INSERT ... ON CONFLICT DO NOTHING} on the partial unique index
+     * {@code (eleccion_id, funcionario_id) WHERE status='ISSUED'} so retries are safe.
+     * Tokens that already exist for a (eleccion_id, funcionario_id) pair are silently skipped.
+     *
+     * @param tokens the list of tokens to persist (must all be in ISSUED status)
+     * @return the tokens that were actually inserted (skipping existing ones)
+     */
+    List<VotingToken> saveAllIssued(List<VotingToken> tokens);
+
+    /**
      * Atomically mark the token as USED within an existing DB transaction.
      *
      * @return true if exactly one row was updated; false if the token was already USED/INVALIDATED
