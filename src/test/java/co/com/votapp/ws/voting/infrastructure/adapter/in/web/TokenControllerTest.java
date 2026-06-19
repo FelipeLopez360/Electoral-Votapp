@@ -55,7 +55,7 @@ class TokenControllerTest {
         when(issueVotingTokenUseCase.issue(any())).thenReturn(issued);
 
         TokenController.IssueTokenRequest request = new TokenController.IssueTokenRequest(
-                ELECTION_ID.toString(), FUNCIONARIO_ID
+                ELECTION_ID, FUNCIONARIO_ID
         );
 
         // When
@@ -69,14 +69,15 @@ class TokenControllerTest {
     }
 
     @Test
-    @DisplayName("Should build IssueVotingTokenCommand with parsed UUID and funcionarioId")
-    void issueToken_shouldBuildCommandWithCorrectFields_fromRequest() {
+    @DisplayName("Should build IssueVotingTokenCommand with UUID and funcionarioId from typed request")
+    void issueToken_shouldBuildCommandWithCorrectFields_fromTypedRequest() {
         // Given
         IssuedVotingToken issued = new IssuedVotingToken(RAW_TOKEN, TOKEN_ID);
         when(issueVotingTokenUseCase.issue(any())).thenReturn(issued);
 
+        // Using typed UUID directly — no more String → UUID.fromString() in controller
         TokenController.IssueTokenRequest request = new TokenController.IssueTokenRequest(
-                ELECTION_ID.toString(), FUNCIONARIO_ID
+                ELECTION_ID, FUNCIONARIO_ID
         );
 
         // When
@@ -91,19 +92,6 @@ class TokenControllerTest {
     }
 
     @Test
-    @DisplayName("Should throw IllegalArgumentException when eleccionId is not a valid UUID")
-    void issueToken_shouldThrow_whenEleccionIdIsNotUuid() {
-        // Given
-        TokenController.IssueTokenRequest badRequest = new TokenController.IssueTokenRequest(
-                "not-a-uuid", FUNCIONARIO_ID
-        );
-
-        // When & Then
-        assertThatThrownBy(() -> controller.issueToken(badRequest))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
     @DisplayName("Should propagate domain exception when use case throws")
     void issueToken_shouldPropagateDomainException_whenUseCaseThrows() {
         // Given
@@ -111,12 +99,36 @@ class TokenControllerTest {
                 .thenThrow(new co.com.votapp.ws.common.exception.DomainException("Funcionario not eligible"));
 
         TokenController.IssueTokenRequest request = new TokenController.IssueTokenRequest(
-                ELECTION_ID.toString(), FUNCIONARIO_ID
+                ELECTION_ID, FUNCIONARIO_ID
         );
 
         // When & Then
         assertThatThrownBy(() -> controller.issueToken(request))
                 .isInstanceOf(co.com.votapp.ws.common.exception.DomainException.class)
                 .hasMessageContaining("not eligible");
+    }
+
+    // ── Task 4.2: UUID validation now at HTTP layer, not controller body ───────
+
+    @Test
+    @DisplayName("Should pass typed UUID directly to command — no manual UUID.fromString in controller")
+    void issueToken_shouldPassUuidDirectlyToCommand_withoutStringParsing() {
+        // Given — typed UUID, confirming no parsing happens inside the controller method
+        IssuedVotingToken issued = new IssuedVotingToken(RAW_TOKEN, TOKEN_ID);
+        when(issueVotingTokenUseCase.issue(any())).thenReturn(issued);
+
+        UUID differentElectionId = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc");
+        TokenController.IssueTokenRequest request = new TokenController.IssueTokenRequest(
+                differentElectionId, FUNCIONARIO_ID
+        );
+
+        // When
+        controller.issueToken(request);
+
+        // Then — command must carry the exact UUID passed in (no re-parsing or mutation)
+        ArgumentCaptor<co.com.votapp.ws.voting.application.command.IssueVotingTokenCommand> captor =
+                ArgumentCaptor.forClass(co.com.votapp.ws.voting.application.command.IssueVotingTokenCommand.class);
+        verify(issueVotingTokenUseCase).issue(captor.capture());
+        assertThat(captor.getValue().eleccionId()).isEqualTo(differentElectionId);
     }
 }
