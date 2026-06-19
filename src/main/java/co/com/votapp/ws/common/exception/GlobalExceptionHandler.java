@@ -6,8 +6,12 @@ import co.com.votapp.ws.auth.domain.exception.InvalidCredentialsException;
 import co.com.votapp.ws.electoral.domain.exception.ElectionNotModifiableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.stream.Collectors;
 
 /**
  * Global exception handler that maps domain exceptions to HTTP responses.
@@ -23,6 +27,39 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    // ─── Bean-validation and request-binding failures → 400 ─────────────────
+
+    /**
+     * Handles {@link MethodArgumentNotValidException} thrown by {@code @Valid} on
+     * {@code @RequestBody} when bean-validation constraints fail (e.g. {@code @NotNull}).
+     *
+     * <p>Collects all field-level violation messages and joins them with a comma so the
+     * response is deterministic and framework-wording-agnostic.
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(fe -> fe.getField() + " " + fe.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(message.isBlank() ? "Invalid request" : message));
+    }
+
+    /**
+     * Handles {@link HttpMessageNotReadableException} thrown when Jackson cannot deserialize
+     * the request body — e.g. a malformed UUID string into a {@link java.util.UUID} field.
+     *
+     * <p>Returns a stable 400 response with the {@link ErrorResponse} shape so callers
+     * never see the raw Spring/Jackson error format.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse("Malformed or unreadable request body"));
+    }
 
     // ─── Portal auth exceptions (must come before generic DomainException) ───
 

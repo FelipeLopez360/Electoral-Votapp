@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -50,10 +52,10 @@ public class TokenController {
             @ApiResponse(responseCode = "401", description = "Authentication required"),
             @ApiResponse(responseCode = "409", description = "Funcionario not eligible, already voted, or election not ACTIVA")
     })
-    public ResponseEntity<IssueTokenResponse> issueToken(@RequestBody IssueTokenRequest request) {
+    public ResponseEntity<IssueTokenResponse> issueToken(@Valid @RequestBody IssueTokenRequest request) {
         IssueVotingTokenCommand command = new IssueVotingTokenCommand(
                 request.funcionarioId(),
-                UUID.fromString(request.eleccionId())
+                request.eleccionId()
         );
         IssuedVotingToken result = issueVotingTokenUseCase.issue(command);
         return ResponseEntity
@@ -66,12 +68,18 @@ public class TokenController {
     /**
      * Request body to issue a token.
      *
-     * <p>{@code eleccionId} must be a valid UUID string.
+     * <p>Bean validation constraints ensure both fields are present and well-typed before
+     * the controller body runs. Spring's {@link org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler}
+     * handles binding errors — {@link co.com.votapp.ws.common.exception.GlobalExceptionHandler}
+     * maps them to a stable {@link co.com.votapp.ws.common.exception.GlobalExceptionHandler.ErrorResponse}.
+     *
+     * <p>{@code eleccionId} is deserialized directly as a {@link UUID} — malformed strings
+     * cause a {@code MethodArgumentNotValidException} before reaching the controller body.
      * {@code funcionarioId} is the DB primary key (SERIAL integer) of the funcionario.
      */
     public record IssueTokenRequest(
-            String eleccionId,
-            Long funcionarioId
+            @NotNull UUID eleccionId,
+            @NotNull Long funcionarioId
     ) {}
 
     /**
