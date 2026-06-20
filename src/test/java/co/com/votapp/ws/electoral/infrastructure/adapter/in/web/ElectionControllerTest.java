@@ -2,15 +2,12 @@ package co.com.votapp.ws.electoral.infrastructure.adapter.in.web;
 
 import co.com.votapp.ws.electoral.application.command.AddCandidateCommand;
 import co.com.votapp.ws.electoral.application.service.ElectionTransitionAppService;
-import co.com.votapp.ws.electoral.domain.Ballot;
 import co.com.votapp.ws.electoral.domain.Candidate;
-import co.com.votapp.ws.electoral.domain.CandidateOption;
 import co.com.votapp.ws.electoral.domain.Election;
 import co.com.votapp.ws.electoral.domain.ElectionStatus;
 import co.com.votapp.ws.electoral.domain.port.in.AddCandidateUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.CreateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.FinalizeElectionUseCase;
-import co.com.votapp.ws.electoral.domain.port.in.GetBallotUseCase;
 import co.com.votapp.ws.electoral.domain.port.out.CandidateRepositoryPort;
 import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +21,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,7 +46,6 @@ class ElectionControllerTest {
     @Mock private CreateElectionUseCase createElectionUseCase;
     @Mock private ElectionTransitionAppService electionTransitionAppService;
     @Mock private FinalizeElectionUseCase finalizeElectionUseCase;
-    @Mock private GetBallotUseCase getBallotUseCase;
     @Mock private AddCandidateUseCase addCandidateUseCase;
     @Mock private ElectionRepositoryPort electionRepository;
     @Mock private CandidateRepositoryPort candidateRepository;
@@ -68,7 +63,6 @@ class ElectionControllerTest {
                 createElectionUseCase,
                 electionTransitionAppService,
                 finalizeElectionUseCase,
-                getBallotUseCase,
                 addCandidateUseCase,
                 electionRepository,
                 candidateRepository
@@ -238,44 +232,4 @@ class ElectionControllerTest {
         assertThat(command.numeroOrden()).isEqualTo(2);
     }
 
-    // ── getBallot ────────────────────────────────────────────────────────────
-
-    @Test
-    @DisplayName("Should return 200 with ballot response when token is valid")
-    void getBallot_shouldReturn200WithBallot_whenTokenIsValid() {
-        // Given
-        String rawToken = "test-raw-token-abc";
-        CandidateOption candidate = new CandidateOption(CANDIDATE_ID, "Candidato A", false);
-        CandidateOption blank = new CandidateOption(UUID.randomUUID(), "Voto en Blanco", true);
-        Ballot ballot = new Ballot(ELECTION_ID, "Elección General", List.of(candidate, blank));
-        when(getBallotUseCase.getBallot(rawToken)).thenReturn(ballot);
-
-        // When
-        ResponseEntity<ElectionController.BallotResponse> response = controller.getBallot(ELECTION_ID.toString(), rawToken);
-
-        // Then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().eleccionId()).isEqualTo(ELECTION_ID.toString());
-        assertThat(response.getBody().eleccionNombre()).isEqualTo("Elección General");
-        assertThat(response.getBody().candidates()).hasSize(2);
-        assertThat(response.getBody().candidates().get(0).nombre()).isEqualTo("Candidato A");
-        assertThat(response.getBody().candidates().get(1).esVotoEnBlanco()).isTrue();
-    }
-
-    @Test
-    @DisplayName("Should pass rawToken to use case when path id matches ballot's eleccionId")
-    void getBallot_shouldPassRawTokenToUseCase() {
-        // Given
-        String rawToken = "my-raw-token";
-        CandidateOption candidate = new CandidateOption(CANDIDATE_ID, "Candidato A", false);
-        Ballot ballot = new Ballot(ELECTION_ID, "Test Election", List.of(candidate));
-        when(getBallotUseCase.getBallot(rawToken)).thenReturn(ballot);
-
-        // When
-        controller.getBallot(ELECTION_ID.toString(), rawToken);
-
-        // Then
-        verify(getBallotUseCase).getBallot(rawToken);
-    }
 }

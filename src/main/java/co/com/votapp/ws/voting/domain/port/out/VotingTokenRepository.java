@@ -10,21 +10,10 @@ import java.util.UUID;
 /**
  * Output port for voting token persistence.
  *
- * <p>All query methods operate on hashed tokens — the raw secret is never passed here.
+ * <p>All query methods operate on internal token IDs or (funcionario, election) pairs.
+ * The raw token secret is never passed through this port.
  */
 public interface VotingTokenRepository {
-
-    /**
-     * Find a token by its SHA-256 hash. Returns the token only if it belongs
-     * to the given election and its status is ISSUED.
-     */
-    Optional<VotingToken> findValidByHash(String tokenHash, UUID electionId);
-
-    /**
-     * Find any ISSUED token by its SHA-256 hash alone (without knowing the election).
-     * Used by GetBallotUseCase where the election is derived from the token.
-     */
-    Optional<VotingToken> findIssuedByHash(String tokenHash);
 
     /**
      * Check if a funcionario already has an ISSUED token for the given election.

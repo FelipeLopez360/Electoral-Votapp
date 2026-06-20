@@ -16,7 +16,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-@DisplayName("VoterEligibilityRepositoryAdapter - Global and election-scoped eligibility")
+@DisplayName("VoterEligibilityRepositoryAdapter - Election-scoped eligibility")
 @ExtendWith(MockitoExtension.class)
 class VoterEligibilityRepositoryAdapterTest {
 
@@ -34,41 +34,6 @@ class VoterEligibilityRepositoryAdapterTest {
     @BeforeEach
     void setUp() {
         adapter = new VoterEligibilityRepositoryAdapter(funcionarioJpaRepository, censoJpaRepository);
-    }
-
-    // ─── isEligible (global) ──────────────────────────────────────────────────
-
-    @Test
-    @DisplayName("isEligible should return true when funcionario is ACTIVO and puede_votar=true")
-    void isEligible_shouldReturnTrue_whenActivoAndPuedeVotar() {
-        // Given
-        when(funcionarioJpaRepository.findById(FUNCIONARIO_ID.intValue()))
-                .thenReturn(Optional.of(activoFuncionario()));
-
-        // When & Then
-        assertThat(adapter.isEligible(FUNCIONARIO_ID)).isTrue();
-    }
-
-    @Test
-    @DisplayName("isEligible should return false when funcionario is INACTIVO")
-    void isEligible_shouldReturnFalse_whenInactivo() {
-        // Given
-        when(funcionarioJpaRepository.findById(FUNCIONARIO_ID.intValue()))
-                .thenReturn(Optional.of(inactivoFuncionario()));
-
-        // When & Then
-        assertThat(adapter.isEligible(FUNCIONARIO_ID)).isFalse();
-    }
-
-    @Test
-    @DisplayName("isEligible should return false when funcionario does not exist")
-    void isEligible_shouldReturnFalse_whenFuncionarioNotFound() {
-        // Given
-        when(funcionarioJpaRepository.findById(FUNCIONARIO_ID.intValue()))
-                .thenReturn(Optional.empty());
-
-        // When & Then
-        assertThat(adapter.isEligible(FUNCIONARIO_ID)).isFalse();
     }
 
     // ─── isEligibleForElection — census exists path ───────────────────────────

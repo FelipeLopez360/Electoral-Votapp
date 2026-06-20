@@ -1,8 +1,6 @@
 package co.com.votapp.ws.voting.application.service;
 
-import co.com.votapp.ws.voting.application.command.CastVoteCommand;
 import co.com.votapp.ws.voting.domain.port.in.CastVoteByTokenIdPort;
-import co.com.votapp.ws.voting.domain.port.in.CastVoteUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,20 +11,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.UUID;
 
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 /**
- * Unit tests for {@link CastVoteAppService}.
+ * Unit tests for {@link CastVoteAppService} — portal flow only.
  *
- * <p>Verifies that the application service correctly delegates to the domain ports
- * without adding any business logic of its own.
+ * <p>The legacy rawToken castVote(CastVoteCommand) method has been removed.
+ * Only castVoteByTokenId (portal flow) remains.
  */
-@DisplayName("CastVoteAppService - Unit tests (delegation to domain ports)")
+@DisplayName("CastVoteAppService - Portal flow delegation (castVoteByTokenId)")
 @ExtendWith(MockitoExtension.class)
 class CastVoteAppServiceTest {
-
-    @Mock
-    private CastVoteUseCase castVoteUseCase;
 
     @Mock
     private CastVoteByTokenIdPort castVoteByTokenIdPort;
@@ -35,23 +29,7 @@ class CastVoteAppServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new CastVoteAppService(castVoteUseCase, castVoteByTokenIdPort);
-    }
-
-    // ─── castVote (rawToken flow) ─────────────────────────────────────────────
-
-    @Test
-    @DisplayName("Should delegate castVote(command) to CastVoteUseCase without modification")
-    void castVote_shouldDelegateToCastVoteUseCase_withSameCommand() {
-        // Given
-        CastVoteCommand command = new CastVoteCommand("raw-token-abc", UUID.randomUUID());
-
-        // When
-        service.castVote(command);
-
-        // Then
-        verify(castVoteUseCase).cast(command);
-        verifyNoMoreInteractions(castVoteUseCase, castVoteByTokenIdPort);
+        service = new CastVoteAppService(castVoteByTokenIdPort);
     }
 
     // ─── castVoteByTokenId (portal flow) ─────────────────────────────────────
@@ -68,6 +46,19 @@ class CastVoteAppServiceTest {
 
         // Then
         verify(castVoteByTokenIdPort).castVote(tokenId, candidatoId);
-        verifyNoMoreInteractions(castVoteUseCase, castVoteByTokenIdPort);
+    }
+
+    @Test
+    @DisplayName("Should delegate different tokenId and candidatoId values correctly")
+    void castVoteByTokenId_shouldDelegateDistinctIds_toPort() {
+        // Given — triangulation with different values
+        UUID tokenId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        UUID candidatoId = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+
+        // When
+        service.castVoteByTokenId(tokenId, candidatoId);
+
+        // Then
+        verify(castVoteByTokenIdPort).castVote(tokenId, candidatoId);
     }
 }

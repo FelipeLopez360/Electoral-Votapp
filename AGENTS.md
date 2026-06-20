@@ -57,10 +57,10 @@ co.com.votapp.ws.{context}/
 
 ## Key Domain Decisions
 
-- **Token model**: `rawToken` (ephemeral, shown once to admin) → `tokenHash` SHA-256 (persisted in DB) → `tokenId` UUID (internal references)
+- **Token model**: `tokenHash` SHA-256 (persisted in DB) → `tokenId` UUID (resolved from portal session). The rawToken manual-issuance flow has been removed. Tokens are bulk-issued automatically on election activation.
 - **Anonymity**: `votos` table NEVER stores `funcionario_id`. Participation tracked separately in `participacion_electoral`.
 - **Blank vote**: synthetic `Candidato` with `es_voto_en_blanco=true`, created automatically when an election is activated. Never managed manually.
-- **CastVote atomicity**: Redis SETNX lock → DB transaction (revalidate + markUsed + insert voto + mark participación + audit) → release lock
+- **CastVote atomicity**: Redis SETNX lock → DB transaction (revalidate by tokenId + markUsed + insert voto + mark participación + audit) → release lock. Portal flow uses `CastVoteByTokenIdPort` (no rawToken in flight).
 - **Audit**: synchronous port call from use case. Domain does not know about audit.
 - **Schema**: V1 is the canonical MVP schema. No V2 until production data exists.
 
@@ -79,16 +79,17 @@ co.com.votapp.ws.{context}/
 - `@Service` or `@Component` on domain use cases → wire manually via `DomainConfig`
 - `@Autowired` field injection anywhere → constructor injection only
 - JPA `@Entity` in `domain/` → entities live in `adapter/out/persistence/`
-- `rawToken` in logs, DB, or any persistence layer
+- `rawToken` in logs, DB, or any persistence layer — the manual token-issuance flow has been removed
 - `funcionario_id` in `votos` table
 - `@Configuration` inside `adapter/` packages → always in `config/`
+- Manually issuing single tokens via `IssueVotingTokenUseCase` — that flow is deleted; bulk issuance on activation is the only mechanism
+- Accepting votes via `POST /api/v1/votes` or ballot loading via `GET /api/v1/elections/{id}/ballot` — those endpoints are removed; portal flow (`/api/v1/portal/**`) is canonical
 
 ## SDD Context
 
-- Change in progress: `mvp-base`
-- Artifacts in Engram under project `Electoral-Votapp`
-- Topic keys: `sdd/mvp-base/{explore,proposal,spec,design,tasks,apply-progress}`
-- Chain strategy: stacked-to-main (3 PRs)
-- PR 1: schema + domain types + ports ← current
-- PR 2: use cases (electoral + voting)
-- PR 3: adapters + controllers + integration tests
+- Change in progress: `remove-admin-legacy-token-vote`
+- Artifacts in Engram under project `electoral-votapp`
+- Topic keys: `sdd/remove-admin-legacy-token-vote/{spec,design,tasks,apply-progress}`
+- Chain strategy: two separate PRs (one per repo, frontend-first)
+- PR-FE: frontend legacy deletion — COMPLETE
+- PR-BE: backend legacy deletion — this change

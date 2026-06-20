@@ -3,14 +3,12 @@ package co.com.votapp.ws.electoral.infrastructure.adapter.in.web;
 import co.com.votapp.ws.electoral.application.command.AddCandidateCommand;
 import co.com.votapp.ws.electoral.application.command.CreateElectionCommand;
 import co.com.votapp.ws.electoral.application.service.ElectionTransitionAppService;
-import co.com.votapp.ws.electoral.domain.Ballot;
 import co.com.votapp.ws.electoral.domain.Candidate;
 import co.com.votapp.ws.electoral.domain.Election;
 import co.com.votapp.ws.electoral.domain.ElectionStatus;
 import co.com.votapp.ws.electoral.domain.port.in.AddCandidateUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.CreateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.FinalizeElectionUseCase;
-import co.com.votapp.ws.electoral.domain.port.in.GetBallotUseCase;
 import co.com.votapp.ws.electoral.domain.port.out.CandidateRepositoryPort;
 import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,7 +25,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
@@ -39,8 +36,7 @@ import java.util.UUID;
 /**
  * REST adapter for election lifecycle management.
  *
- * <p>Admin endpoints (create, activate, finalize) require HTTP Basic auth.
- * The ballot endpoint is public — the rawToken authenticates the voter.
+ * <p>All admin endpoints (create, activate, finalize) require HTTP Basic auth.
  */
 @RestController
 @RequestMapping("/api/v1/elections")
@@ -50,7 +46,6 @@ public class ElectionController {
     private final CreateElectionUseCase createElectionUseCase;
     private final ElectionTransitionAppService electionTransitionAppService;
     private final FinalizeElectionUseCase finalizeElectionUseCase;
-    private final GetBallotUseCase getBallotUseCase;
     private final AddCandidateUseCase addCandidateUseCase;
     private final ElectionRepositoryPort electionRepository;
     private final CandidateRepositoryPort candidateRepository;
@@ -59,14 +54,12 @@ public class ElectionController {
             CreateElectionUseCase createElectionUseCase,
             ElectionTransitionAppService electionTransitionAppService,
             FinalizeElectionUseCase finalizeElectionUseCase,
-            GetBallotUseCase getBallotUseCase,
             AddCandidateUseCase addCandidateUseCase,
             ElectionRepositoryPort electionRepository,
             CandidateRepositoryPort candidateRepository) {
         this.createElectionUseCase = createElectionUseCase;
         this.electionTransitionAppService = electionTransitionAppService;
         this.finalizeElectionUseCase = finalizeElectionUseCase;
-        this.getBallotUseCase = getBallotUseCase;
         this.addCandidateUseCase = addCandidateUseCase;
         this.electionRepository = electionRepository;
         this.candidateRepository = candidateRepository;
@@ -288,31 +281,6 @@ public class ElectionController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{id}/ballot")
-    @Operation(
-            summary = "Get ballot for an election",
-            description = "Returns the ordered list of candidates for a given election. "
-                    + "Public endpoint — the voter's rawToken is passed as a query parameter. "
-                    + "The use case validates the token belongs to this election and is in ISSUED state."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Ballot returned"),
-            @ApiResponse(responseCode = "409", description = "Token invalid or election not ACTIVA")
-    })
-    public ResponseEntity<BallotResponse> getBallot(
-            @PathVariable String id,
-            @RequestParam String token) {
-        // The use case hashes rawToken, validates it is ISSUED, checks the election is ACTIVA,
-        // then returns the ordered candidates. The path param {id} must match the token's election.
-        Ballot ballot = getBallotUseCase.getBallot(token);
-        UUID requestedEleccionId = UUID.fromString(id);
-        if (!requestedEleccionId.equals(ballot.eleccionId())) {
-            throw new co.com.votapp.ws.common.exception.DomainException(
-                    "El token no pertenece a la elección indicada — token no pertenece a esta elección");
-        }
-        return ResponseEntity.ok(BallotResponse.from(ballot));
-    }
-
     // ── Helpers ─────────────────────────────────────────────────────────────
 
     /**
@@ -360,35 +328,6 @@ public class ElectionController {
             );
         }
     }
-
-    /** Response projection for the ballot (election + ordered candidates). */
-    public record BallotResponse(
-            String eleccionId,
-            String eleccionNombre,
-            List<CandidateOptionResponse> candidates
-    ) {
-        public static BallotResponse from(Ballot ballot) {
-            List<CandidateOptionResponse> candidates = ballot.candidates().stream()
-                    .map(c -> new CandidateOptionResponse(
-                            c.id().toString(),
-                            c.nombre(),
-                            c.esVotoEnBlanco()
-                    ))
-                    .toList();
-            return new BallotResponse(
-                    ballot.eleccionId().toString(),
-                    ballot.eleccionNombre(),
-                    candidates
-            );
-        }
-    }
-
-    /** Candidate option within a ballot. */
-    public record CandidateOptionResponse(
-            String id,
-            String nombre,
-            boolean esVotoEnBlanco
-    ) {}
 
     /** Request body for adding a candidate. */
     public record AddCandidateRequest(

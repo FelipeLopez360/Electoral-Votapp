@@ -28,20 +28,6 @@ public class VotingTokenRepositoryAdapter implements VotingTokenRepository {
     }
 
     @Override
-    public Optional<VotingToken> findValidByHash(String tokenHash, UUID electionId) {
-        return jpaRepository
-                .findByTokenHashAndEleccionIdAndStatus(tokenHash, electionId, TokenStatus.ISSUED.name())
-                .map(this::toDomain);
-    }
-
-    @Override
-    public Optional<VotingToken> findIssuedByHash(String tokenHash) {
-        return jpaRepository
-                .findByTokenHashAndStatus(tokenHash, TokenStatus.ISSUED.name())
-                .map(this::toDomain);
-    }
-
-    @Override
     public boolean existsIssuedTokenFor(UUID electionId, Long funcionarioId) {
         return jpaRepository.existsByEleccionIdAndFuncionarioIdAndStatus(
                 electionId, funcionarioId.intValue(), TokenStatus.ISSUED.name());

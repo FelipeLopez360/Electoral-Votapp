@@ -18,19 +18,6 @@ import java.util.UUID;
 public interface VotingTokenJpaRepository extends JpaRepository<VotingTokenEntity, UUID> {
 
     /**
-     * Find an ISSUED token by its hash within a specific election.
-     * Used by CastVoteUseCase to validate a token before casting.
-     */
-    Optional<VotingTokenEntity> findByTokenHashAndEleccionIdAndStatus(
-            String tokenHash, UUID eleccionId, String status);
-
-    /**
-     * Find any ISSUED token by its hash alone (election unknown at call time).
-     * Used by GetBallotUseCase to derive the election from the token.
-     */
-    Optional<VotingTokenEntity> findByTokenHashAndStatus(String tokenHash, String status);
-
-    /**
      * Check whether a funcionario already holds an ISSUED token for the given election.
      * Used to enforce the one-token-per-funcionario-per-election invariant.
      */
