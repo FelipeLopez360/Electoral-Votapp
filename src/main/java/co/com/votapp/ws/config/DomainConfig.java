@@ -23,16 +23,22 @@ import co.com.votapp.ws.electoral.domain.port.in.ActivateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.AddCandidateUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.CreateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.FinalizeElectionUseCase;
+import co.com.votapp.ws.electoral.domain.port.in.GenerateElectionReportUseCase;
+import co.com.votapp.ws.electoral.domain.port.in.GetElectionResultsUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.ManageCensoUseCase;
 import co.com.votapp.ws.electoral.domain.port.out.CandidateRepositoryPort;
 import co.com.votapp.ws.electoral.domain.port.out.CensoRepositoryPort;
 import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;
 import co.com.votapp.ws.electoral.domain.port.out.EleccionRepositoryPort;
+import co.com.votapp.ws.electoral.domain.port.out.ReportExporterPort;
+import co.com.votapp.ws.electoral.domain.port.out.ResultsRepositoryPort;
 import co.com.votapp.ws.electoral.domain.usecase.ActivateElectionUseCaseImpl;
 import co.com.votapp.ws.electoral.domain.usecase.AddCandidateUseCaseImpl;
 import co.com.votapp.ws.electoral.domain.usecase.CreateElectionUseCaseImpl;
 import co.com.votapp.ws.electoral.domain.usecase.FinalizeElectionUseCaseImpl;
+import co.com.votapp.ws.electoral.domain.usecase.GenerateElectionReportUseCaseImpl;
 import co.com.votapp.ws.electoral.domain.usecase.GetEleccionUseCase;
+import co.com.votapp.ws.electoral.domain.usecase.GetElectionResultsUseCaseImpl;
 import co.com.votapp.ws.electoral.domain.usecase.ManageCensoUseCaseImpl;
 import co.com.votapp.ws.organization.domain.port.out.DepartamentoRepositoryPort;
 import co.com.votapp.ws.organization.domain.usecase.GetDepartamentosUseCase;
@@ -156,6 +162,21 @@ public class DomainConfig {
                                                            FuncionarioRepositoryPort funcionarioRepository) {
         return new BulkIssueTokensUseCaseImpl(
                 censoRepository, votingTokenRepository, eligibilityRepository, funcionarioRepository);
+    }
+
+    // ─── modulo-resultados-y-reportes: Results use cases ─────────────────────
+
+    @Bean
+    public GetElectionResultsUseCase getElectionResultsUseCase(ElectionRepositoryPort electionRepository,
+                                                                ResultsRepositoryPort resultsRepository) {
+        return new GetElectionResultsUseCaseImpl(electionRepository, resultsRepository);
+    }
+
+    @Bean
+    public GenerateElectionReportUseCase generateElectionReportUseCase(
+            GetElectionResultsUseCase getElectionResultsUseCase,
+            ReportExporterPort reportExporterDispatcher) {
+        return new GenerateElectionReportUseCaseImpl(getElectionResultsUseCase, reportExporterDispatcher);
     }
 
     // ─── Voting use cases ─────────────────────────────────────────────────────

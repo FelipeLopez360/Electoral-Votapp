@@ -3,6 +3,7 @@ package co.com.votapp.ws.common.exception;
 import co.com.votapp.ws.auth.domain.exception.AccountInactiveException;
 import co.com.votapp.ws.auth.domain.exception.AccountLockedException;
 import co.com.votapp.ws.auth.domain.exception.InvalidCredentialsException;
+import co.com.votapp.ws.electoral.domain.exception.ElectionNotFinalizedException;
 import co.com.votapp.ws.electoral.domain.exception.ElectionNotModifiableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -85,6 +86,13 @@ public class GlobalExceptionHandler {
     }
 
     // ─── Electoral domain exceptions ──────────────────────────────────────────
+
+    @ExceptionHandler(ElectionNotFinalizedException.class)
+    public ResponseEntity<ErrorResponse> handleElectionNotFinalized(ElectionNotFinalizedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(ex.getMessage()));
+    }
 
     @ExceptionHandler(ElectionNotModifiableException.class)
     public ResponseEntity<ErrorResponse> handleElectionNotModifiable(ElectionNotModifiableException ex) {

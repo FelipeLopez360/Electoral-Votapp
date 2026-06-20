@@ -276,6 +276,6 @@ class CastVoteByTokenIdUseCaseImplTest {
     }
 
     private co.com.votapp.ws.electoral.domain.Candidate candidate(UUID id, UUID eleccionId) {
-        return new co.com.votapp.ws.electoral.domain.Candidate(id, eleccionId, "Candidato Test", false, 1);
+        return new co.com.votapp.ws.electoral.domain.Candidate(id, eleccionId, "Candidato Test", false, false, 1);
     }
 }

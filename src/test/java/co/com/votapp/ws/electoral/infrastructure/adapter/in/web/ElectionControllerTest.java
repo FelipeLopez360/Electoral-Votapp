@@ -191,7 +191,7 @@ class ElectionControllerTest {
     @DisplayName("Should return 201 with candidate response when creation succeeds")
     void addCandidate_shouldReturn201_whenCreationSucceeds() {
         // Given
-        Candidate candidate = new Candidate(CANDIDATE_ID, ELECTION_ID, "Candidato A", false, 1);
+        Candidate candidate = new Candidate(CANDIDATE_ID, ELECTION_ID, "Candidato A", false, false, 1);
         when(addCandidateUseCase.addCandidate(any())).thenReturn(candidate);
 
         ElectionController.AddCandidateRequest request = new ElectionController.AddCandidateRequest(
@@ -213,7 +213,7 @@ class ElectionControllerTest {
     @DisplayName("Should build AddCandidateCommand with path variable and request body")
     void addCandidate_shouldBuildCommand_fromPathVariableAndBody() {
         // Given
-        Candidate candidate = new Candidate(CANDIDATE_ID, ELECTION_ID, "Candidato B", false, 2);
+        Candidate candidate = new Candidate(CANDIDATE_ID, ELECTION_ID, "Candidato B", false, false, 2);
         when(addCandidateUseCase.addCandidate(any())).thenReturn(candidate);
 
         ElectionController.AddCandidateRequest request = new ElectionController.AddCandidateRequest(

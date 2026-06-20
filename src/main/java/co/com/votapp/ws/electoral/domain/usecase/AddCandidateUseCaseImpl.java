@@ -53,6 +53,7 @@ public class AddCandidateUseCaseImpl implements AddCandidateUseCase {
                 command.eleccionId(),
                 command.nombre(),
                 false,
+                false,
                 command.numeroOrden()
         );
 

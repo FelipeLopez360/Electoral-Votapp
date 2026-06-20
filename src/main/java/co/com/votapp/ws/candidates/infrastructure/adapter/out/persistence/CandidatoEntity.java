@@ -34,6 +34,9 @@ public class CandidatoEntity implements Persistable<UUID> {
     @Column(name = "es_voto_en_blanco", nullable = false)
     private Boolean esVotoEnBlanco = false;
 
+    @Column(name = "es_voto_nulo", nullable = false)
+    private Boolean esVotoNulo = false;
+
     @Column(name = "numero_orden", nullable = false)
     private Integer numeroOrden;
 
@@ -64,6 +67,9 @@ public class CandidatoEntity implements Persistable<UUID> {
 
     public Boolean getEsVotoEnBlanco() { return esVotoEnBlanco; }
     public void setEsVotoEnBlanco(Boolean esVotoEnBlanco) { this.esVotoEnBlanco = esVotoEnBlanco; }
+
+    public Boolean getEsVotoNulo() { return esVotoNulo; }
+    public void setEsVotoNulo(Boolean esVotoNulo) { this.esVotoNulo = esVotoNulo; }
 
     public Integer getNumeroOrden() { return numeroOrden; }
     public void setNumeroOrden(Integer numeroOrden) { this.numeroOrden = numeroOrden; }
