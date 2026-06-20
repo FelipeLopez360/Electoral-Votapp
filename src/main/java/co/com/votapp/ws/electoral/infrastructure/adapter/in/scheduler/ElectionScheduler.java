@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -40,12 +40,12 @@ public class ElectionScheduler {
      * Scheduled tick: activate elections past their {@code fechaInicio} and finalize
      * elections past their {@code fechaFin}.
      *
-     * <p>Uses {@code LocalDateTime.now(ZoneOffset.UTC)} so comparisons stay consistent
+     * <p>Uses {@code LocalDateTime.now(ZoneId.systemDefault())} so comparisons stay consistent
      * with the UTC {@code Instant} values stored in the database.
      */
     @Scheduled(fixedRate = 60_000)
     public void processElections() {
-        LocalDateTime nowUtc = LocalDateTime.now(ZoneOffset.UTC);
+        LocalDateTime nowUtc = LocalDateTime.now(ZoneId.systemDefault());
 
         List<Election> toActivate = electionRepository
                 .findByStatusAndFechaInicioLessThanEqual(ElectionStatus.PROGRAMADA, nowUtc);
