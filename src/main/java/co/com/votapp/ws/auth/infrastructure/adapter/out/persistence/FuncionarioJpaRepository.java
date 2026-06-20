@@ -1,5 +1,7 @@
 package co.com.votapp.ws.auth.infrastructure.adapter.out.persistence;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,6 +21,10 @@ public interface FuncionarioJpaRepository extends JpaRepository<FuncionarioEntit
 
     boolean existsByDocumentoIdentidad(String documentoIdentidad);
 
+    /**
+     * Paginated search across nombres, apellidos and documentoIdentidad.
+     * When search is null or blank, all records are returned (match-all JPQL condition).
+     */
     @Query("""
             SELECT f FROM FuncionarioEntity f
             WHERE :search IS NULL OR :search = ''
@@ -26,7 +32,7 @@ public interface FuncionarioJpaRepository extends JpaRepository<FuncionarioEntit
                OR LOWER(f.apellidos)          LIKE LOWER(CONCAT('%', :search, '%'))
                OR LOWER(f.documentoIdentidad) LIKE LOWER(CONCAT('%', :search, '%'))
             """)
-    List<FuncionarioEntity> search(@Param("search") String search);
+    Page<FuncionarioEntity> search(@Param("search") String search, Pageable pageable);
 
     // ─── Portal auth: lockout support ─────────────────────────────────────────
 

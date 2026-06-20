@@ -1,7 +1,7 @@
 package co.com.votapp.ws.electoral.infrastructure.adapter.out.persistence;
 
 import co.com.votapp.ws.electoral.domain.model.CensoEntry;
-import co.com.votapp.ws.electoral.domain.model.PageResult;
+import co.com.votapp.ws.common.domain.model.PageResult;
 import co.com.votapp.ws.electoral.domain.port.out.CensoRepositoryPort;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

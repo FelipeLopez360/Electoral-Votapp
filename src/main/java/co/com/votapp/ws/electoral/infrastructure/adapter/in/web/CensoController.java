@@ -6,7 +6,7 @@ import co.com.votapp.ws.electoral.application.dto.BulkAddCensoRequest;
 import co.com.votapp.ws.electoral.application.dto.BulkAddCensoResponse;
 import co.com.votapp.ws.electoral.application.dto.CensoEntryResponse;
 import co.com.votapp.ws.electoral.domain.model.CensoEntry;
-import co.com.votapp.ws.electoral.domain.model.PageResult;
+import co.com.votapp.ws.common.domain.model.PageResult;
 import co.com.votapp.ws.electoral.domain.port.in.ManageCensoUseCase;
 import co.com.votapp.ws.organization.domain.Departamento;
 import co.com.votapp.ws.organization.domain.port.out.DepartamentoRepositoryPort;

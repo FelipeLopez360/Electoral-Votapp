@@ -2,7 +2,7 @@ package co.com.votapp.ws.electoral.infrastructure.adapter.out.persistence;
 
 import co.com.votapp.ws.TestcontainersDockerConfig;
 import co.com.votapp.ws.electoral.domain.model.CensoEntry;
-import co.com.votapp.ws.electoral.domain.model.PageResult;
+import co.com.votapp.ws.common.domain.model.PageResult;
 import co.com.votapp.ws.electoral.domain.port.out.CensoRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

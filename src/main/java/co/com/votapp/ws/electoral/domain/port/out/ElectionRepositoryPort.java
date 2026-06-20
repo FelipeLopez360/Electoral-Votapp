@@ -1,5 +1,6 @@
 package co.com.votapp.ws.electoral.domain.port.out;
 
+import co.com.votapp.ws.common.domain.model.PageResult;
 import co.com.votapp.ws.electoral.domain.Election;
 import co.com.votapp.ws.electoral.domain.ElectionStatus;
 
@@ -36,6 +37,15 @@ public interface ElectionRepositoryPort {
      * Return all elections ordered by creation date descending.
      */
     List<Election> findAll();
+
+    /**
+     * Return a paginated list of elections filtered by name or code, ordered by createdAt DESC.
+     *
+     * @param page   zero-based page index
+     * @param size   page size (clamped by caller)
+     * @param search optional filter on nombre or codigo (case-insensitive); null = match all
+     */
+    PageResult<Election> findAll(int page, int size, String search);
 
     /**
      * Return elections with the given status whose fechaInicio is at or before {@code now}.

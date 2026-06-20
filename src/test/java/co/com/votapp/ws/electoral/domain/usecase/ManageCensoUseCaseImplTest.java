@@ -9,7 +9,7 @@ import co.com.votapp.ws.electoral.domain.exception.ElectionNotModifiableExceptio
 import co.com.votapp.ws.electoral.domain.model.CensoEntry;
 import co.com.votapp.ws.electoral.domain.port.in.ManageCensoUseCase;
 import co.com.votapp.ws.electoral.domain.port.out.CensoRepositoryPort;
-import co.com.votapp.ws.electoral.domain.model.PageResult;
+import co.com.votapp.ws.common.domain.model.PageResult;
 import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

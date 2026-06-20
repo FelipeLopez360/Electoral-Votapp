@@ -1,6 +1,10 @@
 package co.com.votapp.ws.electoral.infrastructure.adapter.out.persistence;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.util.List;
@@ -14,6 +18,19 @@ public interface EleccionJpaRepository extends JpaRepository<EleccionEntity, UUI
     Optional<EleccionEntity> findByCodigo(String codigo);
 
     List<EleccionEntity> findAllByOrderByCreatedAtDesc();
+
+    /**
+     * Paginated search across codigo and nombre (case-insensitive).
+     * When search is null or blank, all records are returned.
+     * Ordering is controlled by the caller via {@link Pageable}'s sort (createdAt DESC).
+     */
+    @Query("""
+            SELECT e FROM EleccionEntity e
+            WHERE :search IS NULL OR :search = ''
+               OR LOWER(e.codigo) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(e.nombre) LIKE LOWER(CONCAT('%', :search, '%'))
+            """)
+    Page<EleccionEntity> search(@Param("search") String search, Pageable pageable);
 
     /**
      * Find elections by estado (String) whose fechaInicio is at or before {@code now} ({@code <=}).

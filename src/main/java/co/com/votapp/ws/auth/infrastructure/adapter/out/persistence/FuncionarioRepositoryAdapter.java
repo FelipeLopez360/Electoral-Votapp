@@ -2,6 +2,9 @@ package co.com.votapp.ws.auth.infrastructure.adapter.out.persistence;
 
 import co.com.votapp.ws.auth.domain.Funcionario;
 import co.com.votapp.ws.auth.domain.port.out.FuncionarioRepositoryPort;
+import co.com.votapp.ws.common.domain.model.PageResult;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -37,11 +40,17 @@ public class FuncionarioRepositoryAdapter implements FuncionarioRepositoryPort {
     }
 
     @Override
-    public List<Funcionario> findAll(String search) {
-        return jpaRepository.search(search == null ? "" : search)
-                .stream()
-                .map(this::toDomain)
-                .toList();
+    public PageResult<Funcionario> findAll(int page, int size, String search) {
+        String effectiveSearch = search == null ? "" : search;
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<FuncionarioEntity> entityPage = jpaRepository.search(effectiveSearch, pageRequest);
+        return new PageResult<>(
+                entityPage.getContent().stream().map(this::toDomain).toList(),
+                entityPage.getNumber(),
+                entityPage.getSize(),
+                entityPage.getTotalElements(),
+                entityPage.getTotalPages()
+        );
     }
 
     @Override

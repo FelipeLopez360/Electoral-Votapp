@@ -1,6 +1,7 @@
 package co.com.votapp.ws.auth.domain.port.out;
 
 import co.com.votapp.ws.auth.domain.Funcionario;
+import co.com.votapp.ws.common.domain.model.PageResult;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,8 +22,15 @@ import java.util.Optional;
  */
 public interface FuncionarioRepositoryPort {
 
-    /** Returns all funcionarios. If {@code search} is blank or null, returns all. */
-    List<Funcionario> findAll(String search);
+    /**
+     * Returns a paginated list of funcionarios.
+     * If {@code search} is blank or null, returns all. Ordered by default JPA ordering.
+     *
+     * @param page   zero-based page index (floored to 0 if negative)
+     * @param size   page size (clamped to 1..100; default 8 when caller applies defaults)
+     * @param search optional filter on nombres, apellidos, documentoIdentidad (null = match all)
+     */
+    PageResult<Funcionario> findAll(int page, int size, String search);
 
     Optional<Funcionario> findById(Integer id);
 
