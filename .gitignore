@@ -43,3 +43,8 @@ logs/
 ### Spring Boot ###
 application-local.yml
 application-local.properties
+
+# Agent tooling
+.atl/
+openspec/opencode.json
+.playwright-mcp/

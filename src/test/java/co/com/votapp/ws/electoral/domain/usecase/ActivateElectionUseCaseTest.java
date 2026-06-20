@@ -19,10 +19,13 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -75,14 +78,44 @@ class ActivateElectionUseCaseTest {
         // When
         useCase.activate(electionId);
 
-        // Then
+        // Then — two synthetic candidates are saved (blank + null)
         ArgumentCaptor<Candidate> candidateCaptor = ArgumentCaptor.forClass(Candidate.class);
-        verify(candidateRepository).save(candidateCaptor.capture());
-        Candidate blankVote = candidateCaptor.getValue();
-        assertThat(blankVote.esVotoEnBlanco()).isTrue();
+        verify(candidateRepository, times(2)).save(candidateCaptor.capture());
+        List<Candidate> savedCandidates = candidateCaptor.getAllValues();
+        Candidate blankVote = savedCandidates.stream()
+                .filter(Candidate::esVotoEnBlanco)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("No blank vote candidate saved"));
         assertThat(blankVote.nombre()).isEqualTo("Voto en Blanco");
         assertThat(blankVote.numeroOrden()).isEqualTo(0);
         assertThat(blankVote.eleccionId()).isEqualTo(electionId);
+    }
+
+    @Test
+    @DisplayName("Should auto-create synthetic Voto Nulo candidate with numero_orden=-1 alongside blank vote")
+    void activate_shouldCreateNullVoteCandidate_whenElectionIsProgramada() {
+        // Given
+        UUID electionId = UUID.randomUUID();
+        var election = electionWith(electionId, ElectionStatus.PROGRAMADA);
+        when(electionRepository.findById(electionId)).thenReturn(Optional.of(election));
+        when(electionRepository.save(any(Election.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(candidateRepository.save(any(Candidate.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        useCase.activate(electionId);
+
+        // Then
+        ArgumentCaptor<Candidate> candidateCaptor = ArgumentCaptor.forClass(Candidate.class);
+        verify(candidateRepository, times(2)).save(candidateCaptor.capture());
+        List<Candidate> savedCandidates = candidateCaptor.getAllValues();
+        Candidate nullVote = savedCandidates.stream()
+                .filter(Candidate::esVotoNulo)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("No null vote candidate saved"));
+        assertThat(nullVote.nombre()).isEqualTo("Voto Nulo");
+        assertThat(nullVote.esVotoNulo()).isTrue();
+        assertThat(nullVote.esVotoEnBlanco()).isFalse();
+        assertThat(nullVote.eleccionId()).isEqualTo(electionId);
     }
 
     @Test

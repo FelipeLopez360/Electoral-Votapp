@@ -226,8 +226,8 @@ class PortalVotingControllerWebMvcTest {
                 .thenReturn(Optional.of(activaElection()));
         when(candidateRepository.findByEleccionIdOrderByNumeroOrden(ELECCION_ID))
                 .thenReturn(List.of(
-                        new Candidate(candId1, ELECCION_ID, "Candidato A", false, 1),
-                        new Candidate(blankId, ELECCION_ID, "Voto en Blanco", true, 99)
+                        new Candidate(candId1, ELECCION_ID, "Candidato A", false, false, 1),
+                        new Candidate(blankId, ELECCION_ID, "Voto en Blanco", true, false, 99)
                 ));
 
         // When & Then

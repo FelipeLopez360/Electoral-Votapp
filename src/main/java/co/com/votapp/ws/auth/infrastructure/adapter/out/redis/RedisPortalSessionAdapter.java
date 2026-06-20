@@ -1,7 +1,7 @@
 package co.com.votapp.ws.auth.infrastructure.adapter.out.redis;
 
 import co.com.votapp.ws.auth.domain.port.out.PortalSessionPort;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -11,7 +11,7 @@ import java.util.UUID;
 /**
  * Redis-backed adapter for portal session management.
  *
- * <p>Implements {@link PortalSessionPort} using a {@link RedisTemplate}.
+ * <p>Implements {@link PortalSessionPort} using a {@link StringRedisTemplate}.
  * Each session is stored as a key-value pair:
  * <ul>
  *   <li><b>Key</b>: {@code portal:session:{uuid}}</li>
@@ -28,9 +28,9 @@ public class RedisPortalSessionAdapter implements PortalSessionPort {
     private static final String KEY_PREFIX = "portal:session:";
     private static final Duration SESSION_TTL = Duration.ofMinutes(30);
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
-    public RedisPortalSessionAdapter(RedisTemplate<String, String> redisTemplate) {
+    public RedisPortalSessionAdapter(StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
