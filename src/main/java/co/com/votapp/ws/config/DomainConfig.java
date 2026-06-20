@@ -23,7 +23,6 @@ import co.com.votapp.ws.electoral.domain.port.in.ActivateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.AddCandidateUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.CreateElectionUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.FinalizeElectionUseCase;
-import co.com.votapp.ws.electoral.domain.port.in.GetBallotUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.ManageCensoUseCase;
 import co.com.votapp.ws.electoral.domain.port.out.CandidateRepositoryPort;
 import co.com.votapp.ws.electoral.domain.port.out.CensoRepositoryPort;
@@ -33,7 +32,6 @@ import co.com.votapp.ws.electoral.domain.usecase.ActivateElectionUseCaseImpl;
 import co.com.votapp.ws.electoral.domain.usecase.AddCandidateUseCaseImpl;
 import co.com.votapp.ws.electoral.domain.usecase.CreateElectionUseCaseImpl;
 import co.com.votapp.ws.electoral.domain.usecase.FinalizeElectionUseCaseImpl;
-import co.com.votapp.ws.electoral.domain.usecase.GetBallotUseCaseImpl;
 import co.com.votapp.ws.electoral.domain.usecase.GetEleccionUseCase;
 import co.com.votapp.ws.electoral.domain.usecase.ManageCensoUseCaseImpl;
 import co.com.votapp.ws.organization.domain.port.out.DepartamentoRepositoryPort;
@@ -45,8 +43,6 @@ import co.com.votapp.ws.voting.domain.port.out.VotingTokenRepository;
 import co.com.votapp.ws.voting.domain.port.in.BulkIssueTokensUseCase;
 import co.com.votapp.ws.voting.domain.usecase.BulkIssueTokensUseCaseImpl;
 import co.com.votapp.ws.voting.domain.usecase.CastVoteByTokenIdUseCaseImpl;
-import co.com.votapp.ws.voting.domain.usecase.CastVoteUseCaseImpl;
-import co.com.votapp.ws.voting.domain.usecase.IssueVotingTokenUseCaseImpl;
 import co.com.votapp.ws.votereligibility.domain.port.out.VoterEligibilityRepositoryPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -151,13 +147,6 @@ public class DomainConfig {
         return new FinalizeElectionUseCaseImpl(electionRepository);
     }
 
-    @Bean
-    public GetBallotUseCase getBallotUseCase(VotingTokenRepository votingTokenRepository,
-                                              ElectionRepositoryPort electionRepository,
-                                              CandidateRepositoryPort candidateRepository) {
-        return new GetBallotUseCaseImpl(votingTokenRepository, electionRepository, candidateRepository);
-    }
-
     // ─── bulk-token-on-activation: Bulk issuance use case ────────────────────
 
     @Bean
@@ -169,35 +158,7 @@ public class DomainConfig {
                 censoRepository, votingTokenRepository, eligibilityRepository, funcionarioRepository);
     }
 
-    // ─── PR 2: Voting use cases ───────────────────────────────────────────────
-
-    @Bean
-    public IssueVotingTokenUseCaseImpl issueVotingTokenUseCase(VotingTokenRepository votingTokenRepository,
-                                                                VoterEligibilityRepositoryPort eligibilityRepository,
-                                                                ParticipacionRepositoryPort participacionRepository,
-                                                                ElectionRepositoryPort electionRepository) {
-        return new IssueVotingTokenUseCaseImpl(
-                votingTokenRepository, eligibilityRepository, participacionRepository, electionRepository);
-    }
-
-    @Bean
-    public CastVoteUseCaseImpl castVoteUseCase(VotingTokenRepository votingTokenRepository,
-                                               TokenLockPort tokenLockPort,
-                                               ElectionRepositoryPort electionRepository,
-                                               CandidateRepositoryPort candidateRepository,
-                                               VoteRepositoryPort voteRepository,
-                                               ParticipacionRepositoryPort participacionRepository,
-                                               RegisterAuditEventPort auditPort) {
-        return new CastVoteUseCaseImpl(
-                votingTokenRepository,
-                tokenLockPort,
-                electionRepository,
-                candidateRepository,
-                voteRepository,
-                participacionRepository,
-                auditPort
-        );
-    }
+    // ─── Voting use cases ─────────────────────────────────────────────────────
 
     @Bean
     public CastVoteByTokenIdUseCaseImpl castVoteByTokenIdUseCase(VotingTokenRepository votingTokenRepository,

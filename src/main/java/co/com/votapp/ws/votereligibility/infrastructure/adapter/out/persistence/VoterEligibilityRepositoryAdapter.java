@@ -13,17 +13,11 @@ import java.util.UUID;
  * <p>Implements {@link VoterEligibilityRepositoryPort}. Reuses {@link FuncionarioJpaRepository}
  * from the auth infrastructure context — both map to the {@code funcionarios} table.
  * Also reuses {@link CensoJpaRepository} from the electoral infrastructure context —
- * this cross-context adapter read is an established pattern (mirrors how this adapter
- * already reuses the auth JPA repo).
+ * this cross-context adapter read is an established pattern.
  *
- * <p>A funcionario is globally eligible when:
+ * <p>Election-scoped eligibility requires:
  * <ul>
- *   <li>{@code estado_laboral = 'ACTIVO'}</li>
- *   <li>{@code puede_votar = true}</li>
- * </ul>
- *
- * <p>Election-scoped eligibility additionally requires:
- * <ul>
+ *   <li>Funcionario is globally eligible (ACTIVO + puede_votar=true).</li>
  *   <li>Census is empty for the election (backward-compat fallback), OR</li>
  *   <li>Funcionario has an explicit census entry for the election.</li>
  * </ul>
@@ -38,11 +32,6 @@ public class VoterEligibilityRepositoryAdapter implements VoterEligibilityReposi
                                               CensoJpaRepository censoJpaRepository) {
         this.funcionarioJpaRepository = funcionarioJpaRepository;
         this.censoJpaRepository = censoJpaRepository;
-    }
-
-    @Override
-    public boolean isEligible(Long funcionarioId) {
-        return isGloballyEligible(funcionarioId);
     }
 
     /**

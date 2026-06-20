@@ -5,26 +5,14 @@ import java.util.UUID;
 /**
  * Output port for voter eligibility checks.
  *
- * <p>A funcionario is globally eligible if and only if:
+ * <p>Election-scoped eligibility checks that the funcionario:
  * <ul>
- *   <li>{@code estado_laboral = 'ACTIVO'}</li>
- *   <li>{@code puede_votar = true}</li>
+ *   <li>Has {@code estado_laboral = 'ACTIVO'} and {@code puede_votar = true}</li>
+ *   <li>Is included in the election's census (if non-empty), or the census is empty
+ *       (backward-compat fallback)</li>
  * </ul>
- *
- * <p>Election-scoped eligibility additionally checks that the funcionario
- * is included in the election's census (if the census is non-empty).
- * When the census is empty, the check falls back to global eligibility only
- * to preserve backward compatibility.
  */
 public interface VoterEligibilityRepositoryPort {
-
-    /**
-     * Global eligibility check (backward-compatible).
-     *
-     * @param funcionarioId the funcionario's primary key
-     * @return {@code true} if the funcionario is ACTIVO and puede_votar=true
-     */
-    boolean isEligible(Long funcionarioId);
 
     /**
      * Election-scoped eligibility check.

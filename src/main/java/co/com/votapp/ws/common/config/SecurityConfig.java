@@ -116,16 +116,12 @@ public class SecurityConfig {
                 // No HTTP session — each request must carry credentials
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Public endpoints: vote casting (token IS the auth), ballot viewing, eligibility check.
-                // Admin endpoints (elections CRUD, token issuance) require HTTP Basic auth.
+                // Admin endpoints (elections CRUD, activation, candidates) require HTTP Basic auth.
+                // Legacy vote casting and token issuance endpoints have been removed —
+                // unauthenticated requests to those paths now receive 401 from this chain.
                 // SpringDoc paths are always permitted.
                 .authorizeHttpRequests(auth ->
-                        auth.requestMatchers(
-                                        "/api/v1/votes/**",
-                                        "/api/v1/elections/*/ballot",
-                                        "/api/v1/voters/**"
-                                ).permitAll()
-                                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                        auth.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                                 // Allow CORS preflight (OPTIONS) without auth
                                 .requestMatchers(this::isPreFlight).permitAll()
                                 .requestMatchers("/api/**").authenticated()

@@ -1,17 +1,17 @@
 package co.com.votapp.ws.voting.infrastructure.adapter.out;
 
+import co.com.votapp.ws.TestcontainersDockerConfig;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,9 +20,26 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Integration test for {@link RedisTokenLockAdapter} — requires Docker.
+ *
+ * <p>Named {@code *IT.java} to run under Maven Failsafe ({@code ./mvnw verify})
+ * and NOT under Surefire ({@code ./mvnw test}). This prevents the flaky
+ * ApplicationContext failure (localhost:55555 refused) that occurred when the
+ * test was named {@code *Test.java} and ran alongside lightweight unit tests
+ * in the aggregate Surefire pass — Testcontainers startup is heavyweight and
+ * races with the Surefire classloader on macOS Docker Desktop.
+ *
+ * <p>The test logic itself is unchanged. The rename moves it to the correct
+ * Maven lifecycle phase per project conventions documented in {@code AGENTS.md}.
+ */
 @SpringBootTest
 @Testcontainers
-class RedisTokenLockAdapterTest {
+class RedisTokenLockAdapterIT {
+
+    static {
+        TestcontainersDockerConfig.configure();
+    }
 
     @Container
     private static final GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine")
