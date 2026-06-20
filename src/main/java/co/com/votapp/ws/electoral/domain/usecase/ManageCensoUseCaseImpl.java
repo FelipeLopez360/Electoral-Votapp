@@ -6,7 +6,7 @@ import co.com.votapp.ws.common.exception.DomainException;
 import co.com.votapp.ws.electoral.domain.ElectionStatus;
 import co.com.votapp.ws.electoral.domain.exception.ElectionNotModifiableException;
 import co.com.votapp.ws.electoral.domain.model.CensoEntry;
-import co.com.votapp.ws.electoral.domain.model.PageResult;
+import co.com.votapp.ws.common.domain.model.PageResult;
 import co.com.votapp.ws.electoral.domain.port.in.ManageCensoUseCase;
 import co.com.votapp.ws.electoral.domain.port.out.CensoRepositoryPort;
 import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;

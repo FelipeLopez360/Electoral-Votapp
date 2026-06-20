@@ -1,7 +1,7 @@
 package co.com.votapp.ws.electoral.domain.port.in;
 
 import co.com.votapp.ws.electoral.domain.model.CensoEntry;
-import co.com.votapp.ws.electoral.domain.model.PageResult;
+import co.com.votapp.ws.common.domain.model.PageResult;
 
 import java.util.UUID;
 

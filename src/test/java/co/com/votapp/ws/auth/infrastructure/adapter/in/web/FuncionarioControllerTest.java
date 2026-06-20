@@ -7,6 +7,7 @@ import co.com.votapp.ws.auth.domain.Funcionario;
 import co.com.votapp.ws.auth.domain.port.in.CreateFuncionarioUseCase;
 import co.com.votapp.ws.auth.domain.port.in.UpdateFuncionarioUseCase;
 import co.com.votapp.ws.auth.domain.port.out.FuncionarioRepositoryPort;
+import co.com.votapp.ws.common.domain.model.PageResult;
 import co.com.votapp.ws.common.exception.DomainException;
 import co.com.votapp.ws.common.exception.NotFoundException;
 import co.com.votapp.ws.common.exception.ValidationException;
@@ -26,6 +27,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -110,56 +112,66 @@ class FuncionarioControllerTest {
     // ── GET /api/v1/funcionarios ──────────────────────────────────────────────
 
     @Test
-    @DisplayName("Should return 200 with list of funcionarios when no search param")
-    void list_shouldReturn200WithFuncionarioList_whenNoSearchParam() {
+    @DisplayName("Should return 200 with PageResult defaulting page=0 size=8 when no params")
+    void list_shouldReturn200WithPageResult_whenNoSearchParam() {
         // Given
         Funcionario f1 = sampleFuncionario(1);
         Funcionario f2 = sampleFuncionario(2);
-        when(funcionarioRepository.findAll(null)).thenReturn(List.of(f1, f2));
+        PageResult<Funcionario> pageResult = new PageResult<>(List.of(f1, f2), 0, 8, 2L, 1);
+        when(funcionarioRepository.findAll(eq(0), eq(8), eq(null))).thenReturn(pageResult);
 
         // When
-        ResponseEntity<List<FuncionarioResponse>> response = controller.list(null);
+        ResponseEntity<PageResult<FuncionarioResponse>> response = controller.list(null, null, null);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).hasSize(2);
-        assertThat(response.getBody().get(0).id()).isEqualTo(1);
-        assertThat(response.getBody().get(1).id()).isEqualTo(2);
-        verify(funcionarioRepository).findAll(null);
+        PageResult<FuncionarioResponse> body = response.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.content()).hasSize(2);
+        assertThat(body.content().get(0).id()).isEqualTo(1);
+        assertThat(body.content().get(1).id()).isEqualTo(2);
+        assertThat(body.page()).isEqualTo(0);
+        assertThat(body.size()).isEqualTo(8);
+        verify(funcionarioRepository).findAll(eq(0), eq(8), eq(null));
     }
 
     @Test
-    @DisplayName("Should return 200 with filtered list when search param is provided")
+    @DisplayName("Should return 200 with filtered PageResult when search param is provided")
     void list_shouldReturn200WithFilteredList_whenSearchParamProvided() {
         // Given
         Funcionario f = sampleFuncionario(1);
-        when(funcionarioRepository.findAll("Ana")).thenReturn(List.of(f));
+        PageResult<Funcionario> pageResult = new PageResult<>(List.of(f), 0, 8, 1L, 1);
+        when(funcionarioRepository.findAll(eq(0), eq(8), eq("Ana"))).thenReturn(pageResult);
 
         // When
-        ResponseEntity<List<FuncionarioResponse>> response = controller.list("Ana");
+        ResponseEntity<PageResult<FuncionarioResponse>> response = controller.list(null, null, "Ana");
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).hasSize(1);
-        assertThat(response.getBody().get(0).nombres()).isEqualTo("Ana");
+        PageResult<FuncionarioResponse> body = response.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.content()).hasSize(1);
+        assertThat(body.content().get(0).nombres()).isEqualTo("Ana");
 
         ArgumentCaptor<String> searchCaptor = ArgumentCaptor.forClass(String.class);
-        verify(funcionarioRepository).findAll(searchCaptor.capture());
+        verify(funcionarioRepository).findAll(anyInt(), anyInt(), searchCaptor.capture());
         assertThat(searchCaptor.getValue()).isEqualTo("Ana");
     }
 
     @Test
-    @DisplayName("Should return 200 with empty list when no funcionarios match")
+    @DisplayName("Should return 200 with empty PageResult when no funcionarios match")
     void list_shouldReturn200WithEmptyList_whenNoneFound() {
         // Given
-        when(funcionarioRepository.findAll(anyString())).thenReturn(List.of());
+        when(funcionarioRepository.findAll(anyInt(), anyInt(), anyString()))
+                .thenReturn(PageResult.empty(0, 8));
 
         // When
-        ResponseEntity<List<FuncionarioResponse>> response = controller.list("ZZZZZ");
+        ResponseEntity<PageResult<FuncionarioResponse>> response = controller.list(null, null, "ZZZZZ");
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEmpty();
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().content()).isEmpty();
     }
 
     // ── GET /api/v1/funcionarios/{id} ─────────────────────────────────────────

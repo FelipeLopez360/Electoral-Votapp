@@ -6,6 +6,7 @@ import co.com.votapp.ws.auth.application.dto.UpdateFuncionarioRequest;
 import co.com.votapp.ws.auth.domain.port.in.CreateFuncionarioUseCase;
 import co.com.votapp.ws.auth.domain.port.in.UpdateFuncionarioUseCase;
 import co.com.votapp.ws.auth.domain.port.out.FuncionarioRepositoryPort;
+import co.com.votapp.ws.common.domain.model.PageResult;
 import co.com.votapp.ws.common.exception.NotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -15,8 +16,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * REST controller for funcionario administration (CRUD).
@@ -46,21 +45,24 @@ public class FuncionarioController {
 
     @Operation(
             summary = "Listar funcionarios",
-            description = "Returns all funcionarios. Optional search term filters by nombres, "
-                    + "apellidos, or documentoIdentidad (case-insensitive).",
+            description = "Returns a paginated list of funcionarios. Optional search term filters by nombres, "
+                    + "apellidos, or documentoIdentidad (case-insensitive). Defaults to page=0, size=8.",
             security = @SecurityRequirement(name = "basicAuth")
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "List returned (may be empty)"),
+            @ApiResponse(responseCode = "200", description = "Paginated list returned"),
             @ApiResponse(responseCode = "401", description = "Authentication required")
     })
     @GetMapping
-    public ResponseEntity<List<FuncionarioResponse>> list(
+    public ResponseEntity<PageResult<FuncionarioResponse>> list(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String search) {
-        List<FuncionarioResponse> response = funcionarioRepository.findAll(search)
-                .stream()
-                .map(FuncionarioResponse::fromDomain)
-                .toList();
+        int effectivePage = Math.max(0, page != null ? page : 0);
+        int effectiveSize = Math.min(100, Math.max(1, size != null ? size : 8));
+        PageResult<FuncionarioResponse> response = funcionarioRepository
+                .findAll(effectivePage, effectiveSize, search)
+                .map(FuncionarioResponse::fromDomain);
         return ResponseEntity.ok(response);
     }
 

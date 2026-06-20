@@ -1,5 +1,6 @@
 package co.com.votapp.ws.electoral.infrastructure.adapter.in.web;
 
+import co.com.votapp.ws.common.domain.model.PageResult;
 import co.com.votapp.ws.electoral.application.command.AddCandidateCommand;
 import co.com.votapp.ws.electoral.application.command.CreateElectionCommand;
 import co.com.votapp.ws.electoral.application.service.ElectionTransitionAppService;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
@@ -101,19 +103,25 @@ public class ElectionController {
 
     @GetMapping
     @Operation(
-            summary = "List all elections",
-            description = "Returns all elections ordered by creation date. Requires admin credentials.",
+            summary = "List elections with pagination and search",
+            description = "Returns a paginated list of elections ordered by creation date descending. "
+                    + "Optional search filters by nombre or codigo (case-insensitive). "
+                    + "Defaults to page=0, size=8. Requires admin credentials.",
             security = @SecurityRequirement(name = "basicAuth")
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "List of elections"),
+            @ApiResponse(responseCode = "200", description = "Paginated list of elections"),
             @ApiResponse(responseCode = "401", description = "Authentication required")
     })
-    public ResponseEntity<List<ElectionResponse>> listElections() {
-        List<Election> elections = electionRepository.findAll();
-        List<ElectionResponse> response = elections.stream()
-                .map(ElectionResponse::from)
-                .toList();
+    public ResponseEntity<PageResult<ElectionResponse>> listElections(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String search) {
+        int effectivePage = Math.max(0, page != null ? page : 0);
+        int effectiveSize = Math.min(100, Math.max(1, size != null ? size : 8));
+        PageResult<ElectionResponse> response = electionRepository
+                .findAll(effectivePage, effectiveSize, search)
+                .map(ElectionResponse::from);
         return ResponseEntity.ok(response);
     }
 

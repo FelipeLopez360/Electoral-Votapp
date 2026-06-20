@@ -1,8 +1,12 @@
 package co.com.votapp.ws.electoral.infrastructure.adapter.out.persistence;
 
+import co.com.votapp.ws.common.domain.model.PageResult;
 import co.com.votapp.ws.electoral.domain.Election;
 import co.com.votapp.ws.electoral.domain.ElectionStatus;
 import co.com.votapp.ws.electoral.domain.port.out.ElectionRepositoryPort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -45,6 +49,20 @@ public class ElectionRepositoryAdapter implements ElectionRepositoryPort {
                 .stream()
                 .map(this::toDomain)
                 .toList();
+    }
+
+    @Override
+    public PageResult<Election> findAll(int page, int size, String search) {
+        String effectiveSearch = search == null ? "" : search;
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<EleccionEntity> entityPage = jpaRepository.search(effectiveSearch, pageRequest);
+        return new PageResult<>(
+                entityPage.getContent().stream().map(this::toDomain).toList(),
+                entityPage.getNumber(),
+                entityPage.getSize(),
+                entityPage.getTotalElements(),
+                entityPage.getTotalPages()
+        );
     }
 
     @Override

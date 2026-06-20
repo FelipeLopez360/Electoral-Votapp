@@ -2,6 +2,7 @@ package co.com.votapp.ws.auth.infrastructure.adapter.out.persistence;
 
 import co.com.votapp.ws.TestcontainersDockerConfig;
 import co.com.votapp.ws.auth.domain.Funcionario;
+import co.com.votapp.ws.common.domain.model.PageResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -143,7 +143,7 @@ class FuncionarioRepositoryAdapterIT {
     }
 
     @Test
-    @DisplayName("Should find funcionarios matching a partial search term")
+    @DisplayName("Should find funcionarios matching a partial search term (paginated)")
     void shouldFindBySearchTerm() {
         // Given — two distinct funcionarios
         String suffix = String.valueOf(System.nanoTime());
@@ -154,26 +154,25 @@ class FuncionarioRepositoryAdapterIT {
         adapter.saveWithHash(torres, "$2a$10$hash-t");
 
         // When — search by the unique suffix in apellidos
-        List<Funcionario> results = adapter.findAll("Álvarez" + suffix);
+        PageResult<Funcionario> results = adapter.findAll(0, 50, "Álvarez" + suffix);
 
         // Then — only Álvarez returned
-        assertThat(results).isNotEmpty();
-        assertThat(results).allSatisfy(f ->
+        assertThat(results.content()).isNotEmpty();
+        assertThat(results.content()).allSatisfy(f ->
                 assertThat(f.getApellidos()).contains("Álvarez" + suffix));
     }
 
     @Test
-    @DisplayName("Should return all funcionarios when search is null or empty")
+    @DisplayName("Should return all funcionarios when search is null or empty (paginated)")
     void shouldReturnAllWhenSearchIsNull() {
         // Given — at least two funcionarios already exist in the DB (seed data)
-        // We just verify that findAll(null) returns a non-empty list
-        List<Funcionario> withNull = adapter.findAll(null);
-        List<Funcionario> withEmpty = adapter.findAll("");
+        PageResult<Funcionario> withNull = adapter.findAll(0, 100, null);
+        PageResult<Funcionario> withEmpty = adapter.findAll(0, 100, "");
 
         // Then
-        assertThat(withNull).isNotEmpty();
-        assertThat(withEmpty).isNotEmpty();
-        assertThat(withNull.size()).isEqualTo(withEmpty.size());
+        assertThat(withNull.content()).isNotEmpty();
+        assertThat(withEmpty.content()).isNotEmpty();
+        assertThat(withNull.totalElements()).isEqualTo(withEmpty.totalElements());
     }
 
     @Test

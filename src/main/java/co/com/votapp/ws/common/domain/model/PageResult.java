@@ -1,4 +1,4 @@
-package co.com.votapp.ws.electoral.domain.model;
+package co.com.votapp.ws.common.domain.model;
 
 import java.util.List;
 import java.util.Objects;
@@ -11,6 +11,9 @@ import java.util.function.Function;
  * so that ports and use cases remain free of any Spring framework imports.
  *
  * <p>Adapters map from Spring's {@code Page} to this type at the infrastructure boundary.
+ *
+ * <p>Shared across bounded contexts (electoral, auth, etc.) to avoid cross-context cyclic
+ * dependencies and duplication.
  *
  * @param <T>           element type
  * @param content        the elements on this page
