@@ -293,7 +293,8 @@ class GetElectionResultsUseCaseImplTest {
 
         Election election = new Election(
                 electionId, "ELEC-001", electionName, ElectionStatus.FINALIZADA,
-                LocalDateTime.now().minusDays(30), LocalDateTime.now().minusDays(1)
+                LocalDateTime.now().minusDays(30), LocalDateTime.now().minusDays(1),
+                true, 1
         );
         when(electionRepository.findById(electionId)).thenReturn(Optional.of(election));
 
@@ -319,7 +320,9 @@ class GetElectionResultsUseCaseImplTest {
                 "Eleccion Test",
                 status,
                 LocalDateTime.now().minusDays(30),
-                LocalDateTime.now().minusDays(1)
+                LocalDateTime.now().minusDays(1),
+                true,
+                1
         );
     }
 }

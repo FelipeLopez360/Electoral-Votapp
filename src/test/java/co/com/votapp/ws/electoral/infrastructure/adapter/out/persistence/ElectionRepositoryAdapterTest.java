@@ -177,7 +177,7 @@ class ElectionRepositoryAdapterTest {
         LocalDateTime fechaFin = LocalDateTime.of(2026, 6, 30, 0, 0);
 
         Election election = new Election(id, "TEST-001", "Test Election",
-                ElectionStatus.ACTIVA, fechaInicio, fechaFin);
+                ElectionStatus.ACTIVA, fechaInicio, fechaFin, true, 1);
 
         EleccionEntity existingEntity = entityWith(id, "PROGRAMADA",
                 fechaInicio.toInstant(ZoneOffset.UTC),
@@ -205,7 +205,7 @@ class ElectionRepositoryAdapterTest {
         LocalDateTime fechaFin = LocalDateTime.of(2026, 6, 30, 0, 0);
 
         Election election = new Election(null, "TEST-002", "New Election",
-                ElectionStatus.PROGRAMADA, fechaInicio, fechaFin);
+                ElectionStatus.PROGRAMADA, fechaInicio, fechaFin, true, 1);
 
         when(jpaRepository.save(any(EleccionEntity.class))).thenAnswer(inv -> {
             EleccionEntity e = inv.getArgument(0);
@@ -234,7 +234,7 @@ class ElectionRepositoryAdapterTest {
         LocalDateTime fechaFin = LocalDateTime.of(2026, 6, 30, 0, 0);
 
         Election election = new Election(id, "TEST-003", "Update Election",
-                ElectionStatus.FINALIZADA, fechaInicio, fechaFin);
+                ElectionStatus.FINALIZADA, fechaInicio, fechaFin, true, 1);
 
         EleccionEntity existingEntity = entityWith(id, "ACTIVA",
                 fechaInicio.toInstant(ZoneOffset.UTC),

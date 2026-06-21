@@ -170,7 +170,9 @@ class ActivateElectionUseCaseTest {
                 "Eleccion Test",
                 status,
                 LocalDateTime.now().plusDays(1),
-                LocalDateTime.now().plusDays(30)
+                LocalDateTime.now().plusDays(30),
+                true,
+                1
         );
     }
 }

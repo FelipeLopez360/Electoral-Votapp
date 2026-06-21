@@ -178,7 +178,9 @@ class ElectionSchedulerTest {
                 "Election " + id,
                 status,
                 LocalDateTime.now().minusDays(2),
-                LocalDateTime.now().plusDays(5)
+                LocalDateTime.now().plusDays(5),
+                true,
+                1
         );
     }
 }

@@ -54,7 +54,11 @@ public class AddCandidateUseCaseImpl implements AddCandidateUseCase {
                 command.nombre(),
                 false,
                 false,
-                command.numeroOrden()
+                command.numeroOrden(),
+                command.fotoUrl(),
+                command.biografia(),
+                command.propuestas(),
+                command.afiliacionPolitica()
         );
 
         return candidateRepository.save(candidate);

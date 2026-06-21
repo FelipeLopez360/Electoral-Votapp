@@ -40,6 +40,18 @@ public class CandidatoEntity implements Persistable<UUID> {
     @Column(name = "numero_orden", nullable = false)
     private Integer numeroOrden;
 
+    @Column(name = "foto_url", columnDefinition = "TEXT")
+    private String fotoUrl;
+
+    @Column(name = "biografia", columnDefinition = "TEXT")
+    private String biografia;
+
+    @Column(name = "propuestas", columnDefinition = "TEXT")
+    private String propuestas;
+
+    @Column(name = "afiliacion_politica", columnDefinition = "TEXT")
+    private String afiliacionPolitica;
+
     // ─── Persistable ─────────────────────────────────────────────────────────
 
     @Override
@@ -73,4 +85,16 @@ public class CandidatoEntity implements Persistable<UUID> {
 
     public Integer getNumeroOrden() { return numeroOrden; }
     public void setNumeroOrden(Integer numeroOrden) { this.numeroOrden = numeroOrden; }
+
+    public String getFotoUrl() { return fotoUrl; }
+    public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+
+    public String getBiografia() { return biografia; }
+    public void setBiografia(String biografia) { this.biografia = biografia; }
+
+    public String getPropuestas() { return propuestas; }
+    public void setPropuestas(String propuestas) { this.propuestas = propuestas; }
+
+    public String getAfiliacionPolitica() { return afiliacionPolitica; }
+    public void setAfiliacionPolitica(String afiliacionPolitica) { this.afiliacionPolitica = afiliacionPolitica; }
 }

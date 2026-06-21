@@ -42,6 +42,12 @@ public class EleccionEntity implements Persistable<UUID> {
     @Column(name = "fecha_fin", nullable = false)
     private Instant fechaFin;
 
+    @Column(name = "permite_voto_blanco", nullable = false)
+    private boolean permiteVotoBlanco = true;
+
+    @Column(name = "max_votos_por_elector", nullable = false)
+    private int maxVotosPorElector = 1;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -78,6 +84,12 @@ public class EleccionEntity implements Persistable<UUID> {
 
     public Instant getFechaFin() { return fechaFin; }
     public void setFechaFin(Instant fechaFin) { this.fechaFin = fechaFin; }
+
+    public boolean isPermiteVotoBlanco() { return permiteVotoBlanco; }
+    public void setPermiteVotoBlanco(boolean permiteVotoBlanco) { this.permiteVotoBlanco = permiteVotoBlanco; }
+
+    public int getMaxVotosPorElector() { return maxVotosPorElector; }
+    public void setMaxVotosPorElector(int maxVotosPorElector) { this.maxVotosPorElector = maxVotosPorElector; }
 
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
