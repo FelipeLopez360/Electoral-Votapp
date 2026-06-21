@@ -92,7 +92,11 @@ public class CandidateRepositoryAdapter implements CandidateRepositoryPort {
                 entity.getNombre(),
                 Boolean.TRUE.equals(entity.getEsVotoEnBlanco()),
                 Boolean.TRUE.equals(entity.getEsVotoNulo()),
-                entity.getNumeroOrden()
+                entity.getNumeroOrden(),
+                entity.getFotoUrl(),
+                entity.getBiografia(),
+                entity.getPropuestas(),
+                entity.getAfiliacionPolitica()
         );
     }
 
@@ -104,6 +108,10 @@ public class CandidateRepositoryAdapter implements CandidateRepositoryPort {
         entity.setEsVotoEnBlanco(candidate.esVotoEnBlanco());
         entity.setEsVotoNulo(candidate.esVotoNulo());
         entity.setNumeroOrden(candidate.numeroOrden());
+        entity.setFotoUrl(candidate.fotoUrl());
+        entity.setBiografia(candidate.biografia());
+        entity.setPropuestas(candidate.propuestas());
+        entity.setAfiliacionPolitica(candidate.afiliacionPolitica());
         return entity;
     }
 }

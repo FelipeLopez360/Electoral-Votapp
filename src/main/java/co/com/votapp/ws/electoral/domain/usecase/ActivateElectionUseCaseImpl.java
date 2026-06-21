@@ -45,31 +45,36 @@ public class ActivateElectionUseCaseImpl implements ActivateElectionUseCase {
                 election.nombre(),
                 ElectionStatus.ACTIVA,
                 election.fechaInicio(),
-                election.fechaFin()
+                election.fechaFin(),
+                election.permiteVotoBlanco(),
+                election.maxVotosPorElector()
         );
 
         electionRepository.save(activated);
 
-        // Auto-create the synthetic blank vote candidate (numero_orden=0)
-        Candidate blankVote = new Candidate(
-                UUID.randomUUID(),
-                electionId,
-                "Voto en Blanco",
-                true,
-                false,
-                0
-        );
+        // Auto-create the synthetic blank vote candidate ONLY when permiteVotoBlanco=true
+        if (election.permiteVotoBlanco()) {
+            Candidate blankVote = new Candidate(
+                    UUID.randomUUID(),
+                    electionId,
+                    "Voto en Blanco",
+                    true,
+                    false,
+                    0,
+                    null, null, null, null
+            );
+            candidateRepository.save(blankVote);
+        }
 
-        candidateRepository.save(blankVote);
-
-        // Auto-create the synthetic null vote candidate (numero_orden=-1, always last)
+        // Auto-create the synthetic null vote candidate (always created, never conditional)
         Candidate nullVote = new Candidate(
                 UUID.randomUUID(),
                 electionId,
                 "Voto Nulo",
                 false,
                 true,
-                -1
+                -1,
+                null, null, null, null
         );
 
         candidateRepository.save(nullVote);

@@ -91,7 +91,8 @@ class PortalVotingControllerWebMvcTest {
         return new Election(ELECCION_ID, "ELEC-TEST", "Elección de Prueba",
                 ElectionStatus.ACTIVA,
                 LocalDateTime.now().minusDays(1),
-                LocalDateTime.now().plusDays(30));
+                LocalDateTime.now().plusDays(30),
+                true, 1);
     }
 
     // ────────────────────────────────────────────────────────────────────────
@@ -226,8 +227,8 @@ class PortalVotingControllerWebMvcTest {
                 .thenReturn(Optional.of(activaElection()));
         when(candidateRepository.findByEleccionIdOrderByNumeroOrden(ELECCION_ID))
                 .thenReturn(List.of(
-                        new Candidate(candId1, ELECCION_ID, "Candidato A", false, false, 1),
-                        new Candidate(blankId, ELECCION_ID, "Voto en Blanco", true, false, 99)
+                        new Candidate(candId1, ELECCION_ID, "Candidato A", false, false, 1, null, null, null, null),
+                        new Candidate(blankId, ELECCION_ID, "Voto en Blanco", true, false, 99, null, null, null, null)
                 ));
 
         // When & Then
@@ -268,12 +269,12 @@ class PortalVotingControllerWebMvcTest {
     }
 
     // ────────────────────────────────────────────────────────────────────────
-    // POST /api/v1/portal/votar/{eleccionId}/{candidatoId}
+    // POST /api/v1/portal/votar/{eleccionId}   (Phase 2: JSON body with candidatoIds)
     // Req 3.1: successful vote cast; 3.3: error cases
     // ────────────────────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("Should return 204 when vote is cast successfully via portal")
+    @DisplayName("Should return 204 when vote is cast successfully via portal (JSON body)")
     void votar_shouldReturn204_whenVoteCastSuccessfully() throws Exception {
         // Given
         when(sessionPort.getFuncionarioIdFromSession(VALID_SESSION))
@@ -281,18 +282,20 @@ class PortalVotingControllerWebMvcTest {
         when(votingTokenRepository.findIssuedByFuncionarioAndEleccion(FUNCIONARIO_ID, ELECCION_ID))
                 .thenReturn(Optional.of(issuedToken()));
 
-        // When & Then
-        mockMvc.perform(post("/api/v1/portal/votar/{eleccionId}/{candidatoId}", ELECCION_ID, CANDIDATO_ID)
+        // When & Then — Phase 2: body with candidatoIds
+        mockMvc.perform(post("/api/v1/portal/votar/{eleccionId}", ELECCION_ID)
                         .header("Authorization", "Bearer " + VALID_SESSION)
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"candidatoIds\": [\"" + CANDIDATO_ID + "\"] }"))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     @DisplayName("Should return 401 when no Authorization header is present for votar")
     void votar_shouldReturn401_whenNoAuthHeader() throws Exception {
-        mockMvc.perform(post("/api/v1/portal/votar/{eleccionId}/{candidatoId}", ELECCION_ID, CANDIDATO_ID)
-                        .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post("/api/v1/portal/votar/{eleccionId}", ELECCION_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"candidatoIds\": [\"" + CANDIDATO_ID + "\"] }"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -304,9 +307,10 @@ class PortalVotingControllerWebMvcTest {
                 .thenReturn(Optional.empty());
 
         // When & Then
-        mockMvc.perform(post("/api/v1/portal/votar/{eleccionId}/{candidatoId}", ELECCION_ID, CANDIDATO_ID)
+        mockMvc.perform(post("/api/v1/portal/votar/{eleccionId}", ELECCION_ID)
                         .header("Authorization", "Bearer expired-token")
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"candidatoIds\": [\"" + CANDIDATO_ID + "\"] }"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -320,9 +324,10 @@ class PortalVotingControllerWebMvcTest {
                 .thenReturn(Optional.empty());
 
         // When & Then
-        mockMvc.perform(post("/api/v1/portal/votar/{eleccionId}/{candidatoId}", ELECCION_ID, CANDIDATO_ID)
+        mockMvc.perform(post("/api/v1/portal/votar/{eleccionId}", ELECCION_ID)
                         .header("Authorization", "Bearer " + VALID_SESSION)
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"candidatoIds\": [\"" + CANDIDATO_ID + "\"] }"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("No tenés un token asignado para esta elección"));
     }
@@ -339,9 +344,10 @@ class PortalVotingControllerWebMvcTest {
                 .when(castVoteAppService).castVoteByTokenId(any(), any());
 
         // When & Then
-        mockMvc.perform(post("/api/v1/portal/votar/{eleccionId}/{candidatoId}", ELECCION_ID, CANDIDATO_ID)
+        mockMvc.perform(post("/api/v1/portal/votar/{eleccionId}", ELECCION_ID)
                         .header("Authorization", "Bearer " + VALID_SESSION)
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"candidatoIds\": [\"" + CANDIDATO_ID + "\"] }"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("Ya hiciste efectivo tu derecho al voto"));
     }

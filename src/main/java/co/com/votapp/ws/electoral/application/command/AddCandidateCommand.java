@@ -6,12 +6,17 @@ import java.util.UUID;
  * Command to add a candidate to an existing election.
  *
  * <p>Cannot be used when the election is FINALIZADA or CANCELADA.
+ * Rich profile fields are all optional (nullable).
  */
 public record AddCandidateCommand(
         UUID eleccionId,
         String nombre,
         String descripcion,
-        int numeroOrden
+        int numeroOrden,
+        String fotoUrl,
+        String biografia,
+        String propuestas,
+        String afiliacionPolitica
 ) {
     public AddCandidateCommand {
         if (eleccionId == null) throw new IllegalArgumentException("eleccionId must not be null");

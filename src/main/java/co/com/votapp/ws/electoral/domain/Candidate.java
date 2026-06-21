@@ -7,6 +7,10 @@ import java.util.UUID;
  *
  * <p>MVP single-category model. Blank vote and null vote are synthetic candidates
  * created automatically when an election is activated.
+ *
+ * <p>Rich profile fields ({@code fotoUrl}, {@code biografia}, {@code propuestas},
+ * {@code afiliacionPolitica}) are optional (nullable). Synthetic candidates (blank vote,
+ * null vote) always pass {@code null} for these fields.
  */
 public record Candidate(
         UUID id,
@@ -14,7 +18,11 @@ public record Candidate(
         String nombre,
         boolean esVotoEnBlanco,
         boolean esVotoNulo,
-        int numeroOrden
+        int numeroOrden,
+        String fotoUrl,
+        String biografia,
+        String propuestas,
+        String afiliacionPolitica
 ) {
     public Candidate {
         if (id == null) throw new IllegalArgumentException("id must not be null");

@@ -48,7 +48,7 @@ class CreateElectionUseCaseTest {
         when(electionRepository.save(any(Election.class))).thenAnswer(inv -> {
             Election arg = inv.getArgument(0);
             // Simulate JPA-generated UUID by assigning one
-            return new Election(UUID.randomUUID(), arg.codigo(), arg.nombre(), arg.status(), arg.fechaInicio(), arg.fechaFin());
+            return new Election(UUID.randomUUID(), arg.codigo(), arg.nombre(), arg.status(), arg.fechaInicio(), arg.fechaFin(), arg.permiteVotoBlanco(), arg.maxVotosPorElector());
         });
 
         // When
@@ -103,7 +103,9 @@ class CreateElectionUseCaseTest {
                 "Eleccion Test",
                 "Descripcion de prueba",
                 LocalDateTime.now().plusDays(1),
-                LocalDateTime.now().plusDays(30)
+                LocalDateTime.now().plusDays(30),
+                true,
+                1
         );
     }
 
@@ -114,7 +116,9 @@ class CreateElectionUseCaseTest {
                 "Eleccion Existente",
                 status,
                 LocalDateTime.now().plusDays(1),
-                LocalDateTime.now().plusDays(30)
+                LocalDateTime.now().plusDays(30),
+                true,
+                1
         );
     }
 }

@@ -24,7 +24,7 @@ class CandidateNullVoteTest {
         UUID eleccionId = UUID.randomUUID();
 
         // When
-        var nullVoteCandidate = new Candidate(id, eleccionId, "Voto Nulo", false, true, 1);
+        var nullVoteCandidate = new Candidate(id, eleccionId, "Voto Nulo", false, true, 1, null, null, null, null);
 
         // Then
         assertThat(nullVoteCandidate.esVotoNulo()).isTrue();
@@ -40,7 +40,7 @@ class CandidateNullVoteTest {
         UUID eleccionId = UUID.randomUUID();
 
         // When & Then
-        assertThatThrownBy(() -> new Candidate(id, eleccionId, "Voto Nulo", true, true, 1))
+        assertThatThrownBy(() -> new Candidate(id, eleccionId, "Voto Nulo", true, true, 1, null, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -52,7 +52,7 @@ class CandidateNullVoteTest {
         UUID eleccionId = UUID.randomUUID();
 
         // When & Then
-        assertThatThrownBy(() -> new Candidate(id, eleccionId, "Some Other Name", false, true, 1))
+        assertThatThrownBy(() -> new Candidate(id, eleccionId, "Some Other Name", false, true, 1, null, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -64,7 +64,7 @@ class CandidateNullVoteTest {
         UUID eleccionId = UUID.randomUUID();
 
         // When
-        var regular = new Candidate(id, eleccionId, "Candidato A", false, false, 1);
+        var regular = new Candidate(id, eleccionId, "Candidato A", false, false, 1, null, null, null, null);
 
         // Then
         assertThat(regular.esVotoNulo()).isFalse();

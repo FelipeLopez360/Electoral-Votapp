@@ -33,7 +33,9 @@ public class CreateElectionUseCaseImpl implements CreateElectionUseCase {
                 command.nombre(),
                 ElectionStatus.PROGRAMADA,
                 command.fechaInicio(),
-                command.fechaFin()
+                command.fechaFin(),
+                command.permiteVotoBlanco(),
+                command.maxVotosPorElector()
         );
 
         return electionRepository.save(election);

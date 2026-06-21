@@ -6,13 +6,16 @@ import java.time.LocalDateTime;
  * Command to create a new election.
  *
  * <p>The initial status is always PROGRAMADA — enforced by the use case.
+ * Ballot configuration defaults: {@code permiteVotoBlanco=true}, {@code maxVotosPorElector=1}.
  */
 public record CreateElectionCommand(
         String codigo,
         String nombre,
         String descripcion,
         LocalDateTime fechaInicio,
-        LocalDateTime fechaFin
+        LocalDateTime fechaFin,
+        boolean permiteVotoBlanco,
+        int maxVotosPorElector
 ) {
     public CreateElectionCommand {
         if (codigo == null || codigo.isBlank()) throw new IllegalArgumentException("codigo must not be blank");
@@ -21,5 +24,7 @@ public record CreateElectionCommand(
         if (fechaFin == null) throw new IllegalArgumentException("fechaFin must not be null");
         if (!fechaFin.isAfter(fechaInicio))
             throw new IllegalArgumentException("fechaFin must be after fechaInicio");
+        if (maxVotosPorElector < 1)
+            throw new IllegalArgumentException("maxVotosPorElector must be >= 1");
     }
 }

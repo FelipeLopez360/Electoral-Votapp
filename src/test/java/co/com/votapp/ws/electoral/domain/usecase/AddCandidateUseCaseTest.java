@@ -49,7 +49,7 @@ class AddCandidateUseCaseTest {
         // Given
         UUID eleccionId = UUID.randomUUID();
         var election = electionWith(eleccionId, ElectionStatus.PROGRAMADA);
-        var command = new AddCandidateCommand(eleccionId, "Candidato Uno", "Descripcion", 1);
+        var command = new AddCandidateCommand(eleccionId, "Candidato Uno", "Descripcion", 1, null, null, null, null);
 
         when(electionRepository.findById(eleccionId)).thenReturn(Optional.of(election));
         when(candidateRepository.existsByEleccionIdAndNumeroOrden(eleccionId, 1)).thenReturn(false);
@@ -71,7 +71,7 @@ class AddCandidateUseCaseTest {
         // Given
         UUID eleccionId = UUID.randomUUID();
         var election = electionWith(eleccionId, ElectionStatus.ACTIVA);
-        var command = new AddCandidateCommand(eleccionId, "Candidato Dos", "Descripcion", 2);
+        var command = new AddCandidateCommand(eleccionId, "Candidato Dos", "Descripcion", 2, null, null, null, null);
 
         when(electionRepository.findById(eleccionId)).thenReturn(Optional.of(election));
         when(candidateRepository.existsByEleccionIdAndNumeroOrden(eleccionId, 2)).thenReturn(false);
@@ -90,7 +90,7 @@ class AddCandidateUseCaseTest {
         // Given
         UUID eleccionId = UUID.randomUUID();
         var election = electionWith(eleccionId, ElectionStatus.FINALIZADA);
-        var command = new AddCandidateCommand(eleccionId, "Candidato", "Desc", 1);
+        var command = new AddCandidateCommand(eleccionId, "Candidato", "Desc", 1, null, null, null, null);
 
         when(electionRepository.findById(eleccionId)).thenReturn(Optional.of(election));
 
@@ -107,7 +107,7 @@ class AddCandidateUseCaseTest {
         // Given
         UUID eleccionId = UUID.randomUUID();
         var election = electionWith(eleccionId, ElectionStatus.CANCELADA);
-        var command = new AddCandidateCommand(eleccionId, "Candidato", "Desc", 1);
+        var command = new AddCandidateCommand(eleccionId, "Candidato", "Desc", 1, null, null, null, null);
 
         when(electionRepository.findById(eleccionId)).thenReturn(Optional.of(election));
 
@@ -124,7 +124,7 @@ class AddCandidateUseCaseTest {
         // Given
         UUID eleccionId = UUID.randomUUID();
         var election = electionWith(eleccionId, ElectionStatus.PROGRAMADA);
-        var command = new AddCandidateCommand(eleccionId, "Candidato", "Desc", 1);
+        var command = new AddCandidateCommand(eleccionId, "Candidato", "Desc", 1, null, null, null, null);
 
         when(electionRepository.findById(eleccionId)).thenReturn(Optional.of(election));
         when(candidateRepository.existsByEleccionIdAndNumeroOrden(eleccionId, 1)).thenReturn(true);
@@ -142,7 +142,7 @@ class AddCandidateUseCaseTest {
     void addCandidate_shouldThrowDomainException_whenElectionNotFound() {
         // Given
         UUID eleccionId = UUID.randomUUID();
-        var command = new AddCandidateCommand(eleccionId, "Candidato", "Desc", 1);
+        var command = new AddCandidateCommand(eleccionId, "Candidato", "Desc", 1, null, null, null, null);
         when(electionRepository.findById(eleccionId)).thenReturn(Optional.empty());
 
         // When & Then
@@ -159,7 +159,9 @@ class AddCandidateUseCaseTest {
                 "Eleccion Test",
                 status,
                 LocalDateTime.now().plusDays(1),
-                LocalDateTime.now().plusDays(30)
+                LocalDateTime.now().plusDays(30),
+                true,
+                1
         );
     }
 }

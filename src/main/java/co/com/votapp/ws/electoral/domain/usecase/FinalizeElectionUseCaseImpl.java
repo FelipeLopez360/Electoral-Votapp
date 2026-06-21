@@ -39,7 +39,9 @@ public class FinalizeElectionUseCaseImpl implements FinalizeElectionUseCase {
                 election.nombre(),
                 ElectionStatus.FINALIZADA,
                 election.fechaInicio(),
-                election.fechaFin()
+                election.fechaFin(),
+                election.permiteVotoBlanco(),
+                election.maxVotosPorElector()
         );
 
         electionRepository.save(finalized);

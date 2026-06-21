@@ -8,15 +8,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.Mockito.verify;
 
 /**
- * Unit tests for {@link CastVoteAppService} — portal flow only.
+ * Unit tests for {@link CastVoteAppService} — portal flow only (multi-candidate).
  *
  * <p>The legacy rawToken castVote(CastVoteCommand) method has been removed.
- * Only castVoteByTokenId (portal flow) remains.
+ * The canonical flow uses castVoteByTokenId with a list of candidate UUIDs.
  */
 @DisplayName("CastVoteAppService - Portal flow delegation (castVoteByTokenId)")
 @ExtendWith(MockitoExtension.class)
@@ -35,30 +36,33 @@ class CastVoteAppServiceTest {
     // ─── castVoteByTokenId (portal flow) ─────────────────────────────────────
 
     @Test
-    @DisplayName("Should delegate castVoteByTokenId(tokenId, candidatoId) to CastVoteByTokenIdPort")
+    @DisplayName("Should delegate castVoteByTokenId(tokenId, candidatoIds) to CastVoteByTokenIdPort")
     void castVoteByTokenId_shouldDelegateToCastVoteByTokenIdPort_withSameArgs() {
         // Given
         UUID tokenId = UUID.randomUUID();
         UUID candidatoId = UUID.randomUUID();
+        List<UUID> candidatoIds = List.of(candidatoId);
 
         // When
-        service.castVoteByTokenId(tokenId, candidatoId);
+        service.castVoteByTokenId(tokenId, candidatoIds);
 
         // Then
-        verify(castVoteByTokenIdPort).castVote(tokenId, candidatoId);
+        verify(castVoteByTokenIdPort).castVote(tokenId, candidatoIds);
     }
 
     @Test
-    @DisplayName("Should delegate different tokenId and candidatoId values correctly")
-    void castVoteByTokenId_shouldDelegateDistinctIds_toPort() {
-        // Given — triangulation with different values
+    @DisplayName("Should delegate multiple candidate IDs correctly to port")
+    void castVoteByTokenId_shouldDelegateMultipleCandidateIds_toPort() {
+        // Given — triangulation with multiple candidates
         UUID tokenId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
-        UUID candidatoId = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+        UUID cand1 = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+        UUID cand2 = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc");
+        List<UUID> candidatoIds = List.of(cand1, cand2);
 
         // When
-        service.castVoteByTokenId(tokenId, candidatoId);
+        service.castVoteByTokenId(tokenId, candidatoIds);
 
         // Then
-        verify(castVoteByTokenIdPort).castVote(tokenId, candidatoId);
+        verify(castVoteByTokenIdPort).castVote(tokenId, candidatoIds);
     }
 }

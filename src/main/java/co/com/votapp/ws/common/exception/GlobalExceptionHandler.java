@@ -117,6 +117,21 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(ex.getMessage()));
     }
 
+    /**
+     * Handles {@link IllegalArgumentException} thrown by domain compact constructors
+     * (e.g. {@code Election} or {@code CreateElectionCommand}) when semantic invariants
+     * are violated — such as {@code maxVotosPorElector < 1}.
+     *
+     * <p>These are client-input errors (the caller sent an invalid value), so they map
+     * to HTTP 400 Bad Request rather than 500 Internal Server Error.
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(ex.getMessage()));
+    }
+
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ErrorResponse> handleDomain(DomainException ex) {
         return ResponseEntity

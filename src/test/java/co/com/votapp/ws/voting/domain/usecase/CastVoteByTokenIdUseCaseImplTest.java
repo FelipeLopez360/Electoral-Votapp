@@ -3,6 +3,7 @@ package co.com.votapp.ws.voting.domain.usecase;
 import co.com.votapp.ws.audit.domain.AuditoriaEvento;
 import co.com.votapp.ws.audit.domain.port.in.RegisterAuditEventPort;
 import co.com.votapp.ws.common.exception.DomainException;
+import co.com.votapp.ws.electoral.domain.Candidate;
 import co.com.votapp.ws.electoral.domain.Election;
 import co.com.votapp.ws.electoral.domain.ElectionStatus;
 import co.com.votapp.ws.electoral.domain.port.out.CandidateRepositoryPort;
@@ -25,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,11 +37,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit tests for {@link CastVoteByTokenIdUseCaseImpl} (Task 1.5).
+ * Unit tests for {@link CastVoteByTokenIdUseCaseImpl} — core atomic flow.
  *
- * <p>RED phase: tests will fail until the use case is created.
- * Validates that the same atomic flow works when the token is resolved by UUID
- * instead of rawToken hash.
+ * <p>Validates the atomic voting flow using the multi-candidate port signature.
+ * Token resolution by UUID instead of rawToken hash.
  */
 @DisplayName("CastVoteByTokenIdUseCaseImpl - Vote by token ID without rawToken")
 @ExtendWith(MockitoExtension.class)
@@ -87,7 +88,7 @@ class CastVoteByTokenIdUseCaseImplTest {
         when(votingTokenRepository.markUsed(any(), any(), any(), any())).thenReturn(true);
 
         // When
-        useCase.castVote(tokenId, candidatoId);
+        useCase.castVote(tokenId, List.of(candidatoId));
 
         // Then
         verify(voteRepository).save(any());
@@ -115,7 +116,7 @@ class CastVoteByTokenIdUseCaseImplTest {
         when(votingTokenRepository.markUsed(any(), any(), any(), any())).thenReturn(true);
 
         // When
-        useCase.castVote(tokenId, candidatoId);
+        useCase.castVote(tokenId, List.of(candidatoId));
 
         // Then — lock acquired before DB work, released after
         InOrder order = inOrder(tokenLockPort, electionRepository, voteRepository);
@@ -135,7 +136,7 @@ class CastVoteByTokenIdUseCaseImplTest {
         when(votingTokenRepository.findById(tokenId)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThatThrownBy(() -> useCase.castVote(tokenId, candidatoId))
+        assertThatThrownBy(() -> useCase.castVote(tokenId, List.of(candidatoId)))
                 .isInstanceOf(DomainException.class);
 
         verify(tokenLockPort, never()).acquire(any());
@@ -153,7 +154,7 @@ class CastVoteByTokenIdUseCaseImplTest {
         when(votingTokenRepository.findById(tokenId)).thenReturn(Optional.of(usedToken));
 
         // When & Then
-        assertThatThrownBy(() -> useCase.castVote(tokenId, candidatoId))
+        assertThatThrownBy(() -> useCase.castVote(tokenId, List.of(candidatoId)))
                 .isInstanceOf(DomainException.class);
 
         verify(tokenLockPort, never()).acquire(any());
@@ -172,7 +173,8 @@ class CastVoteByTokenIdUseCaseImplTest {
                 eleccionId, "ELEC-TEST", "Test",
                 ElectionStatus.FINALIZADA,
                 LocalDateTime.now().minusDays(5),
-                LocalDateTime.now().minusDays(1)
+                LocalDateTime.now().minusDays(1),
+                true, 1
         );
 
         when(votingTokenRepository.findById(tokenId)).thenReturn(Optional.of(token));
@@ -180,7 +182,7 @@ class CastVoteByTokenIdUseCaseImplTest {
         when(electionRepository.findById(eleccionId)).thenReturn(Optional.of(finalizedElection));
 
         // When & Then
-        assertThatThrownBy(() -> useCase.castVote(tokenId, candidatoId))
+        assertThatThrownBy(() -> useCase.castVote(tokenId, List.of(candidatoId)))
                 .isInstanceOf(DomainException.class);
 
         verify(tokenLockPort).release(tokenId);
@@ -200,7 +202,7 @@ class CastVoteByTokenIdUseCaseImplTest {
         when(tokenLockPort.acquire(tokenId)).thenReturn(false);
 
         // When & Then
-        assertThatThrownBy(() -> useCase.castVote(tokenId, candidatoId))
+        assertThatThrownBy(() -> useCase.castVote(tokenId, List.of(candidatoId)))
                 .isInstanceOf(DomainException.class);
 
         verify(electionRepository, never()).findById(any());
@@ -226,7 +228,7 @@ class CastVoteByTokenIdUseCaseImplTest {
         when(votingTokenRepository.markUsed(any(), any(), any(), any())).thenReturn(true);
 
         // When
-        useCase.castVote(tokenId, candidatoId);
+        useCase.castVote(tokenId, List.of(candidatoId));
 
         // Then
         ArgumentCaptor<AuditoriaEvento> auditCaptor = ArgumentCaptor.forClass(AuditoriaEvento.class);
@@ -257,11 +259,42 @@ class CastVoteByTokenIdUseCaseImplTest {
         doThrow(new RuntimeException("DB error")).when(voteRepository).save(any());
 
         // When & Then
-        assertThatThrownBy(() -> useCase.castVote(tokenId, candidatoId))
+        assertThatThrownBy(() -> useCase.castVote(tokenId, List.of(candidatoId)))
                 .isInstanceOf(RuntimeException.class);
 
         // Lock MUST be released even on failure
         verify(tokenLockPort).release(tokenId);
+    }
+
+    @Test
+    @DisplayName("Should throw DomainException before any I/O when candidatoIds is empty")
+    void castVote_shouldThrowDomainException_whenCandidatoIdsIsEmpty() {
+        // Given
+        UUID tokenId = UUID.randomUUID();
+
+        // When & Then — guard fires before ANY repository or lock interaction
+        assertThatThrownBy(() -> useCase.castVote(tokenId, List.of()))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("at least one");
+
+        // Critical: NO I/O must occur — empty list rejected before token lookup or lock
+        verifyNoInteractions(votingTokenRepository, tokenLockPort, electionRepository,
+                candidateRepository, voteRepository, participacionRepository, auditPort);
+    }
+
+    @Test
+    @DisplayName("Should throw DomainException before any I/O when candidatoIds is null")
+    void castVote_shouldThrowDomainException_whenCandidatoIdsIsNull() {
+        // Given
+        UUID tokenId = UUID.randomUUID();
+
+        // When & Then — guard fires before ANY repository or lock interaction
+        assertThatThrownBy(() -> useCase.castVote(tokenId, null))
+                .isInstanceOf(DomainException.class);
+
+        // Critical: NO I/O must occur — null list rejected before token lookup or lock
+        verifyNoInteractions(votingTokenRepository, tokenLockPort, electionRepository,
+                candidateRepository, voteRepository, participacionRepository, auditPort);
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -272,10 +305,11 @@ class CastVoteByTokenIdUseCaseImplTest {
 
     private Election activaElection(UUID id) {
         return new Election(id, "ELEC-" + id.toString().substring(0, 8), "Eleccion Test",
-                ElectionStatus.ACTIVA, LocalDateTime.now().minusDays(1), LocalDateTime.now().plusDays(30));
+                ElectionStatus.ACTIVA, LocalDateTime.now().minusDays(1), LocalDateTime.now().plusDays(30),
+                true, 1);
     }
 
-    private co.com.votapp.ws.electoral.domain.Candidate candidate(UUID id, UUID eleccionId) {
-        return new co.com.votapp.ws.electoral.domain.Candidate(id, eleccionId, "Candidato Test", false, false, 1);
+    private Candidate candidate(UUID id, UUID eleccionId) {
+        return new Candidate(id, eleccionId, "Candidato Test", false, false, 1, null, null, null, null);
     }
 }

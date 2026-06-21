@@ -99,7 +99,9 @@ public class ElectionRepositoryAdapter implements ElectionRepositoryPort {
                 entity.getNombre(),
                 ElectionStatus.valueOf(entity.getEstado()),
                 LocalDateTime.ofInstant(entity.getFechaInicio(), ZoneOffset.UTC),
-                LocalDateTime.ofInstant(entity.getFechaFin(), ZoneOffset.UTC)
+                LocalDateTime.ofInstant(entity.getFechaFin(), ZoneOffset.UTC),
+                entity.isPermiteVotoBlanco(),
+                entity.getMaxVotosPorElector()
         );
     }
 
@@ -111,6 +113,8 @@ public class ElectionRepositoryAdapter implements ElectionRepositoryPort {
         entity.setEstado(election.status().name());
         entity.setFechaInicio(election.fechaInicio().toInstant(ZoneOffset.UTC));
         entity.setFechaFin(election.fechaFin().toInstant(ZoneOffset.UTC));
+        entity.setPermiteVotoBlanco(election.permiteVotoBlanco());
+        entity.setMaxVotosPorElector(election.maxVotosPorElector());
 
         if (election.id() != null) {
             // UPDATE: preserve original createdAt from the DB row — never reset it

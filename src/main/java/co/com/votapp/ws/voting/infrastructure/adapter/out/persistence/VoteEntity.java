@@ -25,7 +25,7 @@ public class VoteEntity {
     @Column(name = "candidato_id", nullable = false, columnDefinition = "UUID")
     private UUID candidatoId;
 
-    @Column(name = "token_id", nullable = false, unique = true, columnDefinition = "UUID")
+    @Column(name = "token_id", nullable = false, columnDefinition = "UUID")
     private UUID tokenId;
 
     @Column(name = "created_at", nullable = false)

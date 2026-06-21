@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -127,34 +128,39 @@ public class PortalVotingController {
         List<Candidate> candidates = candidateRepository.findByEleccionIdOrderByNumeroOrden(eleccionId);
 
         List<PortalCandidateItem> items = candidates.stream()
-                .map(c -> new PortalCandidateItem(c.id().toString(), c.nombre(), c.esVotoEnBlanco(), c.numeroOrden()))
+                .map(c -> new PortalCandidateItem(
+                        c.id().toString(), c.nombre(), c.esVotoEnBlanco(), c.numeroOrden(),
+                        c.fotoUrl(), c.biografia(), c.propuestas(), c.afiliacionPolitica()))
                 .toList();
 
         return ResponseEntity.ok(new PortalBallotResponse(
                 election.id().toString(),
                 election.nombre(),
+                election.maxVotosPorElector(),
+                election.permiteVotoBlanco(),
                 items
         ));
     }
 
-    // ── POST /api/v1/portal/votar/{eleccionId}/{candidatoId} ─────────────────
+    // ── POST /api/v1/portal/votar/{eleccionId} ───────────────────────────────
 
-    @PostMapping("/votar/{eleccionId}/{candidatoId}")
+    @PostMapping("/votar/{eleccionId}")
     @Operation(
-            summary = "Cast vote via portal",
-            description = "Casts an anonymous vote for the authenticated funcionario. "
+            summary = "Cast vote via portal (multi-selection)",
+            description = "Casts one or more anonymous votes for the authenticated funcionario. "
+                    + "Accepts a JSON body with a list of candidate UUIDs (candidatoIds). "
                     + "The rawToken is resolved internally by looking up the ISSUED token "
-                    + "for this funcionario+election pair. The vote is cast atomically."
+                    + "for this funcionario+election pair. All votes are cast atomically."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Vote cast successfully"),
+            @ApiResponse(responseCode = "204", description = "Vote(s) cast successfully"),
             @ApiResponse(responseCode = "401", description = "Session token missing or expired"),
             @ApiResponse(responseCode = "404", description = "No assigned token for this election"),
-            @ApiResponse(responseCode = "409", description = "Domain rule violated — already voted, election not active, etc.")
+            @ApiResponse(responseCode = "409", description = "Domain rule violated — already voted, election not active, blank/null exclusivity, max votes exceeded, etc.")
     })
     public ResponseEntity<Void> votar(
             @PathVariable UUID eleccionId,
-            @PathVariable UUID candidatoId,
+            @RequestBody VotarRequest votarRequest,
             HttpServletRequest request) {
 
         Integer funcionarioId = resolvedFuncionarioId(request);
@@ -164,8 +170,8 @@ public class PortalVotingController {
                 .findIssuedByFuncionarioAndEleccion(funcionarioId, eleccionId)
                 .orElseThrow(() -> new NotFoundException("No tenés un token asignado para esta elección"));
 
-        // Delegate atomic vote-casting to the transactional app service
-        castVoteAppService.castVoteByTokenId(token.id(), candidatoId);
+        // Delegate atomic multi-vote casting to the transactional app service
+        castVoteAppService.castVoteByTokenId(token.id(), votarRequest.candidatoIds());
 
         return ResponseEntity.noContent().build();
     }
@@ -191,18 +197,42 @@ public class PortalVotingController {
             boolean yaVoto
     ) {}
 
-    /** Response body for GET /portal/ballot/{eleccionId}. */
+    /**
+     * Request body for POST /portal/votar/{eleccionId}.
+     *
+     * <p>Contains the list of selected candidate UUIDs. At least one ID is required.
+     * Blank vote mutual exclusivity is enforced by the domain use case.
+     */
+    public record VotarRequest(List<UUID> candidatoIds) {}
+
+    /**
+     * Response body for GET /portal/ballot/{eleccionId}.
+     *
+     * <p>Includes ballot configuration ({@code maxVotosPorElector}, {@code permiteVotoBlanco})
+     * used by the VotePage to drive multi-select and blank-vote exclusivity UI logic.
+     */
     public record PortalBallotResponse(
             String eleccionId,
             String nombre,
+            int maxVotosPorElector,
+            boolean permiteVotoBlanco,
             List<PortalCandidateItem> candidates
     ) {}
 
-    /** Single candidate item in the portal ballot. */
+    /**
+     * Single candidate item in the portal ballot.
+     *
+     * <p>Includes rich profile fields for candidate cards.
+     * Synthetic candidates (blank vote, null vote) have {@code null} for all rich fields.
+     */
     public record PortalCandidateItem(
             String id,
             String nombre,
             boolean esVotoEnBlanco,
-            int numeroOrden
+            int numeroOrden,
+            String fotoUrl,
+            String biografia,
+            String propuestas,
+            String afiliacionPolitica
     ) {}
 }
