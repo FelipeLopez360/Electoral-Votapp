@@ -2,6 +2,7 @@ package co.com.votapp.ws.common.config;
 
 import co.com.votapp.ws.auth.domain.port.out.PortalSessionPort;
 import co.com.votapp.ws.common.exception.GlobalExceptionHandler;
+import co.com.votapp.ws.electoral.application.service.CreateElectionWithCandidatesAppService;
 import co.com.votapp.ws.electoral.application.service.ElectionTransitionAppService;
 import co.com.votapp.ws.electoral.domain.port.in.AddCandidateUseCase;
 import co.com.votapp.ws.electoral.domain.port.in.CreateElectionUseCase;
@@ -60,6 +61,9 @@ class LegacyEndpointRemovalWebMvcTest {
 
     @MockitoBean
     private CreateElectionUseCase createElectionUseCase;
+
+    @MockitoBean
+    private CreateElectionWithCandidatesAppService createElectionWithCandidatesAppService;
 
     @MockitoBean
     private ElectionTransitionAppService electionTransitionAppService;

@@ -61,6 +61,7 @@ class ElectionControllerTest {
     void setUp() {
         controller = new ElectionController(
                 createElectionUseCase,
+                null, // CreateElectionWithCandidatesAppService — not needed for these unit tests
                 electionTransitionAppService,
                 finalizeElectionUseCase,
                 addCandidateUseCase,
@@ -75,14 +76,15 @@ class ElectionControllerTest {
     @DisplayName("Should return 201 with election response when creation succeeds")
     void createElection_shouldReturn201_whenCreationSucceeds() {
         // Given
-        Election created = new Election(ELECTION_ID, "ELEC-2025", "Elección General", ElectionStatus.PROGRAMADA, START, END);
+        Election created = new Election(ELECTION_ID, "ELEC-2025", "Elección General", ElectionStatus.PROGRAMADA, START, END, true, 1);
         when(createElectionUseCase.create(any())).thenReturn(created);
 
         String startStr = START.toString();
         String endStr = END.toString();
         ElectionController.CreateElectionRequest request = new ElectionController.CreateElectionRequest(
                 "ELEC-2025", "Elección General",
-                startStr, endStr
+                startStr, endStr,
+                true, 1
         );
 
         // When
@@ -101,14 +103,15 @@ class ElectionControllerTest {
     @DisplayName("Should build CreateElectionCommand with parsed dates from request")
     void createElection_shouldBuildCommandWithParsedDates_whenRequestIsValid() {
         // Given
-        Election created = new Election(ELECTION_ID, "ELEC-2025", "Test", ElectionStatus.PROGRAMADA, START, END);
+        Election created = new Election(ELECTION_ID, "ELEC-2025", "Test", ElectionStatus.PROGRAMADA, START, END, true, 1);
         when(createElectionUseCase.create(any())).thenReturn(created);
 
         String startStr = START.toString();
         String endStr = END.toString();
         ElectionController.CreateElectionRequest request = new ElectionController.CreateElectionRequest(
                 "ELEC-2025", "Test",
-                startStr, endStr
+                startStr, endStr,
+                true, 1
         );
 
         // When
@@ -129,12 +132,97 @@ class ElectionControllerTest {
         // Given
         ElectionController.CreateElectionRequest badRequest = new ElectionController.CreateElectionRequest(
                 "ELEC-2025", "Test",
-                "not-a-date", "2025-11-01T18:00:00"
+                "not-a-date", "2025-11-01T18:00:00",
+                true, 1
         );
 
         // When & Then
         assertThatThrownBy(() -> controller.createElection(badRequest))
                 .isInstanceOf(java.time.format.DateTimeParseException.class);
+    }
+
+    // ── createElection ballot config (legacy POST /api/v1/elections) ─────────
+
+    @Test
+    @DisplayName("Should forward permiteVotoBlanco=false and maxVotosPorElector=3 from legacy createElection request")
+    void createElection_shouldForwardBallotConfig_whenNonDefaultValuesProvided() {
+        // Given — non-default ballot config: no blank vote, 3 votes max
+        Election created = new Election(ELECTION_ID, "ELEC-2025", "Elección General",
+                ElectionStatus.PROGRAMADA, START, END, false, 3);
+        when(createElectionUseCase.create(any())).thenReturn(created);
+
+        ElectionController.CreateElectionRequest request = new ElectionController.CreateElectionRequest(
+                "ELEC-2025", "Elección General",
+                START.toString(), END.toString(),
+                false, 3
+        );
+
+        // When
+        ResponseEntity<?> response = controller.createElection(request);
+
+        // Then — command must carry the non-default values (not hardcoded 1/true)
+        ArgumentCaptor<co.com.votapp.ws.electoral.application.command.CreateElectionCommand> captor =
+                ArgumentCaptor.forClass(co.com.votapp.ws.electoral.application.command.CreateElectionCommand.class);
+        verify(createElectionUseCase).create(captor.capture());
+        assertThat(captor.getValue().permiteVotoBlanco()).isFalse();
+        assertThat(captor.getValue().maxVotosPorElector()).isEqualTo(3);
+
+        // And the response reflects the actual election state
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        var body = (ElectionController.ElectionResponse) response.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.permiteVotoBlanco()).isFalse();
+        assertThat(body.maxVotosPorElector()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("Should forward permiteVotoBlanco=true and maxVotosPorElector=2 from legacy createElection request")
+    void createElection_shouldForwardBallotConfig_whenPermiteVotoBlancoTrueAndMaxTwo() {
+        // Given — triangulation: blank vote allowed, but max 2
+        Election created = new Election(ELECTION_ID, "ELEC-2026", "Segunda Elección",
+                ElectionStatus.PROGRAMADA, START, END, true, 2);
+        when(createElectionUseCase.create(any())).thenReturn(created);
+
+        ElectionController.CreateElectionRequest request = new ElectionController.CreateElectionRequest(
+                "ELEC-2026", "Segunda Elección",
+                START.toString(), END.toString(),
+                true, 2
+        );
+
+        // When
+        controller.createElection(request);
+
+        // Then
+        ArgumentCaptor<co.com.votapp.ws.electoral.application.command.CreateElectionCommand> captor =
+                ArgumentCaptor.forClass(co.com.votapp.ws.electoral.application.command.CreateElectionCommand.class);
+        verify(createElectionUseCase).create(captor.capture());
+        assertThat(captor.getValue().permiteVotoBlanco()).isTrue();
+        assertThat(captor.getValue().maxVotosPorElector()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Should return 201 with ballot config echoed back when legacy createElection request uses non-defaults")
+    void createElection_shouldReturn201WithBallotConfigInResponse_whenNonDefaultConfig() {
+        // Given
+        Election created = new Election(ELECTION_ID, "ELEC-X", "Elección X",
+                ElectionStatus.PROGRAMADA, START, END, false, 5);
+        when(createElectionUseCase.create(any())).thenReturn(created);
+
+        ElectionController.CreateElectionRequest request = new ElectionController.CreateElectionRequest(
+                "ELEC-X", "Elección X",
+                START.toString(), END.toString(),
+                false, 5
+        );
+
+        // When
+        ResponseEntity<?> response = controller.createElection(request);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        var body = (ElectionController.ElectionResponse) response.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.permiteVotoBlanco()).isFalse();
+        assertThat(body.maxVotosPorElector()).isEqualTo(5);
     }
 
     // ── activateElection ─────────────────────────────────────────────────────
@@ -191,11 +279,11 @@ class ElectionControllerTest {
     @DisplayName("Should return 201 with candidate response when creation succeeds")
     void addCandidate_shouldReturn201_whenCreationSucceeds() {
         // Given
-        Candidate candidate = new Candidate(CANDIDATE_ID, ELECTION_ID, "Candidato A", false, false, 1);
+        Candidate candidate = new Candidate(CANDIDATE_ID, ELECTION_ID, "Candidato A", false, false, 1, null, null, null, null);
         when(addCandidateUseCase.addCandidate(any())).thenReturn(candidate);
 
         ElectionController.AddCandidateRequest request = new ElectionController.AddCandidateRequest(
-                "Candidato A", "Candidate description", 1);
+                "Candidato A", "Candidate description", 1, null, null, null, null);
 
         // When
         ResponseEntity<ElectionController.CandidateResponse> response =
@@ -213,11 +301,11 @@ class ElectionControllerTest {
     @DisplayName("Should build AddCandidateCommand with path variable and request body")
     void addCandidate_shouldBuildCommand_fromPathVariableAndBody() {
         // Given
-        Candidate candidate = new Candidate(CANDIDATE_ID, ELECTION_ID, "Candidato B", false, false, 2);
+        Candidate candidate = new Candidate(CANDIDATE_ID, ELECTION_ID, "Candidato B", false, false, 2, null, null, null, null);
         when(addCandidateUseCase.addCandidate(any())).thenReturn(candidate);
 
         ElectionController.AddCandidateRequest request = new ElectionController.AddCandidateRequest(
-                "Candidato B", "Another candidate", 2);
+                "Candidato B", "Another candidate", 2, null, null, null, null);
 
         // When
         controller.addCandidate(ELECTION_ID, request);

@@ -247,10 +247,18 @@ class InitialSchemaMigrationIT {
         assertThat(cols).doesNotContain("funcionario_id");
     }
 
+    /**
+     * V4 migration ({@code V4__Ballot_config_and_candidate_profiles.sql}) dropped the
+     * {@code votos_token_id_key} UNIQUE constraint on {@code votos.token_id} to allow
+     * multi-vote: one token can now produce N rows (one per selected candidate).
+     *
+     * <p>Atomicity is guaranteed by Redis SETNX lock + {@code markUsed()} in {@code CastVoteByTokenIdUseCaseImpl}.
+     * This test was updated from the V1 assertion to reflect the V4 contract.
+     */
     @Test
-    @DisplayName("votos.token_id has UNIQUE constraint (one vote per token)")
-    void votosTokenIdIsUnique() {
-        assertThat(uniqueConstraintOnColumns("votos", "token_id")).isTrue();
+    @DisplayName("votos.token_id does NOT have UNIQUE constraint after V4 migration (multi-vote support)")
+    void votosTokenIdHasNoUniqueConstraint_afterV4() {
+        assertThat(uniqueConstraintOnColumns("votos", "token_id")).isFalse();
     }
 
     @Test

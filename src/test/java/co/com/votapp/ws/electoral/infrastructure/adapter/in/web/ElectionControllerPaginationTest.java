@@ -57,6 +57,7 @@ class ElectionControllerPaginationTest {
     void setUp() {
         controller = new ElectionController(
                 createElectionUseCase,
+                null, // CreateElectionWithCandidatesAppService — not exercised in pagination tests
                 electionTransitionAppService,
                 finalizeElectionUseCase,
                 addCandidateUseCase,
@@ -66,7 +67,7 @@ class ElectionControllerPaginationTest {
     }
 
     private Election sampleElection(String codigo) {
-        return new Election(ELECTION_ID, codigo, "Elección " + codigo, ElectionStatus.PROGRAMADA, START, END);
+        return new Election(ELECTION_ID, codigo, "Elección " + codigo, ElectionStatus.PROGRAMADA, START, END, true, 1);
     }
 
     private PageResult<Election> pageOf(Election... elections) {

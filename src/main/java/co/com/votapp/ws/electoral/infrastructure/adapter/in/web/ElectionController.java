@@ -3,6 +3,7 @@ package co.com.votapp.ws.electoral.infrastructure.adapter.in.web;
 import co.com.votapp.ws.common.domain.model.PageResult;
 import co.com.votapp.ws.electoral.application.command.AddCandidateCommand;
 import co.com.votapp.ws.electoral.application.command.CreateElectionCommand;
+import co.com.votapp.ws.electoral.application.service.CreateElectionWithCandidatesAppService;
 import co.com.votapp.ws.electoral.application.service.ElectionTransitionAppService;
 import co.com.votapp.ws.electoral.domain.Candidate;
 import co.com.votapp.ws.electoral.domain.Election;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -46,6 +48,7 @@ import java.util.UUID;
 public class ElectionController {
 
     private final CreateElectionUseCase createElectionUseCase;
+    private final CreateElectionWithCandidatesAppService createElectionWithCandidatesAppService;
     private final ElectionTransitionAppService electionTransitionAppService;
     private final FinalizeElectionUseCase finalizeElectionUseCase;
     private final AddCandidateUseCase addCandidateUseCase;
@@ -54,12 +57,14 @@ public class ElectionController {
 
     public ElectionController(
             CreateElectionUseCase createElectionUseCase,
+            CreateElectionWithCandidatesAppService createElectionWithCandidatesAppService,
             ElectionTransitionAppService electionTransitionAppService,
             FinalizeElectionUseCase finalizeElectionUseCase,
             AddCandidateUseCase addCandidateUseCase,
             ElectionRepositoryPort electionRepository,
             CandidateRepositoryPort candidateRepository) {
         this.createElectionUseCase = createElectionUseCase;
+        this.createElectionWithCandidatesAppService = createElectionWithCandidatesAppService;
         this.electionTransitionAppService = electionTransitionAppService;
         this.finalizeElectionUseCase = finalizeElectionUseCase;
         this.addCandidateUseCase = addCandidateUseCase;
@@ -70,7 +75,9 @@ public class ElectionController {
     @PostMapping
     @Operation(
             summary = "Create a new election",
-            description = "Creates an election in PROGRAMADA state. Requires admin credentials.",
+            description = "Creates an election in PROGRAMADA state. Requires admin credentials. "
+                    + "Accepts optional ballot config fields (permiteVotoBlanco, maxVotosPorElector); "
+                    + "defaults are true and 1 when omitted.",
             security = @SecurityRequirement(name = "basicAuth")
     )
     @ApiResponses({
@@ -95,9 +102,65 @@ public class ElectionController {
                 request.nombre(),
                 null,
                 start,
-                end
+                end,
+                request.effectivePermiteVotoBlanco(),
+                request.effectiveMaxVotosPorElector()
         );
         Election election = createElectionUseCase.create(command);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ElectionResponse.from(election));
+    }
+
+    @PostMapping("/full")
+    @Operation(
+            summary = "Create election with candidates (comprehensive submit)",
+            description = "Creates an election in PROGRAMADA state along with all its candidates "
+                    + "in a single atomic transaction. Designed for the admin wizard final Review step. "
+                    + "Requires admin credentials.",
+            security = @SecurityRequirement(name = "basicAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Election and candidates created atomically"),
+            @ApiResponse(responseCode = "400", description = "Invalid request body"),
+            @ApiResponse(responseCode = "401", description = "Authentication required"),
+            @ApiResponse(responseCode = "409", description = "Business rule violation (e.g. duplicate codigo)")
+    })
+    public ResponseEntity<ElectionResponse> createElectionFull(
+            @RequestBody CreateElectionFullRequest request) {
+        LocalDateTime start = parseDateTime(request.fechaInicio());
+        LocalDateTime end = parseDateTime(request.fechaFin());
+
+        if (start != null && start.toLocalDate().isBefore(java.time.LocalDate.now())) {
+            return ResponseEntity.badRequest().build();
+        }
+        if (end != null && start != null && !end.isAfter(start)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        CreateElectionCommand electionCommand = new CreateElectionCommand(
+                request.codigo(),
+                request.nombre(),
+                null,
+                start,
+                end,
+                request.permiteVotoBlanco(),
+                request.maxVotosPorElector()
+        );
+
+        List<CreateElectionWithCandidatesAppService.CandidateCreationData> candidatesData =
+                request.candidatos() == null ? Collections.emptyList() :
+                request.candidatos().stream()
+                        .map(c -> new CreateElectionWithCandidatesAppService.CandidateCreationData(
+                                c.nombre(),
+                                c.numeroOrden(),
+                                c.fotoUrl(),
+                                c.biografia(),
+                                c.propuestas(),
+                                c.afiliacionPolitica()
+                        ))
+                        .toList();
+
+        Election election = createElectionWithCandidatesAppService
+                .createWithCandidates(electionCommand, candidatesData);
         return ResponseEntity.status(HttpStatus.CREATED).body(ElectionResponse.from(election));
     }
 
@@ -178,7 +241,9 @@ public class ElectionController {
         Election updated = new Election(
                 existing.id(), existing.codigo(), request.nombre() != null ? request.nombre() : existing.nombre(),
                 existing.status(),
-                resolvedStart, resolvedEnd
+                resolvedStart, resolvedEnd,
+                existing.permiteVotoBlanco(),
+                existing.maxVotosPorElector()
         );
         return ResponseEntity.ok(ElectionResponse.from(electionRepository.save(updated)));
     }
@@ -196,7 +261,9 @@ public class ElectionController {
     public ResponseEntity<List<CandidateResponse>> listCandidates(@PathVariable UUID id) {
         List<Candidate> candidates = candidateRepository.findByEleccionIdOrderByNumeroOrden(id);
         List<CandidateResponse> response = candidates.stream()
-                .map(c -> new CandidateResponse(c.id().toString(), c.nombre(), c.numeroOrden()))
+                .map(c -> new CandidateResponse(
+                        c.id().toString(), c.nombre(), c.numeroOrden(),
+                        c.fotoUrl(), c.biografia(), c.propuestas(), c.afiliacionPolitica()))
                 .toList();
         return ResponseEntity.ok(response);
     }
@@ -250,11 +317,18 @@ public class ElectionController {
                 eleccionId,
                 request.nombre(),
                 request.descripcion() != null ? request.descripcion() : "",
-                request.numeroOrden()
+                request.numeroOrden(),
+                request.fotoUrl(),
+                request.biografia(),
+                request.propuestas(),
+                request.afiliacionPolitica()
         );
         Candidate candidate = addCandidateUseCase.addCandidate(command);
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                new CandidateResponse(candidate.id().toString(), candidate.nombre(), candidate.numeroOrden()));
+                new CandidateResponse(
+                        candidate.id().toString(), candidate.nombre(), candidate.numeroOrden(),
+                        candidate.fotoUrl(), candidate.biografia(),
+                        candidate.propuestas(), candidate.afiliacionPolitica()));
     }
 
     @PostMapping("/{id}/activate")
@@ -306,24 +380,77 @@ public class ElectionController {
     // ── Request / Response records ──────────────────────────────────────────
 
     /**
-     * Request body for election creation.
-     * Dates are ISO-8601 LocalDateTime strings (e.g. "2025-11-01T08:00:00").
+     * Request body for election creation via the legacy {@code POST /api/v1/elections} endpoint.
+     *
+     * <p>Dates are ISO-8601 LocalDateTime strings (e.g. "2025-11-01T08:00:00").
+     *
+     * <p>Ballot configuration fields are OPTIONAL in JSON. When omitted, Jackson binds them
+     * as {@code null} (wrapper types), and the controller applies the historical defaults:
+     * {@code permiteVotoBlanco=true}, {@code maxVotosPorElector=1}. Explicit non-default
+     * values (e.g. {@code "permiteVotoBlanco": false, "maxVotosPorElector": 3}) are forwarded
+     * as-is. An explicit {@code maxVotosPorElector=0} is a client error and produces 400.
      */
     public record CreateElectionRequest(
             String codigo,
             String nombre,
             String fechaInicio,
-            String fechaFin
+            String fechaFin,
+            Boolean permiteVotoBlanco,
+            Integer maxVotosPorElector
+    ) {
+        /** Resolved value respecting historical default ({@code true} when omitted). */
+        public boolean effectivePermiteVotoBlanco() {
+            return permiteVotoBlanco == null ? true : permiteVotoBlanco;
+        }
+
+        /** Resolved value respecting historical default ({@code 1} when omitted). */
+        public int effectiveMaxVotosPorElector() {
+            return maxVotosPorElector == null ? 1 : maxVotosPorElector;
+        }
+    }
+
+    /**
+     * Comprehensive request body for the wizard final-submit endpoint.
+     *
+     * <p>Carries election metadata, ballot config, and candidates in a single payload.
+     * All operations are committed atomically in one transaction.
+     */
+    public record CreateElectionFullRequest(
+            String codigo,
+            String nombre,
+            String fechaInicio,
+            String fechaFin,
+            boolean permiteVotoBlanco,
+            int maxVotosPorElector,
+            List<CandidateFullRequest> candidatos
     ) {}
 
-    /** Response projection for a created / queried election. */
+    /**
+     * Candidate data within the comprehensive election creation request.
+     * All rich profile fields are optional (nullable).
+     */
+    public record CandidateFullRequest(
+            String nombre,
+            int numeroOrden,
+            String fotoUrl,
+            String biografia,
+            String propuestas,
+            String afiliacionPolitica
+    ) {}
+
+    /**
+     * Response projection for a created / queried election.
+     * Includes ballot configuration fields added in this change.
+     */
     public record ElectionResponse(
             String id,
             String codigo,
             String nombre,
             String estado,
             String fechaInicio,
-            String fechaFin
+            String fechaFin,
+            boolean permiteVotoBlanco,
+            int maxVotosPorElector
     ) {
         public static ElectionResponse from(Election election) {
             return new ElectionResponse(
@@ -332,23 +459,39 @@ public class ElectionController {
                     election.nombre(),
                     election.status().name(),
                     election.fechaInicio().toString(),
-                    election.fechaFin().toString()
+                    election.fechaFin().toString(),
+                    election.permiteVotoBlanco(),
+                    election.maxVotosPorElector()
             );
         }
     }
 
-    /** Request body for adding a candidate. */
+    /**
+     * Request body for adding a candidate.
+     * Rich profile fields are all optional.
+     */
     public record AddCandidateRequest(
             String nombre,
             String descripcion,
-            int numeroOrden
+            int numeroOrden,
+            String fotoUrl,
+            String biografia,
+            String propuestas,
+            String afiliacionPolitica
     ) {}
 
-    /** Response projection for a created candidate. */
+    /**
+     * Response projection for a created candidate.
+     * Includes rich profile fields added in this change.
+     */
     public record CandidateResponse(
             String id,
             String nombre,
-            int numeroOrden
+            int numeroOrden,
+            String fotoUrl,
+            String biografia,
+            String propuestas,
+            String afiliacionPolitica
     ) {}
 
     /** Request body for updating an election. All fields are optional — omitted fields keep their current value. */
