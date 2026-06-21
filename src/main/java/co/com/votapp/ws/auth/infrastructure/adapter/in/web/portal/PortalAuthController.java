@@ -62,7 +62,8 @@ public class PortalAuthController {
         return ResponseEntity.ok(new LoginResponse(
                 sessionToken,
                 funcionario.getId(),
-                funcionario.getNombres() + " " + funcionario.getApellidos()
+                funcionario.getNombres() + " " + funcionario.getApellidos(),
+                funcionario.isDebeCambiarPassword()
         ));
     }
 
@@ -72,5 +73,5 @@ public class PortalAuthController {
     public record LoginRequest(String documentoIdentidad, String password) {}
 
     /** Response body returned on successful portal login. */
-    public record LoginResponse(String sessionToken, Integer funcionarioId, String nombre) {}
+    public record LoginResponse(String sessionToken, Integer funcionarioId, String nombre, boolean debeCambiarPassword) {}
 }
