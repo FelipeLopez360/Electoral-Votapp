@@ -124,6 +124,8 @@ public class SecurityConfig {
                         auth.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                                 // Allow CORS preflight (OPTIONS) without auth
                                 .requestMatchers(this::isPreFlight).permitAll()
+                                // Static file serving: uploaded files are public (read-only GET)
+                                .requestMatchers(org.springframework.http.HttpMethod.GET, "/files/**").permitAll()
                                 .requestMatchers("/api/**").authenticated()
                                 .anyRequest().permitAll())
                 .httpBasic(basic -> basic.authenticationEntryPoint(suppressBrowserPopup));
