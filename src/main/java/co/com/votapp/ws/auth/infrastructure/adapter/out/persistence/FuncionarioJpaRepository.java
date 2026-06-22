@@ -98,4 +98,23 @@ public interface FuncionarioJpaRepository extends JpaRepository<FuncionarioEntit
             @Param("departamentoId") Integer departamentoId,
             @Param("estadoLaboral") String estadoLaboral,
             @Param("puedeVotar") Boolean puedeVotar);
+
+    // ─── Dashboard aggregate counts ────────────────────────────────────────────
+
+    /**
+     * Aggregate funcionario counts grouped by estadoLaboral.
+     *
+     * @return list of Object[] pairs: [0] = estadoLaboral (String), [1] = count (Long)
+     */
+    @Query("SELECT f.estadoLaboral, COUNT(f) FROM FuncionarioEntity f GROUP BY f.estadoLaboral")
+    List<Object[]> countGroupByEstadoLaboral();
+
+    /**
+     * Count funcionarios where estadoLaboral = 'ACTIVO' AND puedeVotar = true.
+     *
+     * <p>Mirrors the exact predicate used by {@code findEligibleByDepartamento}
+     * but applied globally (no department filter).
+     */
+    @Query("SELECT COUNT(f) FROM FuncionarioEntity f WHERE f.estadoLaboral = 'ACTIVO' AND f.puedeVotar = true")
+    long countActiveEligibleVoters();
 }

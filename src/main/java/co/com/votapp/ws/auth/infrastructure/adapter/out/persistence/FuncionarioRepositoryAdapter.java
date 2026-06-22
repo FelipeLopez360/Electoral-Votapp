@@ -8,7 +8,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -185,6 +187,27 @@ public class FuncionarioRepositoryAdapter implements FuncionarioRepositoryPort {
                 .stream()
                 .map(this::toDomain)
                 .toList();
+    }
+
+    // ─── Dashboard aggregate counts ───────────────────────────────────────────
+
+    @Override
+    public Map<String, Long> countByEstadoLaboral() {
+        Map<String, Long> result = new HashMap<>();
+        List<Object[]> rows = jpaRepository.countGroupByEstadoLaboral();
+        for (Object[] row : rows) {
+            String estadoLaboral = (String) row[0];
+            Long count = (Long) row[1];
+            if (estadoLaboral != null) {
+                result.put(estadoLaboral, count);
+            }
+        }
+        return Map.copyOf(result);
+    }
+
+    @Override
+    public long countActiveEligibleVoters() {
+        return jpaRepository.countActiveEligibleVoters();
     }
 
     // ─── Mapping ─────────────────────────────────────────────────────────────
