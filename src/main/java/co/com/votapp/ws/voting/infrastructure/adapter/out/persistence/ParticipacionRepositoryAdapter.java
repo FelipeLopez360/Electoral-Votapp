@@ -37,4 +37,9 @@ public class ParticipacionRepositoryAdapter implements ParticipacionRepositoryPo
     public boolean hasParticipated(UUID eleccionId, Long funcionarioId) {
         return jpaRepository.existsByEleccionIdAndFuncionarioId(eleccionId, funcionarioId.intValue());
     }
+
+    @Override
+    public long countByEleccionId(UUID eleccionId) {
+        return jpaRepository.countByEleccionId(eleccionId);
+    }
 }

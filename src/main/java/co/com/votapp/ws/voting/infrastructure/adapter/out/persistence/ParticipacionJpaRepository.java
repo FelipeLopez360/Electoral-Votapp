@@ -12,4 +12,13 @@ import java.util.UUID;
 public interface ParticipacionJpaRepository extends JpaRepository<ParticipacionEntity, UUID> {
 
     boolean existsByEleccionIdAndFuncionarioId(UUID eleccionId, Integer funcionarioId);
+
+    /**
+     * Count participation records for a given election.
+     * Spring Data derives this as {@code SELECT COUNT(*) FROM participacion_electoral WHERE eleccion_id = ?}.
+     *
+     * @param eleccionId the election UUID
+     * @return number of participation entries for the election
+     */
+    long countByEleccionId(UUID eleccionId);
 }

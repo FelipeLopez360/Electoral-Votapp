@@ -43,4 +43,21 @@ public interface EleccionJpaRepository extends JpaRepository<EleccionEntity, UUI
      * Used by the scheduler to detect ACTIVA elections due for finalization.
      */
     List<EleccionEntity> findByEstadoAndFechaFinLessThanEqual(String estado, Instant now);
+
+    /**
+     * Find elections by estado (String), returning all matches regardless of dates.
+     * Used by the live-tracking dashboard to find all ACTIVA elections.
+     */
+    List<EleccionEntity> findByEstado(String estado);
+
+    /**
+     * Aggregate election counts grouped by estado.
+     *
+     * <p>Returns only rows that actually exist in the DB. The adapter zero-fills missing
+     * {@link co.com.votapp.ws.electoral.domain.ElectionStatus} values.
+     *
+     * @return list of Object[] pairs: [0] = estado (String), [1] = count (Long)
+     */
+    @Query("SELECT e.estado, COUNT(e) FROM EleccionEntity e GROUP BY e.estado")
+    List<Object[]> countGroupByEstado();
 }

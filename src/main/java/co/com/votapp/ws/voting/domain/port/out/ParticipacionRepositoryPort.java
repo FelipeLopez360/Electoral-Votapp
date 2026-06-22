@@ -30,4 +30,15 @@ public interface ParticipacionRepositoryPort {
      * @return true if a participation record exists for this funcionario+election pair
      */
     boolean hasParticipated(UUID eleccionId, Long funcionarioId);
+
+    /**
+     * Count the total number of participation records for an election.
+     *
+     * <p>Used by the live-tracking dashboard to report cast votes per active election.
+     * Delegates to a DB {@code COUNT} for O(1) performance.
+     *
+     * @param eleccionId the election UUID
+     * @return the number of participation records (cast votes), or 0 if none
+     */
+    long countByEleccionId(UUID eleccionId);
 }

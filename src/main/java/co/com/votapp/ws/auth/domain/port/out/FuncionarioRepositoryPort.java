@@ -5,6 +5,7 @@ import co.com.votapp.ws.common.domain.model.PageResult;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -137,4 +138,28 @@ public interface FuncionarioRepositoryPort {
      * @return list of matching funcionarios
      */
     List<Funcionario> findEligibleByFilters(Integer departamentoId, String estadoLaboral, Boolean puedeVotar);
+
+    // ─── Dashboard aggregate counts ────────────────────────────────────────────
+
+    /**
+     * Return funcionario counts grouped by {@code estadoLaboral}.
+     *
+     * <p>Only labor statuses that have at least one row in the DB are returned.
+     * The adapter does NOT zero-fill — callers (e.g., {@code DashboardMetricsService})
+     * are responsible for zero-filling known statuses if needed.
+     *
+     * @return map keyed by {@code estadoLaboral} value → count (> 0)
+     */
+    Map<String, Long> countByEstadoLaboral();
+
+    /**
+     * Return the number of globally eligible active voters.
+     *
+     * <p>Eligible means: {@code estadoLaboral = 'ACTIVO'} AND {@code puedeVotar = true}.
+     * This is the same predicate used by
+     * {@link #findEligibleByDepartamento(Integer)} but aggregated globally.
+     *
+     * @return total count of active eligible voters (≥ 0)
+     */
+    long countActiveEligibleVoters();
 }

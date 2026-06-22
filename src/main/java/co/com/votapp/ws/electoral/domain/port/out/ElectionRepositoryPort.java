@@ -6,6 +6,7 @@ import co.com.votapp.ws.electoral.domain.ElectionStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -64,4 +65,26 @@ public interface ElectionRepositoryPort {
      * arrived are picked up immediately. All date comparisons are performed in UTC.
      */
     List<Election> findByStatusAndFechaFinLessThanEqual(ElectionStatus status, LocalDateTime now);
+
+    /**
+     * Return election counts grouped by {@code estado}.
+     *
+     * <p>All five {@link ElectionStatus} enum values are guaranteed to be present in the
+     * returned map — statuses absent from the DB are zero-filled by the adapter.
+     *
+     * @return immutable map keyed by {@link ElectionStatus#name()} → count (≥ 0)
+     */
+    Map<String, Long> countByStatus();
+
+    /**
+     * Return all elections with the given status.
+     *
+     * <p>Used by the live-tracking dashboard to list all {@code ACTIVA} elections
+     * regardless of their {@code fechaInicio}/{@code fechaFin} bounds (unlike the
+     * scheduler-specific {@link #findByStatusAndFechaInicioLessThanEqual} methods).
+     *
+     * @param status the election status to filter by
+     * @return list of matching elections (empty if none)
+     */
+    List<Election> findByStatus(ElectionStatus status);
 }

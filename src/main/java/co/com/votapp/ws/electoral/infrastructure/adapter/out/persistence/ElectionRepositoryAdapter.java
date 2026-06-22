@@ -12,7 +12,10 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -88,6 +91,30 @@ public class ElectionRepositoryAdapter implements ElectionRepositoryPort {
         EleccionEntity entity = toEntity(election);
         EleccionEntity saved = jpaRepository.save(entity);
         return toDomain(saved);
+    }
+
+    @Override
+    public List<Election> findByStatus(ElectionStatus status) {
+        return jpaRepository.findByEstado(status.name())
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public Map<String, Long> countByStatus() {
+        // Zero-fill all enum values first, then override with DB-reported counts
+        Map<String, Long> result = new HashMap<>();
+        for (ElectionStatus status : EnumSet.allOf(ElectionStatus.class)) {
+            result.put(status.name(), 0L);
+        }
+        List<Object[]> rows = jpaRepository.countGroupByEstado();
+        for (Object[] row : rows) {
+            String estado = (String) row[0];
+            Long count = (Long) row[1];
+            result.put(estado, count);
+        }
+        return Map.copyOf(result);
     }
 
     // ─── Mapping ─────────────────────────────────────────────────────────────
