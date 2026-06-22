@@ -67,7 +67,7 @@ public interface FuncionarioJpaRepository extends JpaRepository<FuncionarioEntit
 
     @Modifying
     @Transactional
-    @Query("UPDATE FuncionarioEntity f SET f.passwordHash = :newHash WHERE f.documentoIdentidad = :doc")
+    @Query("UPDATE FuncionarioEntity f SET f.passwordHash = :newHash, f.debeCambiarPassword = false WHERE f.documentoIdentidad = :doc")
     void updatePasswordHash(@Param("doc") String documentoIdentidad, @Param("newHash") String newHash);
 
     // ─── Census bulk-add queries ───────────────────────────────────────────────
