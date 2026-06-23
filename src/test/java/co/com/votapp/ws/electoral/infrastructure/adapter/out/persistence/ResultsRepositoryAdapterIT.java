@@ -123,25 +123,26 @@ class ResultsRepositoryAdapterIT {
         );
 
         // Candidates: 2 real + blank + null (es_voto_nulo added by V3 migration)
+        // V5: numero_orden dropped — use funcionario_id for real candidates, null for synthetics
         jdbcTemplate.update(
-                "INSERT INTO candidatos (id, eleccion_id, nombre, numero_orden, es_voto_en_blanco, es_voto_nulo) " +
+                "INSERT INTO candidatos (id, eleccion_id, nombre, es_voto_en_blanco, es_voto_nulo, funcionario_id) " +
                         "VALUES (?, ?, ?, ?, ?, ?)",
-                realCandidateAId, electionId, "Candidate A", 1, false, false
+                realCandidateAId, electionId, "Candidate A", false, false, 1
         );
         jdbcTemplate.update(
-                "INSERT INTO candidatos (id, eleccion_id, nombre, numero_orden, es_voto_en_blanco, es_voto_nulo) " +
+                "INSERT INTO candidatos (id, eleccion_id, nombre, es_voto_en_blanco, es_voto_nulo, funcionario_id) " +
                         "VALUES (?, ?, ?, ?, ?, ?)",
-                realCandidateBId, electionId, "Candidate B", 2, false, false
+                realCandidateBId, electionId, "Candidate B", false, false, 2
         );
         jdbcTemplate.update(
-                "INSERT INTO candidatos (id, eleccion_id, nombre, numero_orden, es_voto_en_blanco, es_voto_nulo) " +
-                        "VALUES (?, ?, ?, ?, ?, ?)",
-                blankCandidateId, electionId, "Voto en Blanco", 0, true, false
+                "INSERT INTO candidatos (id, eleccion_id, nombre, es_voto_en_blanco, es_voto_nulo) " +
+                        "VALUES (?, ?, ?, ?, ?)",
+                blankCandidateId, electionId, "Voto en Blanco", true, false
         );
         jdbcTemplate.update(
-                "INSERT INTO candidatos (id, eleccion_id, nombre, numero_orden, es_voto_en_blanco, es_voto_nulo) " +
-                        "VALUES (?, ?, ?, ?, ?, ?)",
-                nullCandidateId, electionId, "Voto Nulo", -1, false, true
+                "INSERT INTO candidatos (id, eleccion_id, nombre, es_voto_en_blanco, es_voto_nulo) " +
+                        "VALUES (?, ?, ?, ?, ?)",
+                nullCandidateId, electionId, "Voto Nulo", false, true
         );
 
         // --- Tokens de votación (required by votos.token_id NOT NULL UNIQUE FK) ---

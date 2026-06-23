@@ -56,36 +56,36 @@ Chain strategy: stacked-to-main
 
 ## Phase 4: V5 Schema Migration
 
-- [ ] 4.1 RED: Write `V5CandidateMigrationIT` — verify `numero_orden`/`afiliacion_politica` dropped, `funcionario_id` added + FK + partial unique index
-- [ ] 4.2 Create `V5__candidate_funcionario_and_ordering.sql` — drop `numero_orden`, `afiliacion_politica`, old UNIQUE; add `funcionario_id INTEGER REFERENCES funcionarios(id)` + partial unique index `WHERE funcionario_id IS NOT NULL`
-- [ ] 4.3 GREEN: 4.1 IT passes
+- [x] 4.1 RED: Write `V5CandidateMigrationIT` — verify `numero_orden`/`afiliacion_politica` dropped, `funcionario_id` added + FK + partial unique index
+- [x] 4.2 Create `V5__candidate_funcionario_and_ordering.sql` — drop `numero_orden`, `afiliacion_politica`, old UNIQUE; add `funcionario_id INTEGER REFERENCES funcionarios(id)` + partial unique index `WHERE funcionario_id IS NOT NULL`
+- [x] 4.3 GREEN: 4.1 IT passes
 
 ## Phase 5: Electoral Domain Changes
 
-- [ ] 5.1 RED: Write unit test for `Candidate` record — constructor rejects null `funcionarioId`?, blank `numeroOrden`/`afiliacionPolitica` fields removed
-- [ ] 5.2 Update `Candidate.java` — drop `numeroOrden`, `afiliacionPolitica`; add `Integer funcionarioId`
-- [ ] 5.3 Update `AddCandidateCommand.java` — replace `int numeroOrden` with `Integer funcionarioId`; remove `numeroOrden >= 1` check
-- [ ] 5.4 Update `CandidateRepositoryPort.java` — `existsByEleccionIdAndNumeroOrden` → `existsByEleccionIdAndFuncionarioId`; `findByEleccionIdOrderByNumeroOrden` → `findByEleccionIdOrderByNombre`
-- [ ] 5.5 GREEN: 5.1 tests pass
-- [ ] 5.6 RED: Write unit test for `AddCandidateUseCaseImpl` — uniqueness by `funcionarioId`, returns 409 on duplicate
-- [ ] 5.7 Update `AddCandidateUseCaseImpl.java` — check `existsByEleccionIdAndFuncionarioId`, build Candidate with null `funcionarioId` fallback
-- [ ] 5.8 Update `ActivateElectionUseCaseImpl.java` — synthetic candidates pass `null` for `funcionarioId`, no sentinel order values
-- [ ] 5.9 GREEN: 5.6 tests pass
+- [x] 5.1 RED: Write unit test for `Candidate` record — constructor rejects null `funcionarioId`?, blank `numeroOrden`/`afiliacionPolitica` fields removed
+- [x] 5.2 Update `Candidate.java` — drop `numeroOrden`, `afiliacionPolitica`; add `Integer funcionarioId`
+- [x] 5.3 Update `AddCandidateCommand.java` — replace `int numeroOrden` with `Integer funcionarioId`; remove `numeroOrden >= 1` check
+- [x] 5.4 Update `CandidateRepositoryPort.java` — `existsByEleccionIdAndNumeroOrden` → `existsByEleccionIdAndFuncionarioId`; `findByEleccionIdOrderByNumeroOrden` → `findByEleccionIdOrderByNombre`
+- [x] 5.5 GREEN: 5.1 tests pass
+- [x] 5.6 RED: Write unit test for `AddCandidateUseCaseImpl` — uniqueness by `funcionarioId`, returns 409 on duplicate
+- [x] 5.7 Update `AddCandidateUseCaseImpl.java` — check `existsByEleccionIdAndFuncionarioId`, build Candidate with null `funcionarioId` fallback
+- [x] 5.8 Update `ActivateElectionUseCaseImpl.java` — synthetic candidates pass `null` for `funcionarioId`, no sentinel order values
+- [x] 5.9 GREEN: 5.6 tests pass
 
 ## Phase 6: Persistence Adapter Changes
 
-- [ ] 6.1 RED: Write unit test for `CandidateRepositoryAdapter` — sorting: synthetic candidates last, nombre ASC
-- [ ] 6.2 Update `CandidatoEntity.java` — drop `numeroOrden`, `afiliacionPolitica`; add `funcionarioId` + FK mapping
-- [ ] 6.3 Update `CandidatoRepositoryAdapter.java` (candidates context mapper) — drop `numeroOrden`/`afiliacionPolitica` mapping
-- [ ] 6.4 Update `CandidateRepositoryAdapter.java` — `findByEleccionIdOrderByNombre`: sort synthetic-last (esVotoEnBlanco/esVotoNulo flags) then nombre ASC; `existsByEleccionIdAndFuncionarioId`; map `funcionarioId`
-- [ ] 6.5 GREEN: 6.1 tests pass
+- [x] 6.1 RED: Write unit test for `CandidateRepositoryAdapter` — sorting: synthetic candidates last, nombre ASC
+- [x] 6.2 Update `CandidatoEntity.java` — drop `numeroOrden`, `afiliacionPolitica`; add `funcionarioId` + FK mapping
+- [x] 6.3 Update `CandidatoRepositoryAdapter.java` (candidates context mapper) — drop `numeroOrden`/`afiliacionPolitica` mapping
+- [x] 6.4 Update `CandidateRepositoryAdapter.java` — `findByEleccionIdOrderByNombre`: sort synthetic-last (esVotoEnBlanco/esVotoNulo flags) then nombre ASC; `existsByEleccionIdAndFuncionarioId`; map `funcionarioId`
+- [x] 6.5 GREEN: 6.1 tests pass
 
 ## Phase 7: API & Legacy Cleanup
 
-- [ ] 7.1 RED: Write slice test `ElectionControllerIT` — updated DTOs (no `numeroOrden`, `afiliacionPolitica`; has `funcionarioId`)
-- [ ] 7.2 Update `ElectionController.java` inner records — `AddCandidateRequest` drops `numeroOrden`/`afiliacionPolitica`, adds `funcionarioId`; `CandidateResponse` similar; `CandidateFullRequest` similar; `listCandidates`/`addCandidate` methods updated
-- [ ] 7.3 Update `CreateElectionWithCandidatesAppService.java` — `CandidateCreationData` replaces `numeroOrden` with `funcionarioId`; `AddCandidateCommand` construction updated
-- [ ] 7.4 Update `CandidatesController.java` — `CandidatoResponse` drops `numeroOrden`
-- [ ] 7.5 Update `Candidato.java` — drop `numeroOrden`
-- [ ] 7.6 Update `PortalVotingController.java` — `PortalCandidateItem` drops `numeroOrden`, `afiliacionPolitica`; ballot projection uses `nombre` ordering
-- [ ] 7.7 GREEN: 7.1 tests pass, full `mvn clean verify` green
+- [x] 7.1 RED: Write slice test `ElectionControllerV5IT` — updated DTOs (no `numeroOrden`, `afiliacionPolitica`; has `funcionarioId`)
+- [x] 7.2 Update `ElectionController.java` inner records — `AddCandidateRequest` drops `numeroOrden`/`afiliacionPolitica`, adds `funcionarioId`; `CandidateResponse` similar; `CandidateFullRequest` similar; `listCandidates`/`addCandidate` methods updated
+- [x] 7.3 Update `CreateElectionWithCandidatesAppService.java` — `CandidateCreationData` replaces `numeroOrden` with `funcionarioId`; `AddCandidateCommand` construction updated
+- [x] 7.4 Update `CandidatesController.java` — `CandidatoResponse` drops `numeroOrden`
+- [x] 7.5 Update `Candidato.java` — drop `numeroOrden`
+- [x] 7.6 Update `PortalVotingController.java` — `PortalCandidateItem` drops `numeroOrden`, `afiliacionPolitica`; ballot projection uses `nombre` ordering
+- [x] 7.7 GREEN: 7.1 tests pass, full `mvn clean verify` green

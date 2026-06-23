@@ -191,9 +191,15 @@ class InitialSchemaMigrationIT {
     }
 
     @Test
-    @DisplayName("candidatos.eleccion_id + numero_orden has UNIQUE constraint")
-    void candidatosEleccionNumeroOrdenIsUnique() {
-        assertThat(uniqueConstraintOnColumns("candidatos", "eleccion_id")).isTrue();
+    @DisplayName("candidatos.eleccion_id has an index (no longer UNIQUE on numero_orden after V5)")
+    void candidatosEleccionIdHasIndex() {
+        // V5 dropped the UNIQUE(eleccion_id, numero_orden) constraint.
+        // Uniqueness is now enforced via partial unique index on (eleccion_id, funcionario_id)
+        // WHERE funcionario_id IS NOT NULL — tested in V5CandidateMigrationIT.
+        List<String> cols = columnsOf("candidatos");
+        assertThat(cols).contains("eleccion_id");
+        // numero_orden column was dropped in V5
+        assertThat(cols).doesNotContain("numero_orden");
     }
 
     // ── tokens_votacion ───────────────────────────────────────────────────────

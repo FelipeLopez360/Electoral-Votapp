@@ -17,6 +17,9 @@ import java.util.UUID;
 
 /**
  * REST controller for the candidates module.
+ *
+ * <p>V5 changes: {@code CandidatoResponse} no longer includes {@code numeroOrden}
+ * (dropped from schema). Alphabetical ordering is handled by the electoral context.
  */
 @Tag(name = "Candidates", description = "Query candidates for an election")
 @RestController
@@ -41,15 +44,17 @@ public class CandidatesController {
                 .map(c -> new CandidatoResponse(
                         c.getId().toString(),
                         c.getNombre(),
-                        c.isEsVotoEnBlanco(),
-                        c.getNumeroOrden()
+                        c.isEsVotoEnBlanco()
                 ))
                 .toList();
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Response projection for a candidate.
+     * V5: {@code numeroOrden} removed.
+     */
     public record CandidatoResponse(String id,
-                                    String nombre,
-                                    boolean esVotoEnBlanco,
-                                    int numeroOrden) {}
+                                     String nombre,
+                                     boolean esVotoEnBlanco) {}
 }

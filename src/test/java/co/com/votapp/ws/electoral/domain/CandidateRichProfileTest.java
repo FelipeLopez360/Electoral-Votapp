@@ -10,8 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Unit tests for {@link Candidate} rich profile fields.
  *
- * <p>RED phase: validates fotoUrl, biografia, propuestas, afiliacionPolitica
- * fields added as part of task 1.3. Tests will fail until Candidate record is updated.
+ * <p>V5: Updated — {@code afiliacionPolitica} removed; {@code funcionarioId} added.
+ * {@code fotoUrl}, {@code biografia}, {@code propuestas} remain.
  */
 @DisplayName("Candidate - Rich profile fields")
 class CandidateRichProfileTest {
@@ -24,18 +24,18 @@ class CandidateRichProfileTest {
         // Given / When
         Candidate candidate = new Candidate(
                 UUID.randomUUID(), ELECTION_ID,
-                "Juan Pérez", false, false, 1,
+                "Juan Pérez", false, false,
+                5, // funcionarioId
                 "https://example.com/photo.jpg",
                 "Experienced leader with 10 years of public service",
-                "Improve education and healthcare access",
-                "Partido Verde"
+                "Improve education and healthcare access"
         );
 
         // Then
+        assertThat(candidate.funcionarioId()).isEqualTo(5);
         assertThat(candidate.fotoUrl()).isEqualTo("https://example.com/photo.jpg");
         assertThat(candidate.biografia()).isEqualTo("Experienced leader with 10 years of public service");
         assertThat(candidate.propuestas()).isEqualTo("Improve education and healthcare access");
-        assertThat(candidate.afiliacionPolitica()).isEqualTo("Partido Verde");
     }
 
     @Test
@@ -44,15 +44,15 @@ class CandidateRichProfileTest {
         // Given / When
         Candidate candidate = new Candidate(
                 UUID.randomUUID(), ELECTION_ID,
-                "María García", false, false, 2,
-                null, null, null, null
+                "María García", false, false,
+                2, // funcionarioId
+                null, null, null
         );
 
         // Then
         assertThat(candidate.fotoUrl()).isNull();
         assertThat(candidate.biografia()).isNull();
         assertThat(candidate.propuestas()).isNull();
-        assertThat(candidate.afiliacionPolitica()).isNull();
     }
 
     @Test
@@ -61,12 +61,13 @@ class CandidateRichProfileTest {
         // Given / When
         Candidate blankVote = new Candidate(
                 UUID.randomUUID(), ELECTION_ID,
-                "Voto en Blanco", true, false, 0,
+                "Voto en Blanco", true, false,
                 null, null, null, null
         );
 
         // Then
         assertThat(blankVote.esVotoEnBlanco()).isTrue();
+        assertThat(blankVote.funcionarioId()).isNull();
         assertThat(blankVote.fotoUrl()).isNull();
         assertThat(blankVote.biografia()).isNull();
     }
@@ -77,12 +78,13 @@ class CandidateRichProfileTest {
         // Given / When
         Candidate nullVote = new Candidate(
                 UUID.randomUUID(), ELECTION_ID,
-                "Voto Nulo", false, true, -1,
+                "Voto Nulo", false, true,
                 null, null, null, null
         );
 
         // Then
         assertThat(nullVote.esVotoNulo()).isTrue();
+        assertThat(nullVote.funcionarioId()).isNull();
         assertThat(nullVote.fotoUrl()).isNull();
     }
 }

@@ -19,18 +19,11 @@ import java.util.List;
  * and submits everything atomically on the final Review step. A single transaction guarantees that
  * either the election AND all candidates are persisted, or nothing is — no orphan elections.
  *
- * <h3>Responsibilities</h3>
- * <ol>
- *   <li>Call {@link CreateElectionUseCase#create(CreateElectionCommand)} to persist the election
- *       in {@code PROGRAMADA} state.</li>
- *   <li>For each {@link CandidateCreationData}, build an {@link AddCandidateCommand} injecting the
- *       newly created election's ID and rich profile fields, then delegate to
- *       {@link AddCandidateUseCase#addCandidate(AddCandidateCommand)}.</li>
- * </ol>
- *
- * <h3>Transaction semantics</h3>
- * <p>If any {@code AddCandidateUseCase} call fails (e.g., duplicate {@code numero_orden}),
- * the whole transaction rolls back — the election and any previously inserted candidates are removed.
+ * <h3>V5 changes</h3>
+ * <p>{@link CandidateCreationData} now uses {@code funcionarioId} instead of {@code numeroOrden}.
+ * {@code afiliacionPolitica} is removed. If the same funcionario appears twice in the candidate list,
+ * {@link AddCandidateUseCase} will throw a {@link co.com.votapp.ws.common.exception.DomainException}
+ * (409) rolling back the entire transaction.
  */
 @Service
 public class CreateElectionWithCandidatesAppService {
@@ -61,11 +54,10 @@ public class CreateElectionWithCandidatesAppService {
                     election.id(),
                     data.nombre(),
                     "",
-                    data.numeroOrden(),
+                    data.funcionarioId(),
                     data.fotoUrl(),
                     data.biografia(),
-                    data.propuestas(),
-                    data.afiliacionPolitica()
+                    data.propuestas()
             );
             addCandidateUseCase.addCandidate(candidateCommand);
         }
@@ -79,19 +71,19 @@ public class CreateElectionWithCandidatesAppService {
      * <p>Does NOT include {@code eleccionId} — the service injects it after the election is created.
      * All rich profile fields are optional (nullable).
      *
+     * <p>V5: {@code funcionarioId} replaces {@code numeroOrden}; {@code afiliacionPolitica} removed.
+     *
      * @param nombre            the candidate's display name (required)
-     * @param numeroOrden       display order within the ballot (≥ 1)
+     * @param funcionarioId     optional FK to funcionarios (nullable; synthetics pass null)
      * @param fotoUrl           optional photo URL
      * @param biografia         optional biography text
-     * @param propuestas        optional proposals text (MVP: single text field)
-     * @param afiliacionPolitica optional political affiliation
+     * @param propuestas        optional proposals text
      */
     public record CandidateCreationData(
             String nombre,
-            int numeroOrden,
+            Integer funcionarioId,
             String fotoUrl,
             String biografia,
-            String propuestas,
-            String afiliacionPolitica
+            String propuestas
     ) {}
 }

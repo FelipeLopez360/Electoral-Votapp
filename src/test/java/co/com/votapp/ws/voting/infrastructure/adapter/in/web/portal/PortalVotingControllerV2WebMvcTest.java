@@ -97,11 +97,11 @@ class PortalVotingControllerV2WebMvcTest {
                 .thenReturn(Optional.of(issuedToken()));
         when(electionRepository.findById(ELECCION_ID))
                 .thenReturn(Optional.of(multiVoteElection()));
-        when(candidateRepository.findByEleccionIdOrderByNumeroOrden(ELECCION_ID))
+        when(candidateRepository.findByEleccionIdOrderByNombre(ELECCION_ID))
                 .thenReturn(List.of(
                         new Candidate(CANDIDATO_ID, ELECCION_ID, "Candidato A", false, false, 1,
-                                "http://foto.png", "Bio del candidato", "Mis propuestas", "Partido X"),
-                        new Candidate(UUID.randomUUID(), ELECCION_ID, "Voto en Blanco", true, false, 99,
+                                "http://foto.png", "Bio del candidato", "Mis propuestas"),
+                        new Candidate(UUID.randomUUID(), ELECCION_ID, "Voto en Blanco", true, false,
                                 null, null, null, null)
                 ));
 
@@ -114,7 +114,7 @@ class PortalVotingControllerV2WebMvcTest {
                 .andExpect(jsonPath("$.candidates[0].fotoUrl").value("http://foto.png"))
                 .andExpect(jsonPath("$.candidates[0].biografia").value("Bio del candidato"))
                 .andExpect(jsonPath("$.candidates[0].propuestas").value("Mis propuestas"))
-                .andExpect(jsonPath("$.candidates[0].afiliacionPolitica").value("Partido X"))
+                .andExpect(jsonPath("$.candidates[0].afiliacionPolitica").doesNotExist())
                 .andExpect(jsonPath("$.candidates[1].fotoUrl").doesNotExist());
     }
 
@@ -133,10 +133,10 @@ class PortalVotingControllerV2WebMvcTest {
                 .thenReturn(Optional.of(issuedToken()));
         when(electionRepository.findById(ELECCION_ID))
                 .thenReturn(Optional.of(singleVoteElection));
-        when(candidateRepository.findByEleccionIdOrderByNumeroOrden(ELECCION_ID))
+        when(candidateRepository.findByEleccionIdOrderByNombre(ELECCION_ID))
                 .thenReturn(List.of(
-                        new Candidate(CANDIDATO_ID, ELECCION_ID, "Candidato Solo", false, false, 1,
-                                null, null, null, null)
+                        new Candidate(CANDIDATO_ID, ELECCION_ID, "Candidato Solo", false, false,
+                                1, null, null, null)
                 ));
 
         // When & Then

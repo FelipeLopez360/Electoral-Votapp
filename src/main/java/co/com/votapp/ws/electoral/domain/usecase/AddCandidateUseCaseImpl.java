@@ -15,7 +15,8 @@ import java.util.UUID;
  * Use case implementation: add a candidate to a valid (non-closed) election.
  *
  * <p>Validates that the election exists and is not FINALIZADA or CANCELADA.
- * Enforces unique numero_orden per election.
+ * V5: Enforces unique funcionarioId per election (returns 409 via DomainException).
+ * If funcionarioId is null (no funcionario link), uniqueness check is skipped.
  * No Spring annotations — wired manually via DomainConfig.
  */
 public class AddCandidateUseCaseImpl implements AddCandidateUseCase {
@@ -42,9 +43,12 @@ public class AddCandidateUseCaseImpl implements AddCandidateUseCase {
             throw new DomainException("Cannot add candidates to a CANCELADA election");
         }
 
-        if (candidateRepository.existsByEleccionIdAndNumeroOrden(command.eleccionId(), command.numeroOrden())) {
+        // Uniqueness check: if funcionarioId provided, ensure no duplicate in this election
+        if (command.funcionarioId() != null &&
+                candidateRepository.existsByEleccionIdAndFuncionarioId(
+                        command.eleccionId(), command.funcionarioId())) {
             throw new DomainException(
-                    "A candidate with numero_orden=" + command.numeroOrden() +
+                    "A candidate linked to funcionario=" + command.funcionarioId() +
                     " already exists for election " + command.eleccionId());
         }
 
@@ -54,11 +58,10 @@ public class AddCandidateUseCaseImpl implements AddCandidateUseCase {
                 command.nombre(),
                 false,
                 false,
-                command.numeroOrden(),
+                command.funcionarioId(),
                 command.fotoUrl(),
                 command.biografia(),
-                command.propuestas(),
-                command.afiliacionPolitica()
+                command.propuestas()
         );
 
         return candidateRepository.save(candidate);

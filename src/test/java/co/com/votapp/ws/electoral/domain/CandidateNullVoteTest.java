@@ -9,9 +9,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Unit tests for the esVotoNulo field added to the Candidate domain record.
+ * Unit tests for the esVotoNulo field in the Candidate domain record.
  *
- * <p>Strict TDD — RED written before adding esVotoNulo to Candidate record.
+ * <p>V5: Updated to match the new Candidate signature (no numeroOrden, no afiliacionPolitica).
  */
 @DisplayName("Candidate - Null vote domain model extension")
 class CandidateNullVoteTest {
@@ -24,7 +24,8 @@ class CandidateNullVoteTest {
         UUID eleccionId = UUID.randomUUID();
 
         // When
-        var nullVoteCandidate = new Candidate(id, eleccionId, "Voto Nulo", false, true, 1, null, null, null, null);
+        var nullVoteCandidate = new Candidate(id, eleccionId, "Voto Nulo", false, true,
+                null, null, null, null);
 
         // Then
         assertThat(nullVoteCandidate.esVotoNulo()).isTrue();
@@ -40,7 +41,8 @@ class CandidateNullVoteTest {
         UUID eleccionId = UUID.randomUUID();
 
         // When & Then
-        assertThatThrownBy(() -> new Candidate(id, eleccionId, "Voto Nulo", true, true, 1, null, null, null, null))
+        assertThatThrownBy(() -> new Candidate(id, eleccionId, "Voto Nulo", true, true,
+                null, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -52,7 +54,8 @@ class CandidateNullVoteTest {
         UUID eleccionId = UUID.randomUUID();
 
         // When & Then
-        assertThatThrownBy(() -> new Candidate(id, eleccionId, "Some Other Name", false, true, 1, null, null, null, null))
+        assertThatThrownBy(() -> new Candidate(id, eleccionId, "Some Other Name", false, true,
+                null, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -64,7 +67,8 @@ class CandidateNullVoteTest {
         UUID eleccionId = UUID.randomUUID();
 
         // When
-        var regular = new Candidate(id, eleccionId, "Candidato A", false, false, 1, null, null, null, null);
+        var regular = new Candidate(id, eleccionId, "Candidato A", false, false,
+                1, null, null, null);
 
         // Then
         assertThat(regular.esVotoNulo()).isFalse();

@@ -310,6 +310,6 @@ class CastVoteByTokenIdUseCaseImplTest {
     }
 
     private Candidate candidate(UUID id, UUID eleccionId) {
-        return new Candidate(id, eleccionId, "Candidato Test", false, false, 1, null, null, null, null);
+        return new Candidate(id, eleccionId, "Candidato Test", false, false, 1, null, null, null);
     }
 }

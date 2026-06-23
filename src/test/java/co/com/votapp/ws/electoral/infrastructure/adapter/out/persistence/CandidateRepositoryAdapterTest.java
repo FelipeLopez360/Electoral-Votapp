@@ -19,15 +19,9 @@ import static org.mockito.Mockito.when;
 /**
  * Unit tests for {@link CandidateRepositoryAdapter}.
  *
- * <p>Focuses on the sort order contract of {@code findByEleccionIdOrderByNumeroOrden}:
- * synthetic candidates (blank vote and null vote) MUST appear LAST in ballot order,
- * after all real candidates sorted ascending by {@code numeroOrden}.
- *
- * <p>Rationale: The null vote is stored with {@code numeroOrden=-1} and the blank vote
- * with {@code numeroOrden=0}. A naive ascending sort would place them BEFORE real candidates
- * (1, 2, 3...), which is wrong UX for ballot display in the portal.
+ * <p>V5: Sorting is now alphabetical by nombre (synthetics last), not by numeroOrden.
  */
-@DisplayName("CandidateRepositoryAdapter - Ballot order and synthetic candidate placement")
+@DisplayName("CandidateRepositoryAdapter - Alphabetical ballot order and synthetic candidate placement")
 @ExtendWith(MockitoExtension.class)
 class CandidateRepositoryAdapterTest {
 
@@ -44,19 +38,19 @@ class CandidateRepositoryAdapterTest {
     }
 
     @Test
-    @DisplayName("Should place blank vote candidate (esVotoEnBlanco=true) after all real candidates")
-    void findByEleccionIdOrderByNumeroOrden_shouldPlaceBlankVoteLast_whenMixedCandidates() {
-        // Given — real candidates (numeroOrden 1, 2) + blank vote (numeroOrden 0)
-        CandidatoEntity realA = buildEntity(UUID.randomUUID(), "Candidate A", 1, false, false);
-        CandidatoEntity realB = buildEntity(UUID.randomUUID(), "Candidate B", 2, false, false);
-        CandidatoEntity blank = buildEntity(UUID.randomUUID(), "Voto en Blanco", 0, true, false);
+    @DisplayName("Should place blank vote candidate (esVotoEnBlanco=true) after all real candidates alphabetically")
+    void findByEleccionIdOrderByNombre_shouldPlaceBlankVoteLast_whenMixedCandidates() {
+        // Given — real candidates + blank vote
+        CandidatoEntity realA = buildEntity(UUID.randomUUID(), "Candidate A", false, false, 1);
+        CandidatoEntity realB = buildEntity(UUID.randomUUID(), "Candidate B", false, false, 2);
+        CandidatoEntity blank = buildEntity(UUID.randomUUID(), "Voto en Blanco", true, false, null);
 
         when(jpaRepository.findByEleccionId(eleccionId)).thenReturn(List.of(blank, realA, realB));
 
         // When
-        List<Candidate> result = adapter.findByEleccionIdOrderByNumeroOrden(eleccionId);
+        List<Candidate> result = adapter.findByEleccionIdOrderByNombre(eleccionId);
 
-        // Then — real candidates first (ascending), synthetics last
+        // Then — real candidates first (alphabetically), synthetics last
         assertThat(result).hasSize(3);
         assertThat(result.get(0).nombre()).isEqualTo("Candidate A");
         assertThat(result.get(1).nombre()).isEqualTo("Candidate B");
@@ -64,19 +58,19 @@ class CandidateRepositoryAdapterTest {
     }
 
     @Test
-    @DisplayName("Should place null vote candidate (esVotoNulo=true) after all real candidates")
-    void findByEleccionIdOrderByNumeroOrden_shouldPlaceNullVoteLast_whenMixedCandidates() {
-        // Given — real candidates (1, 2) + null vote (numeroOrden -1)
-        CandidatoEntity realA = buildEntity(UUID.randomUUID(), "Candidate A", 1, false, false);
-        CandidatoEntity realB = buildEntity(UUID.randomUUID(), "Candidate B", 2, false, false);
-        CandidatoEntity nullVote = buildEntity(UUID.randomUUID(), "Voto Nulo", -1, false, true);
+    @DisplayName("Should place null vote candidate (esVotoNulo=true) after all real candidates alphabetically")
+    void findByEleccionIdOrderByNombre_shouldPlaceNullVoteLast_whenMixedCandidates() {
+        // Given — real candidates + null vote
+        CandidatoEntity realA = buildEntity(UUID.randomUUID(), "Candidate A", false, false, 1);
+        CandidatoEntity realB = buildEntity(UUID.randomUUID(), "Candidate B", false, false, 2);
+        CandidatoEntity nullVote = buildEntity(UUID.randomUUID(), "Voto Nulo", false, true, null);
 
         when(jpaRepository.findByEleccionId(eleccionId)).thenReturn(List.of(nullVote, realA, realB));
 
         // When
-        List<Candidate> result = adapter.findByEleccionIdOrderByNumeroOrden(eleccionId);
+        List<Candidate> result = adapter.findByEleccionIdOrderByNombre(eleccionId);
 
-        // Then — real candidates first (ascending), null vote last
+        // Then — real candidates first, null vote last
         assertThat(result).hasSize(3);
         assertThat(result.get(0).nombre()).isEqualTo("Candidate A");
         assertThat(result.get(1).nombre()).isEqualTo("Candidate B");
@@ -84,28 +78,27 @@ class CandidateRepositoryAdapterTest {
     }
 
     @Test
-    @DisplayName("Should sort real candidates ascending and place both synthetics last")
-    void findByEleccionIdOrderByNumeroOrden_shouldSortRealAscendingAndSyntheticLast_whenAllPresent() {
-        // Given — full ballot: real (1, 2, 3), blank (0), null (-1)
-        CandidatoEntity realA = buildEntity(UUID.randomUUID(), "Candidate A", 1, false, false);
-        CandidatoEntity realB = buildEntity(UUID.randomUUID(), "Candidate B", 2, false, false);
-        CandidatoEntity realC = buildEntity(UUID.randomUUID(), "Candidate C", 3, false, false);
-        CandidatoEntity blank = buildEntity(UUID.randomUUID(), "Voto en Blanco", 0, true, false);
-        CandidatoEntity nullVote = buildEntity(UUID.randomUUID(), "Voto Nulo", -1, false, true);
+    @DisplayName("Should sort real candidates alphabetically and place both synthetics last")
+    void findByEleccionIdOrderByNombre_shouldSortRealAlphabeticallyAndSyntheticLast_whenAllPresent() {
+        // Given — full ballot: real (A, B, C), blank, null
+        CandidatoEntity realA = buildEntity(UUID.randomUUID(), "Candidate A", false, false, 1);
+        CandidatoEntity realB = buildEntity(UUID.randomUUID(), "Candidate B", false, false, 2);
+        CandidatoEntity realC = buildEntity(UUID.randomUUID(), "Candidate C", false, false, 3);
+        CandidatoEntity blank = buildEntity(UUID.randomUUID(), "Voto en Blanco", true, false, null);
+        CandidatoEntity nullVote = buildEntity(UUID.randomUUID(), "Voto Nulo", false, true, null);
 
         when(jpaRepository.findByEleccionId(eleccionId))
                 .thenReturn(List.of(nullVote, blank, realC, realA, realB));
 
         // When
-        List<Candidate> result = adapter.findByEleccionIdOrderByNumeroOrden(eleccionId);
+        List<Candidate> result = adapter.findByEleccionIdOrderByNombre(eleccionId);
 
         // Then
         assertThat(result).hasSize(5);
-        // Real candidates first, ascending
         assertThat(result.get(0).nombre()).isEqualTo("Candidate A");
         assertThat(result.get(1).nombre()).isEqualTo("Candidate B");
         assertThat(result.get(2).nombre()).isEqualTo("Candidate C");
-        // Synthetics at end (relative order among synthetics is stable but not contractually mandated)
+        // Synthetics at end
         List<String> syntheticNames = result.subList(3, 5).stream()
                 .map(Candidate::nombre)
                 .toList();
@@ -114,15 +107,16 @@ class CandidateRepositoryAdapterTest {
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
-    private CandidatoEntity buildEntity(UUID id, String nombre, int numeroOrden,
-                                        boolean esVotoEnBlanco, boolean esVotoNulo) {
+    private CandidatoEntity buildEntity(UUID id, String nombre,
+                                         boolean esVotoEnBlanco, boolean esVotoNulo,
+                                         Integer funcionarioId) {
         CandidatoEntity entity = new CandidatoEntity();
         entity.setId(id);
         entity.setEleccionId(eleccionId);
         entity.setNombre(nombre);
-        entity.setNumeroOrden(numeroOrden);
         entity.setEsVotoEnBlanco(esVotoEnBlanco);
         entity.setEsVotoNulo(esVotoNulo);
+        entity.setFuncionarioId(funcionarioId);
         return entity;
     }
 }

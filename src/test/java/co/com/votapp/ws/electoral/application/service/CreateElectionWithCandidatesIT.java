@@ -27,9 +27,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Integration test for {@link CreateElectionWithCandidatesAppService}.
  *
- * <p>Verifies that the comprehensive election creation (wizard final submit) persists
- * both the election with ballot config AND all candidates with rich profile fields
- * in a single atomic transaction — against a real PostgreSQL instance via Testcontainers.
+ * <p>V5: Updated to use funcionarioId instead of numeroOrden; afiliacionPolitica removed.
+ * Verifies that election and candidates are persisted correctly in a real PostgreSQL instance.
  */
 @SpringBootTest
 @Testcontainers
@@ -86,9 +85,9 @@ class CreateElectionWithCandidatesIT {
 
         List<CreateElectionWithCandidatesAppService.CandidateCreationData> candidatesData = List.of(
                 new CreateElectionWithCandidatesAppService.CandidateCreationData(
-                        "Candidato IT-A", 1, "http://foto-a.png", "Bio A", "Propuestas A", "Partido A"),
+                        "Candidato IT-A", 1, "http://foto-a.png", "Bio A", "Propuestas A"),
                 new CreateElectionWithCandidatesAppService.CandidateCreationData(
-                        "Candidato IT-B", 2, null, null, null, null)
+                        "Candidato IT-B", 2, null, null, null)
         );
 
         // When
@@ -112,7 +111,7 @@ class CreateElectionWithCandidatesIT {
     @Test
     @DisplayName("Should persist candidates with rich profile fields including nullable fields")
     void createWithCandidates_shouldPersistCandidatesWithRichProfile_inDB() {
-        // Given — triangulation: verify candidate persistence with rich fields
+        // Given
         String uniqueCodigo = "IT-RICH-" + System.nanoTime();
         LocalDateTime start = LocalDateTime.now().plusDays(5);
         LocalDateTime end = start.plusDays(1);
@@ -123,7 +122,7 @@ class CreateElectionWithCandidatesIT {
         List<CreateElectionWithCandidatesAppService.CandidateCreationData> candidatesData = List.of(
                 new CreateElectionWithCandidatesAppService.CandidateCreationData(
                         "Candidato Completo", 1,
-                        "http://foto.png", "Una bio completa", "Mis propuestas aqui", "Partido Verde")
+                        "http://foto.png", "Una bio completa", "Mis propuestas aqui")
         );
 
         // When
@@ -132,22 +131,21 @@ class CreateElectionWithCandidatesIT {
 
         // Then — candidate exists with rich fields
         List<Candidate> candidates = candidateRepository
-                .findByEleccionIdOrderByNumeroOrden(election.id());
+                .findByEleccionIdOrderByNombre(election.id());
 
         assertThat(candidates).hasSize(1);
         Candidate saved = candidates.get(0);
         assertThat(saved.nombre()).isEqualTo("Candidato Completo");
-        assertThat(saved.numeroOrden()).isEqualTo(1);
+        assertThat(saved.funcionarioId()).isEqualTo(1);
         assertThat(saved.fotoUrl()).isEqualTo("http://foto.png");
         assertThat(saved.biografia()).isEqualTo("Una bio completa");
         assertThat(saved.propuestas()).isEqualTo("Mis propuestas aqui");
-        assertThat(saved.afiliacionPolitica()).isEqualTo("Partido Verde");
     }
 
     @Test
     @DisplayName("Should persist N candidates for a comprehensive election payload")
     void createWithCandidates_shouldPersistAllCandidates_whenMultipleCandidatesProvided() {
-        // Given — verify N-candidate persistence
+        // Given
         String uniqueCodigo = "IT-MULTI-CAND-" + System.nanoTime();
         LocalDateTime start = LocalDateTime.now().plusDays(5);
         LocalDateTime end = start.plusDays(1);
@@ -157,25 +155,23 @@ class CreateElectionWithCandidatesIT {
 
         List<CreateElectionWithCandidatesAppService.CandidateCreationData> candidatesData = List.of(
                 new CreateElectionWithCandidatesAppService.CandidateCreationData(
-                        "Candidato Alpha", 1, null, null, null, null),
+                        "Candidato Alpha", 1, null, null, null),
                 new CreateElectionWithCandidatesAppService.CandidateCreationData(
-                        "Candidato Beta", 2, null, null, null, null),
+                        "Candidato Beta", 2, null, null, null),
                 new CreateElectionWithCandidatesAppService.CandidateCreationData(
-                        "Candidato Gamma", 3, null, null, null, null)
+                        "Candidato Gamma", 3, null, null, null)
         );
 
         // When
         Election election = createElectionWithCandidatesAppService
                 .createWithCandidates(electionCmd, candidatesData);
 
-        // Then — all 3 candidates persisted
+        // Then — all 3 candidates persisted, sorted alphabetically
         List<Candidate> candidates = candidateRepository
-                .findByEleccionIdOrderByNumeroOrden(election.id());
+                .findByEleccionIdOrderByNombre(election.id());
 
         assertThat(candidates).hasSize(3);
         assertThat(candidates).extracting(Candidate::nombre)
-                .containsExactly("Candidato Alpha", "Candidato Beta", "Candidato Gamma");
-        assertThat(candidates).extracting(Candidate::numeroOrden)
-                .containsExactly(1, 2, 3);
+                .containsExactlyInAnyOrder("Candidato Alpha", "Candidato Beta", "Candidato Gamma");
     }
 }

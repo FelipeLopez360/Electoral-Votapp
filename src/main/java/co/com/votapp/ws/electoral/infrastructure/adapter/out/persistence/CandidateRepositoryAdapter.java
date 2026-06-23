@@ -6,6 +6,7 @@ import co.com.votapp.ws.electoral.domain.Candidate;
 import co.com.votapp.ws.electoral.domain.port.out.CandidateRepositoryPort;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,7 +17,12 @@ import java.util.stream.Collectors;
  *
  * <p>Reuses {@link CandidatoEntity} and {@link CandidatoJpaRepository} from the
  * candidates infrastructure context — both map to the same {@code candidatos} table.
- * This adapter adds the query methods required by the electoral use cases.
+ *
+ * <p>V5 changes:
+ * - {@code findByEleccionIdOrderByNombre}: sorts real candidates alphabetically by nombre ASC,
+ *   synthetic candidates (blank/null vote) always appear last in stable order.
+ * - {@code existsByEleccionIdAndFuncionarioId}: replaces old {@code existsByEleccionIdAndNumeroOrden}.
+ * - Mapping: {@code funcionarioId} added; {@code numeroOrden}/{@code afiliacionPolitica} removed.
  */
 @Component
 public class CandidateRepositoryAdapter implements CandidateRepositoryPort {
@@ -35,21 +41,19 @@ public class CandidateRepositoryAdapter implements CandidateRepositoryPort {
     }
 
     /**
-     * Returns candidates sorted for ballot display: real candidates ascending by {@code numeroOrden},
+     * Returns candidates for ballot display: real candidates alphabetically by {@code nombre} ASC,
      * followed by synthetic candidates (blank vote, null vote) at the end in stable order.
      *
-     * <p>Synthetic candidates are stored with special {@code numeroOrden} values
-     * ({@code 0} for blank, {@code -1} for null) that would otherwise sort before real candidates
-     * when using a simple ascending comparator. This method corrects that by moving all synthetic
-     * candidates to the end of the list regardless of their stored {@code numeroOrden}.
+     * <p>Real candidates: {@code esVotoEnBlanco=false AND esVotoNulo=false}, sorted by nombre ASC.
+     * Synthetic candidates: sorted by nombre ASC among themselves (stable, predictable last position).
      */
     @Override
-    public List<Candidate> findByEleccionIdOrderByNumeroOrden(UUID eleccionId) {
-        java.util.Comparator<CandidatoEntity> ballotOrder =
-                // synthetic candidates (blank or null) sort last; real candidates sort by numeroOrden ascending
-                java.util.Comparator.comparingInt(
-                        (CandidatoEntity e) -> isSynthetic(e) ? Integer.MAX_VALUE : e.getNumeroOrden()
-                ).thenComparingInt(CandidatoEntity::getNumeroOrden);
+    public List<Candidate> findByEleccionIdOrderByNombre(UUID eleccionId) {
+        Comparator<CandidatoEntity> ballotOrder = Comparator
+                // Synthetic candidates (blank or null) sort last
+                .comparingInt((CandidatoEntity e) -> isSynthetic(e) ? 1 : 0)
+                // Among non-synthetics and among synthetics, sort alphabetically by nombre
+                .thenComparing(CandidatoEntity::getNombre, String.CASE_INSENSITIVE_ORDER);
 
         return jpaRepository.findByEleccionId(eleccionId)
                 .stream()
@@ -65,10 +69,11 @@ public class CandidateRepositoryAdapter implements CandidateRepositoryPort {
     }
 
     @Override
-    public boolean existsByEleccionIdAndNumeroOrden(UUID eleccionId, int numeroOrden) {
+    public boolean existsByEleccionIdAndFuncionarioId(UUID eleccionId, Integer funcionarioId) {
+        if (funcionarioId == null) return false;
         return jpaRepository.findByEleccionId(eleccionId)
                 .stream()
-                .anyMatch(e -> numeroOrden == e.getNumeroOrden());
+                .anyMatch(e -> funcionarioId.equals(e.getFuncionarioId()));
     }
 
     @Override
@@ -92,11 +97,10 @@ public class CandidateRepositoryAdapter implements CandidateRepositoryPort {
                 entity.getNombre(),
                 Boolean.TRUE.equals(entity.getEsVotoEnBlanco()),
                 Boolean.TRUE.equals(entity.getEsVotoNulo()),
-                entity.getNumeroOrden(),
+                entity.getFuncionarioId(),
                 entity.getFotoUrl(),
                 entity.getBiografia(),
-                entity.getPropuestas(),
-                entity.getAfiliacionPolitica()
+                entity.getPropuestas()
         );
     }
 
@@ -107,11 +111,10 @@ public class CandidateRepositoryAdapter implements CandidateRepositoryPort {
         entity.setNombre(candidate.nombre());
         entity.setEsVotoEnBlanco(candidate.esVotoEnBlanco());
         entity.setEsVotoNulo(candidate.esVotoNulo());
-        entity.setNumeroOrden(candidate.numeroOrden());
+        entity.setFuncionarioId(candidate.funcionarioId());
         entity.setFotoUrl(candidate.fotoUrl());
         entity.setBiografia(candidate.biografia());
         entity.setPropuestas(candidate.propuestas());
-        entity.setAfiliacionPolitica(candidate.afiliacionPolitica());
         return entity;
     }
 }
