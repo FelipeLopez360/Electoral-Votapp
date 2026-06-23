@@ -41,6 +41,11 @@ import java.util.UUID;
  * REST adapter for election lifecycle management.
  *
  * <p>All admin endpoints (create, activate, finalize) require HTTP Basic auth.
+ *
+ * <p>V5 changes: {@code AddCandidateRequest} and {@code CandidateResponse} now use
+ * {@code funcionarioId} instead of {@code numeroOrden}. {@code afiliacionPolitica} removed
+ * from all DTOs. {@code CandidateFullRequest} also updated. List candidates endpoint
+ * now calls {@code findByEleccionIdOrderByNombre}.
  */
 @RestController
 @RequestMapping("/api/v1/elections")
@@ -151,11 +156,10 @@ public class ElectionController {
                 request.candidatos().stream()
                         .map(c -> new CreateElectionWithCandidatesAppService.CandidateCreationData(
                                 c.nombre(),
-                                c.numeroOrden(),
+                                c.funcionarioId(),
                                 c.fotoUrl(),
                                 c.biografia(),
-                                c.propuestas(),
-                                c.afiliacionPolitica()
+                                c.propuestas()
                         ))
                         .toList();
 
@@ -251,7 +255,7 @@ public class ElectionController {
     @GetMapping("/{id}/candidates")
     @Operation(
             summary = "List candidates for an election",
-            description = "Returns the ordered list of candidates (admin endpoint, no token required).",
+            description = "Returns the ordered list of candidates (alphabetical, admin endpoint).",
             security = @SecurityRequirement(name = "basicAuth")
     )
     @ApiResponses({
@@ -259,11 +263,11 @@ public class ElectionController {
             @ApiResponse(responseCode = "401", description = "Authentication required")
     })
     public ResponseEntity<List<CandidateResponse>> listCandidates(@PathVariable UUID id) {
-        List<Candidate> candidates = candidateRepository.findByEleccionIdOrderByNumeroOrden(id);
+        List<Candidate> candidates = candidateRepository.findByEleccionIdOrderByNombre(id);
         List<CandidateResponse> response = candidates.stream()
                 .map(c -> new CandidateResponse(
-                        c.id().toString(), c.nombre(), c.numeroOrden(),
-                        c.fotoUrl(), c.biografia(), c.propuestas(), c.afiliacionPolitica()))
+                        c.id().toString(), c.nombre(), c.funcionarioId(),
+                        c.fotoUrl(), c.biografia(), c.propuestas()))
                 .toList();
         return ResponseEntity.ok(response);
     }
@@ -308,7 +312,7 @@ public class ElectionController {
             @ApiResponse(responseCode = "201", description = "Candidate created"),
             @ApiResponse(responseCode = "400", description = "Invalid request"),
             @ApiResponse(responseCode = "401", description = "Authentication required"),
-            @ApiResponse(responseCode = "409", description = "Duplicate order number or election not accepting candidates")
+            @ApiResponse(responseCode = "409", description = "Duplicate funcionario or election not accepting candidates")
     })
     public ResponseEntity<CandidateResponse> addCandidate(
             @PathVariable UUID eleccionId,
@@ -317,18 +321,16 @@ public class ElectionController {
                 eleccionId,
                 request.nombre(),
                 request.descripcion() != null ? request.descripcion() : "",
-                request.numeroOrden(),
+                request.funcionarioId(),
                 request.fotoUrl(),
                 request.biografia(),
-                request.propuestas(),
-                request.afiliacionPolitica()
+                request.propuestas()
         );
         Candidate candidate = addCandidateUseCase.addCandidate(command);
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new CandidateResponse(
-                        candidate.id().toString(), candidate.nombre(), candidate.numeroOrden(),
-                        candidate.fotoUrl(), candidate.biografia(),
-                        candidate.propuestas(), candidate.afiliacionPolitica()));
+                        candidate.id().toString(), candidate.nombre(), candidate.funcionarioId(),
+                        candidate.fotoUrl(), candidate.biografia(), candidate.propuestas()));
     }
 
     @PostMapping("/{id}/activate")
@@ -386,9 +388,7 @@ public class ElectionController {
      *
      * <p>Ballot configuration fields are OPTIONAL in JSON. When omitted, Jackson binds them
      * as {@code null} (wrapper types), and the controller applies the historical defaults:
-     * {@code permiteVotoBlanco=true}, {@code maxVotosPorElector=1}. Explicit non-default
-     * values (e.g. {@code "permiteVotoBlanco": false, "maxVotosPorElector": 3}) are forwarded
-     * as-is. An explicit {@code maxVotosPorElector=0} is a client error and produces 400.
+     * {@code permiteVotoBlanco=true}, {@code maxVotosPorElector=1}.
      */
     public record CreateElectionRequest(
             String codigo,
@@ -413,7 +413,7 @@ public class ElectionController {
      * Comprehensive request body for the wizard final-submit endpoint.
      *
      * <p>Carries election metadata, ballot config, and candidates in a single payload.
-     * All operations are committed atomically in one transaction.
+     * V5: candidates use {@code funcionarioId} instead of {@code numeroOrden}.
      */
     public record CreateElectionFullRequest(
             String codigo,
@@ -427,20 +427,20 @@ public class ElectionController {
 
     /**
      * Candidate data within the comprehensive election creation request.
+     * V5: {@code funcionarioId} replaces {@code numeroOrden}; {@code afiliacionPolitica} removed.
      * All rich profile fields are optional (nullable).
      */
     public record CandidateFullRequest(
             String nombre,
-            int numeroOrden,
+            Integer funcionarioId,
             String fotoUrl,
             String biografia,
-            String propuestas,
-            String afiliacionPolitica
+            String propuestas
     ) {}
 
     /**
      * Response projection for a created / queried election.
-     * Includes ballot configuration fields added in this change.
+     * Includes ballot configuration fields.
      */
     public record ElectionResponse(
             String id,
@@ -468,33 +468,32 @@ public class ElectionController {
 
     /**
      * Request body for adding a candidate.
-     * Rich profile fields are all optional.
+     * V5: {@code funcionarioId} (nullable) replaces {@code numeroOrden};
+     * {@code afiliacionPolitica} removed.
      */
     public record AddCandidateRequest(
             String nombre,
             String descripcion,
-            int numeroOrden,
+            Integer funcionarioId,
             String fotoUrl,
             String biografia,
-            String propuestas,
-            String afiliacionPolitica
+            String propuestas
     ) {}
 
     /**
      * Response projection for a created candidate.
-     * Includes rich profile fields added in this change.
+     * V5: {@code funcionarioId} replaces {@code numeroOrden}; {@code afiliacionPolitica} removed.
      */
     public record CandidateResponse(
             String id,
             String nombre,
-            int numeroOrden,
+            Integer funcionarioId,
             String fotoUrl,
             String biografia,
-            String propuestas,
-            String afiliacionPolitica
+            String propuestas
     ) {}
 
-    /** Request body for updating an election. All fields are optional — omitted fields keep their current value. */
+    /** Request body for updating an election. All fields are optional. */
     public record UpdateElectionRequest(
             String nombre,
             String fechaInicio,

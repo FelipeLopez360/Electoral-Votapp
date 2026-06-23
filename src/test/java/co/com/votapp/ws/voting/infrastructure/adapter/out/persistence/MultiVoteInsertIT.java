@@ -99,7 +99,7 @@ class MultiVoteInsertIT {
         List<CreateElectionWithCandidatesAppService.CandidateCreationData> candidatesData =
                 java.util.stream.IntStream.rangeClosed(1, candidateCount)
                         .mapToObj(i -> new CreateElectionWithCandidatesAppService.CandidateCreationData(
-                                "Candidato " + i, i, null, null, null, null))
+                                "Candidato " + i, i, null, null, null))
                         .toList();
 
         Election election = createElectionWithCandidatesAppService
@@ -129,7 +129,7 @@ class MultiVoteInsertIT {
 
         // Get the 2 regular candidates (excluding synthetic Voto Nulo)
         List<Candidate> candidates = candidateRepository
-                .findByEleccionIdOrderByNumeroOrden(eleccionId)
+                .findByEleccionIdOrderByNombre(eleccionId)
                 .stream()
                 .filter(c -> !c.esVotoNulo() && !c.esVotoEnBlanco())
                 .toList();
@@ -160,7 +160,7 @@ class MultiVoteInsertIT {
         UUID eleccionId = token.eleccionId();
 
         List<Candidate> candidates = candidateRepository
-                .findByEleccionIdOrderByNumeroOrden(eleccionId)
+                .findByEleccionIdOrderByNombre(eleccionId)
                 .stream()
                 .filter(c -> !c.esVotoNulo() && !c.esVotoEnBlanco())
                 .toList();
@@ -222,6 +222,7 @@ class MultiVoteInsertIT {
                         + "WHERE table_schema = 'public' AND table_name = 'candidatos' "
                         + "ORDER BY ordinal_position",
                 String.class);
-        assertThat(cols).contains("foto_url", "biografia", "propuestas", "afiliacion_politica");
+        assertThat(cols).contains("foto_url", "biografia", "propuestas", "funcionario_id");
+        assertThat(cols).doesNotContain("afiliacion_politica", "numero_orden");
     }
 }

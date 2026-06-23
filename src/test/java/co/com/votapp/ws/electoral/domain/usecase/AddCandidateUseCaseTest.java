@@ -26,6 +26,11 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link AddCandidateUseCaseImpl}.
+ *
+ * <p>V5: Uses funcionarioId uniqueness instead of numeroOrden uniqueness.
+ */
 @DisplayName("AddCandidateUseCase - Candidate management business logic")
 @ExtendWith(MockitoExtension.class)
 class AddCandidateUseCaseTest {
@@ -44,15 +49,15 @@ class AddCandidateUseCaseTest {
     }
 
     @Test
-    @DisplayName("Should add candidate when election is PROGRAMADA and numero_orden is unique")
-    void addCandidate_shouldReturnCandidate_whenElectionIsProgramadaAndOrderIsUnique() {
+    @DisplayName("Should add candidate when election is PROGRAMADA and funcionarioId is unique")
+    void addCandidate_shouldReturnCandidate_whenElectionIsProgramadaAndFuncionarioIsUnique() {
         // Given
         UUID eleccionId = UUID.randomUUID();
         var election = electionWith(eleccionId, ElectionStatus.PROGRAMADA);
-        var command = new AddCandidateCommand(eleccionId, "Candidato Uno", "Descripcion", 1, null, null, null, null);
+        var command = new AddCandidateCommand(eleccionId, "Candidato Uno", "Descripcion", 1, null, null, null);
 
         when(electionRepository.findById(eleccionId)).thenReturn(Optional.of(election));
-        when(candidateRepository.existsByEleccionIdAndNumeroOrden(eleccionId, 1)).thenReturn(false);
+        when(candidateRepository.existsByEleccionIdAndFuncionarioId(eleccionId, 1)).thenReturn(false);
         when(candidateRepository.save(any(Candidate.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // When
@@ -61,7 +66,7 @@ class AddCandidateUseCaseTest {
         // Then
         assertThat(result.eleccionId()).isEqualTo(eleccionId);
         assertThat(result.nombre()).isEqualTo("Candidato Uno");
-        assertThat(result.numeroOrden()).isEqualTo(1);
+        assertThat(result.funcionarioId()).isEqualTo(1);
         assertThat(result.esVotoEnBlanco()).isFalse();
     }
 
@@ -71,10 +76,10 @@ class AddCandidateUseCaseTest {
         // Given
         UUID eleccionId = UUID.randomUUID();
         var election = electionWith(eleccionId, ElectionStatus.ACTIVA);
-        var command = new AddCandidateCommand(eleccionId, "Candidato Dos", "Descripcion", 2, null, null, null, null);
+        var command = new AddCandidateCommand(eleccionId, "Candidato Dos", "Descripcion", 2, null, null, null);
 
         when(electionRepository.findById(eleccionId)).thenReturn(Optional.of(election));
-        when(candidateRepository.existsByEleccionIdAndNumeroOrden(eleccionId, 2)).thenReturn(false);
+        when(candidateRepository.existsByEleccionIdAndFuncionarioId(eleccionId, 2)).thenReturn(false);
         when(candidateRepository.save(any(Candidate.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // When
@@ -90,7 +95,7 @@ class AddCandidateUseCaseTest {
         // Given
         UUID eleccionId = UUID.randomUUID();
         var election = electionWith(eleccionId, ElectionStatus.FINALIZADA);
-        var command = new AddCandidateCommand(eleccionId, "Candidato", "Desc", 1, null, null, null, null);
+        var command = new AddCandidateCommand(eleccionId, "Candidato", "Desc", null, null, null, null);
 
         when(electionRepository.findById(eleccionId)).thenReturn(Optional.of(election));
 
@@ -107,7 +112,7 @@ class AddCandidateUseCaseTest {
         // Given
         UUID eleccionId = UUID.randomUUID();
         var election = electionWith(eleccionId, ElectionStatus.CANCELADA);
-        var command = new AddCandidateCommand(eleccionId, "Candidato", "Desc", 1, null, null, null, null);
+        var command = new AddCandidateCommand(eleccionId, "Candidato", "Desc", null, null, null, null);
 
         when(electionRepository.findById(eleccionId)).thenReturn(Optional.of(election));
 
@@ -119,20 +124,20 @@ class AddCandidateUseCaseTest {
     }
 
     @Test
-    @DisplayName("Should throw DomainException when numero_orden is already taken")
-    void addCandidate_shouldThrowDomainException_whenNumeroOrdenAlreadyExists() {
+    @DisplayName("Should throw DomainException when funcionarioId is already a candidate in the election")
+    void addCandidate_shouldThrowDomainException_whenFuncionarioIdAlreadyExists() {
         // Given
         UUID eleccionId = UUID.randomUUID();
         var election = electionWith(eleccionId, ElectionStatus.PROGRAMADA);
-        var command = new AddCandidateCommand(eleccionId, "Candidato", "Desc", 1, null, null, null, null);
+        var command = new AddCandidateCommand(eleccionId, "Candidato", "Desc", 5, null, null, null);
 
         when(electionRepository.findById(eleccionId)).thenReturn(Optional.of(election));
-        when(candidateRepository.existsByEleccionIdAndNumeroOrden(eleccionId, 1)).thenReturn(true);
+        when(candidateRepository.existsByEleccionIdAndFuncionarioId(eleccionId, 5)).thenReturn(true);
 
         // When & Then
         assertThatThrownBy(() -> useCase.addCandidate(command))
                 .isInstanceOf(DomainException.class)
-                .hasMessageContaining("numero_orden");
+                .hasMessageContaining("funcionario");
 
         verify(candidateRepository, never()).save(any());
     }
@@ -142,7 +147,7 @@ class AddCandidateUseCaseTest {
     void addCandidate_shouldThrowDomainException_whenElectionNotFound() {
         // Given
         UUID eleccionId = UUID.randomUUID();
-        var command = new AddCandidateCommand(eleccionId, "Candidato", "Desc", 1, null, null, null, null);
+        var command = new AddCandidateCommand(eleccionId, "Candidato", "Desc", null, null, null, null);
         when(electionRepository.findById(eleccionId)).thenReturn(Optional.empty());
 
         // When & Then

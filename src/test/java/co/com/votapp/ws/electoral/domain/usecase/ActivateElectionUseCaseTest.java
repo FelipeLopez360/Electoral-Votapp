@@ -66,7 +66,7 @@ class ActivateElectionUseCaseTest {
     }
 
     @Test
-    @DisplayName("Should auto-create synthetic Voto en Blanco candidate with numero_orden=0")
+    @DisplayName("Should auto-create synthetic Voto en Blanco candidate with null funcionarioId")
     void activate_shouldCreateBlankVoteCandidate_whenElectionIsProgramada() {
         // Given
         UUID electionId = UUID.randomUUID();
@@ -87,12 +87,12 @@ class ActivateElectionUseCaseTest {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("No blank vote candidate saved"));
         assertThat(blankVote.nombre()).isEqualTo("Voto en Blanco");
-        assertThat(blankVote.numeroOrden()).isEqualTo(0);
+        assertThat(blankVote.funcionarioId()).isNull();
         assertThat(blankVote.eleccionId()).isEqualTo(electionId);
     }
 
     @Test
-    @DisplayName("Should auto-create synthetic Voto Nulo candidate with numero_orden=-1 alongside blank vote")
+    @DisplayName("Should auto-create synthetic Voto Nulo candidate with null funcionarioId alongside blank vote")
     void activate_shouldCreateNullVoteCandidate_whenElectionIsProgramada() {
         // Given
         UUID electionId = UUID.randomUUID();

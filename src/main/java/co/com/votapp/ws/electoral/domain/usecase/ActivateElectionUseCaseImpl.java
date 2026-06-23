@@ -13,8 +13,9 @@ import java.util.UUID;
 /**
  * Use case implementation: transition election from PROGRAMADA to ACTIVA.
  *
- * <p>Side effect: auto-creates the synthetic "Voto en Blanco" candidate
- * with numero_orden=0 (always first in the ballot).
+ * <p>Side effect: auto-creates synthetic candidates (blank vote and/or null vote)
+ * with {@code funcionarioId=null} — synthetic candidates are not linked to real funcionarios.
+ * V5: No sentinel {@code numeroOrden} values (0, -1) — ordering is now alphabetical by nombre.
  * No Spring annotations — wired manually via DomainConfig.
  */
 public class ActivateElectionUseCaseImpl implements ActivateElectionUseCase {
@@ -53,6 +54,7 @@ public class ActivateElectionUseCaseImpl implements ActivateElectionUseCase {
         electionRepository.save(activated);
 
         // Auto-create the synthetic blank vote candidate ONLY when permiteVotoBlanco=true
+        // funcionarioId=null: synthetic candidates are not real funcionarios
         if (election.permiteVotoBlanco()) {
             Candidate blankVote = new Candidate(
                     UUID.randomUUID(),
@@ -60,8 +62,8 @@ public class ActivateElectionUseCaseImpl implements ActivateElectionUseCase {
                     "Voto en Blanco",
                     true,
                     false,
-                    0,
-                    null, null, null, null
+                    null,  // funcionarioId = null for synthetic candidates
+                    null, null, null
             );
             candidateRepository.save(blankVote);
         }
@@ -73,8 +75,8 @@ public class ActivateElectionUseCaseImpl implements ActivateElectionUseCase {
                 "Voto Nulo",
                 false,
                 true,
-                -1,
-                null, null, null, null
+                null,  // funcionarioId = null for synthetic candidates
+                null, null, null
         );
 
         candidateRepository.save(nullVote);

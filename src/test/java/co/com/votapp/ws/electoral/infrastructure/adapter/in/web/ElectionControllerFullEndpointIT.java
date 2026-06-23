@@ -84,10 +84,10 @@ class ElectionControllerFullEndpointIT {
                   "permiteVotoBlanco": true,
                   "maxVotosPorElector": 2,
                   "candidatos": [
-                    { "nombre": "Candidato A", "numeroOrden": 1,
+                    { "nombre": "Candidato A", "funcionarioId": 1,
                       "fotoUrl": "http://foto.png", "biografia": "Bio A",
-                      "propuestas": "Propuesta A", "afiliacionPolitica": "Partido A" },
-                    { "nombre": "Candidato B", "numeroOrden": 2 }
+                      "propuestas": "Propuesta A" },
+                    { "nombre": "Candidato B", "funcionarioId": 2 }
                   ]
                 }
                 """.formatted(START, END);
@@ -152,7 +152,7 @@ class ElectionControllerFullEndpointIT {
                   "permiteVotoBlanco": true,
                   "maxVotosPorElector": 3,
                   "candidatos": [
-                    { "nombre": "Candidato A", "numeroOrden": 1 }
+                    { "nombre": "Candidato A", "funcionarioId": 1 }
                   ]
                 }
                 """.formatted(START, END);

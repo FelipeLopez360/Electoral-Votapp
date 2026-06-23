@@ -36,10 +36,8 @@ import static org.mockito.Mockito.when;
 /**
  * Unit tests for {@link CreateElectionWithCandidatesAppService}.
  *
- * <p>Verifies the orchestration contract: CreateElectionUseCase executes first,
- * then AddCandidateUseCase is called once per candidate in the provided list,
- * with the created election's ID injected into each candidate command.
- * The entire operation runs within a single @Transactional boundary.
+ * <p>V5: CandidateCreationData uses funcionarioId instead of numeroOrden;
+ * afiliacionPolitica removed.
  */
 @DisplayName("CreateElectionWithCandidatesAppService - Comprehensive election creation orchestration")
 @ExtendWith(MockitoExtension.class)
@@ -69,18 +67,18 @@ class CreateElectionWithCandidatesAppServiceTest {
                 ElectionStatus.PROGRAMADA, START, END, true, 1);
         when(createElectionUseCase.create(any())).thenReturn(createdElection);
 
-        Candidate cand1 = new Candidate(UUID.randomUUID(), ELECTION_ID, "Candidato A", false, false, 1,
-                null, null, null, null);
-        Candidate cand2 = new Candidate(UUID.randomUUID(), ELECTION_ID, "Candidato B", false, false, 2,
-                null, null, null, null);
+        Candidate cand1 = new Candidate(UUID.randomUUID(), ELECTION_ID, "Candidato A", false, false,
+                1, null, null, null);
+        Candidate cand2 = new Candidate(UUID.randomUUID(), ELECTION_ID, "Candidato B", false, false,
+                2, null, null, null);
         when(addCandidateUseCase.addCandidate(any())).thenReturn(cand1, cand2);
 
         CreateElectionCommand electionCmd = new CreateElectionCommand(
                 "ELEC-01", "Test Election", null, START, END, true, 1);
 
         List<CandidateCreationData> candidates = List.of(
-                new CandidateCreationData("Candidato A", 1, null, null, null, null),
-                new CandidateCreationData("Candidato B", 2, null, null, null, null)
+                new CandidateCreationData("Candidato A", 1, null, null, null),
+                new CandidateCreationData("Candidato B", 2, null, null, null)
         );
 
         // When
@@ -89,7 +87,6 @@ class CreateElectionWithCandidatesAppServiceTest {
         // Then — result is the created election
         assertThat(result).isEqualTo(createdElection);
 
-        // Verify order: create first, then each candidate (2 times total)
         InOrder inOrder = inOrder(createElectionUseCase, addCandidateUseCase);
         inOrder.verify(createElectionUseCase).create(electionCmd);
         inOrder.verify(addCandidateUseCase, times(2)).addCandidate(any());
@@ -104,17 +101,17 @@ class CreateElectionWithCandidatesAppServiceTest {
                 ElectionStatus.PROGRAMADA, START, END, true, 3);
         when(createElectionUseCase.create(any())).thenReturn(createdElection);
 
-        Candidate stub = new Candidate(UUID.randomUUID(), elecId, "X", false, false, 1,
-                null, null, null, null);
+        Candidate stub = new Candidate(UUID.randomUUID(), elecId, "X", false, false,
+                1, null, null, null);
         when(addCandidateUseCase.addCandidate(any())).thenReturn(stub);
 
         CreateElectionCommand electionCmd = new CreateElectionCommand(
                 "ELEC-02", "Multi Candidate Election", null, START, END, true, 3);
 
         List<CandidateCreationData> candidates = List.of(
-                new CandidateCreationData("Candidato X", 1, null, null, null, null),
-                new CandidateCreationData("Candidato Y", 2, null, null, null, null),
-                new CandidateCreationData("Candidato Z", 3, null, null, null, null)
+                new CandidateCreationData("Candidato X", 1, null, null, null),
+                new CandidateCreationData("Candidato Y", 2, null, null, null),
+                new CandidateCreationData("Candidato Z", 3, null, null, null)
         );
 
         // When
@@ -152,20 +149,20 @@ class CreateElectionWithCandidatesAppServiceTest {
         Election createdElection = new Election(ELECTION_ID, "ELEC-04", "Failing Election",
                 ElectionStatus.PROGRAMADA, START, END, true, 1);
         when(createElectionUseCase.create(any())).thenReturn(createdElection);
-        doThrow(new RuntimeException("Duplicate numero_orden"))
+        doThrow(new RuntimeException("Duplicate funcionario"))
                 .when(addCandidateUseCase).addCandidate(any());
 
         CreateElectionCommand electionCmd = new CreateElectionCommand(
                 "ELEC-04", "Failing Election", null, START, END, true, 1);
 
         List<CandidateCreationData> candidates = List.of(
-                new CandidateCreationData("Candidato A", 1, null, null, null, null)
+                new CandidateCreationData("Candidato A", 1, null, null, null)
         );
 
         // When & Then
         assertThatThrownBy(() -> service.createWithCandidates(electionCmd, candidates))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Duplicate numero_orden");
+                .hasMessageContaining("Duplicate funcionario");
 
         verify(createElectionUseCase).create(electionCmd);
     }
@@ -181,7 +178,7 @@ class CreateElectionWithCandidatesAppServiceTest {
                 "ELEC-05", "Bad Election", null, START, END, true, 1);
 
         List<CandidateCreationData> candidates = List.of(
-                new CandidateCreationData("Candidato A", 1, null, null, null, null)
+                new CandidateCreationData("Candidato A", 1, null, null, null)
         );
 
         // When & Then
@@ -200,16 +197,16 @@ class CreateElectionWithCandidatesAppServiceTest {
                 ElectionStatus.PROGRAMADA, START, END, true, 2);
         when(createElectionUseCase.create(any())).thenReturn(createdElection);
 
-        Candidate stub = new Candidate(UUID.randomUUID(), ELECTION_ID, "A", false, false, 1,
-                "http://foto.png", "Bio", "Propuestas", "Partido X");
+        Candidate stub = new Candidate(UUID.randomUUID(), ELECTION_ID, "A", false, false,
+                5, "http://foto.png", "Bio", "Propuestas");
         when(addCandidateUseCase.addCandidate(any())).thenReturn(stub);
 
         CreateElectionCommand electionCmd = new CreateElectionCommand(
                 "ELEC-06", "Rich Election", null, START, END, true, 2);
 
         List<CandidateCreationData> candidates = List.of(
-                new CandidateCreationData("Candidato A", 1,
-                        "http://foto.png", "Bio", "Propuestas", "Partido X")
+                new CandidateCreationData("Candidato A", 5,
+                        "http://foto.png", "Bio", "Propuestas")
         );
 
         // When
@@ -221,11 +218,10 @@ class CreateElectionWithCandidatesAppServiceTest {
         AddCandidateCommand captured = captor.getValue();
         assertThat(captured.eleccionId()).isEqualTo(ELECTION_ID);
         assertThat(captured.nombre()).isEqualTo("Candidato A");
-        assertThat(captured.numeroOrden()).isEqualTo(1);
+        assertThat(captured.funcionarioId()).isEqualTo(5);
         assertThat(captured.fotoUrl()).isEqualTo("http://foto.png");
         assertThat(captured.biografia()).isEqualTo("Bio");
         assertThat(captured.propuestas()).isEqualTo("Propuestas");
-        assertThat(captured.afiliacionPolitica()).isEqualTo("Partido X");
     }
 
     // ── @Transactional contract ───────────────────────────────────────────────

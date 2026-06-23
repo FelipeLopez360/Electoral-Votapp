@@ -33,6 +33,10 @@ import java.util.UUID;
  * {@link PortalAuthFilter}, which resolves the authenticated funcionario ID
  * from the Redis session and stores it in the {@code portalFuncionarioId} request attribute.
  *
+ * <p>V5 changes: {@code PortalCandidateItem} no longer includes {@code numeroOrden}
+ * or {@code afiliacionPolitica}. Ballot ordering is alphabetical by {@code nombre}
+ * (synthetics last), handled by {@code findByEleccionIdOrderByNombre}.
+ *
  * <p>Controllers are THIN — business logic lives in the use cases and app service.
  */
 @RestController
@@ -104,7 +108,8 @@ public class PortalVotingController {
     @Operation(
             summary = "Get portal ballot",
             description = "Returns the ordered list of candidates for an election that the authenticated "
-                    + "funcionario has an ISSUED token for. Requires a valid portal session. "
+                    + "funcionario has an ISSUED token for. Candidates are sorted alphabetically by nombre "
+                    + "(synthetics last). Requires a valid portal session. "
                     + "NEVER returns rawToken or token hash."
     )
     @ApiResponses({
@@ -125,12 +130,13 @@ public class PortalVotingController {
         Election election = electionRepository.findById(eleccionId)
                 .orElseThrow(() -> new NotFoundException("Elección no encontrada"));
 
-        List<Candidate> candidates = candidateRepository.findByEleccionIdOrderByNumeroOrden(eleccionId);
+        // V5: alphabetical ordering by nombre, synthetics last
+        List<Candidate> candidates = candidateRepository.findByEleccionIdOrderByNombre(eleccionId);
 
         List<PortalCandidateItem> items = candidates.stream()
                 .map(c -> new PortalCandidateItem(
-                        c.id().toString(), c.nombre(), c.esVotoEnBlanco(), c.numeroOrden(),
-                        c.fotoUrl(), c.biografia(), c.propuestas(), c.afiliacionPolitica()))
+                        c.id().toString(), c.nombre(), c.esVotoEnBlanco(),
+                        c.fotoUrl(), c.biografia(), c.propuestas()))
                 .toList();
 
         return ResponseEntity.ok(new PortalBallotResponse(
@@ -222,17 +228,16 @@ public class PortalVotingController {
     /**
      * Single candidate item in the portal ballot.
      *
-     * <p>Includes rich profile fields for candidate cards.
+     * <p>V5: {@code numeroOrden} and {@code afiliacionPolitica} removed.
+     * Includes rich profile fields for candidate cards.
      * Synthetic candidates (blank vote, null vote) have {@code null} for all rich fields.
      */
     public record PortalCandidateItem(
             String id,
             String nombre,
             boolean esVotoEnBlanco,
-            int numeroOrden,
             String fotoUrl,
             String biografia,
-            String propuestas,
-            String afiliacionPolitica
+            String propuestas
     ) {}
 }

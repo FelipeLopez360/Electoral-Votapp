@@ -7,8 +7,13 @@ import java.util.UUID;
 import org.springframework.data.domain.Persistable;
 
 /**
- * JPA entity for the {@code candidatos} table (MVP schema).
+ * JPA entity for the {@code candidatos} table (V5 schema).
  * Lives in the infrastructure layer only — never imported by domain.
+ *
+ * <p>V5 changes:
+ * - {@code numeroOrden} column DROPPED (alphabetical ordering now handled by Java layer)
+ * - {@code afiliacionPolitica} column DROPPED (internal election, not relevant)
+ * - {@code funcionarioId} column ADDED (nullable FK → funcionarios.id)
  */
 @Entity
 @Table(name = "candidatos")
@@ -37,8 +42,8 @@ public class CandidatoEntity implements Persistable<UUID> {
     @Column(name = "es_voto_nulo", nullable = false)
     private Boolean esVotoNulo = false;
 
-    @Column(name = "numero_orden", nullable = false)
-    private Integer numeroOrden;
+    @Column(name = "funcionario_id")
+    private Integer funcionarioId;
 
     @Column(name = "foto_url", columnDefinition = "TEXT")
     private String fotoUrl;
@@ -48,9 +53,6 @@ public class CandidatoEntity implements Persistable<UUID> {
 
     @Column(name = "propuestas", columnDefinition = "TEXT")
     private String propuestas;
-
-    @Column(name = "afiliacion_politica", columnDefinition = "TEXT")
-    private String afiliacionPolitica;
 
     // ─── Persistable ─────────────────────────────────────────────────────────
 
@@ -83,8 +85,8 @@ public class CandidatoEntity implements Persistable<UUID> {
     public Boolean getEsVotoNulo() { return esVotoNulo; }
     public void setEsVotoNulo(Boolean esVotoNulo) { this.esVotoNulo = esVotoNulo; }
 
-    public Integer getNumeroOrden() { return numeroOrden; }
-    public void setNumeroOrden(Integer numeroOrden) { this.numeroOrden = numeroOrden; }
+    public Integer getFuncionarioId() { return funcionarioId; }
+    public void setFuncionarioId(Integer funcionarioId) { this.funcionarioId = funcionarioId; }
 
     public String getFotoUrl() { return fotoUrl; }
     public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
@@ -94,7 +96,4 @@ public class CandidatoEntity implements Persistable<UUID> {
 
     public String getPropuestas() { return propuestas; }
     public void setPropuestas(String propuestas) { this.propuestas = propuestas; }
-
-    public String getAfiliacionPolitica() { return afiliacionPolitica; }
-    public void setAfiliacionPolitica(String afiliacionPolitica) { this.afiliacionPolitica = afiliacionPolitica; }
 }

@@ -11,6 +11,10 @@ import java.util.UUID;
  *
  * <p>Distinct from CandidatoRepositoryPort in the candidates context,
  * which manages the legacy Candidato domain object.
+ *
+ * <p>V5 changes:
+ * - {@code existsByEleccionIdAndNumeroOrden} → {@code existsByEleccionIdAndFuncionarioId}
+ * - {@code findByEleccionIdOrderByNumeroOrden} → {@code findByEleccionIdOrderByNombre}
  */
 public interface CandidateRepositoryPort {
 
@@ -22,15 +26,16 @@ public interface CandidateRepositoryPort {
     Candidate save(Candidate candidate);
 
     /**
-     * Find all candidates for an election, ordered by numero_orden ascending.
+     * Find all candidates for an election, ordered alphabetically by nombre.
+     * Synthetic candidates (blank vote, null vote) always appear last.
      */
-    List<Candidate> findByEleccionIdOrderByNumeroOrden(UUID eleccionId);
+    List<Candidate> findByEleccionIdOrderByNombre(UUID eleccionId);
 
     /**
-     * Check if a candidate with a given numero_orden already exists for the election.
-     * Used to enforce uniqueness of numero_orden per election.
+     * Check if a candidate linked to a given funcionarioId already exists for the election.
+     * Used to enforce uniqueness of funcionarioId per election (409 Conflict).
      */
-    boolean existsByEleccionIdAndNumeroOrden(UUID eleccionId, int numeroOrden);
+    boolean existsByEleccionIdAndFuncionarioId(UUID eleccionId, Integer funcionarioId);
 
     /**
      * Find a candidate by its id within a specific election.

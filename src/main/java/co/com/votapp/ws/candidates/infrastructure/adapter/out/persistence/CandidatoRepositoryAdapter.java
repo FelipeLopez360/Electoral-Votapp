@@ -10,6 +10,9 @@ import java.util.stream.Collectors;
 
 /**
  * Persistence adapter for the candidates module.
+ *
+ * <p>V5 changes: {@code numeroOrden} removed from mapping; alphabetical ordering
+ * is now handled in the electoral context's {@code CandidateRepositoryAdapter}.
  */
 @Component
 public class CandidatoRepositoryAdapter implements CandidatoRepositoryPort {
@@ -32,8 +35,7 @@ public class CandidatoRepositoryAdapter implements CandidatoRepositoryPort {
                 entity.getId(),
                 entity.getEleccionId(),
                 entity.getNombre(),
-                Boolean.TRUE.equals(entity.getEsVotoEnBlanco()),
-                entity.getNumeroOrden()
+                Boolean.TRUE.equals(entity.getEsVotoEnBlanco())
         );
     }
 }

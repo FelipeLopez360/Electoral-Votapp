@@ -276,12 +276,12 @@ class CastVoteMultiCandidateTest {
     }
 
     private Candidate regularCandidate(UUID id, UUID eleccionId) {
-        return new Candidate(id, eleccionId, "Regular Candidate", false, false, 1,
-                null, null, null, null);
+        return new Candidate(id, eleccionId, "Regular Candidate", false, false,
+                1, null, null, null);
     }
 
     private Candidate blankVoteCandidate(UUID id, UUID eleccionId) {
-        return new Candidate(id, eleccionId, "Voto en Blanco", true, false, 0,
+        return new Candidate(id, eleccionId, "Voto en Blanco", true, false,
                 null, null, null, null);
     }
 }
