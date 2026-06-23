@@ -46,6 +46,8 @@ import co.com.votapp.ws.voting.domain.port.out.ParticipacionRepositoryPort;
 import co.com.votapp.ws.voting.domain.port.out.TokenLockPort;
 import co.com.votapp.ws.voting.domain.port.out.VoteRepositoryPort;
 import co.com.votapp.ws.voting.domain.port.out.VotingTokenRepository;
+import co.com.votapp.ws.fileupload.domain.port.out.FileStoragePort;
+import co.com.votapp.ws.fileupload.domain.usecase.StoreFileUseCaseImpl;
 import co.com.votapp.ws.voting.domain.port.in.BulkIssueTokensUseCase;
 import co.com.votapp.ws.voting.domain.usecase.BulkIssueTokensUseCaseImpl;
 import co.com.votapp.ws.voting.domain.usecase.CastVoteByTokenIdUseCaseImpl;
@@ -177,6 +179,13 @@ public class DomainConfig {
             GetElectionResultsUseCase getElectionResultsUseCase,
             ReportExporterPort reportExporterDispatcher) {
         return new GenerateElectionReportUseCaseImpl(getElectionResultsUseCase, reportExporterDispatcher);
+    }
+
+    // ─── modificar-formulario-candidatos: FileUpload use case ────────────────
+
+    @Bean
+    public StoreFileUseCaseImpl storeFileUseCase(FileStoragePort fileStoragePort) {
+        return new StoreFileUseCaseImpl(fileStoragePort);
     }
 
     // ─── Voting use cases ─────────────────────────────────────────────────────

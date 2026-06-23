@@ -47,3 +47,8 @@ springdoc:
 app:
   report:
     watermark-text: ${REPORT_WATERMARK_TEXT:Votapp - Sistema Electoral}
+
+  file-upload:
+    upload-dir: ${FILE_UPLOAD_DIR:${java.io.tmpdir}/votapp-uploads}
+    max-size-bytes: ${FILE_UPLOAD_MAX_SIZE:5242880}
+    allowed-types: ${FILE_UPLOAD_ALLOWED_TYPES:image/jpeg,image/png,image/webp}
